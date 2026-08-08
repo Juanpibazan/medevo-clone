@@ -1,0 +1,66 @@
+{
+  "meta": {
+    "title": "MedCiclo — preparación inteligente para Revalida",
+    "description": "Practica, entiende tus errores y repasa en el momento adecuado."
+  },
+  "nav": {
+    "home": "Ir al inicio",
+    "logoAlt": "MedCiclo",
+    "label": "Navegación principal",
+    "signIn": "Ingresar",
+    "signUp": "Crear cuenta"
+  },
+  "language": {
+    "label": "Cambiar idioma",
+    "portuguese": "PT",
+    "spanish": "ES"
+  },
+  "home": {
+    "eyebrow": "Preparación enfocada en Revalida",
+    "title": "Tu estudio gana dirección cuando cada error se convierte en repaso.",
+    "description": "Practica en sesiones concretas, entiende dónde necesitas avanzar y retoma el contenido en el momento adecuado. Un ciclo simple para estudiar con constancia.",
+    "cta": "Comenzar mi ciclo",
+    "cycleLabel": "Ciclo de aprendizaje MedCiclo",
+    "practice": "Practicar con propósito",
+    "error": "Entender el error",
+    "review": "Repasar en el momento adecuado",
+    "progress": "Avanzar con claridad"
+  },
+  "auth": {
+    "eyebrow": "Acceso MedCiclo",
+    "signInTitle": "Continúa tu ciclo",
+    "signInIntro": "Ingresa para retomar tus estudios.",
+    "signUpTitle": "Comienza tu ciclo",
+    "signUpIntro": "Crea tu cuenta y prepara tu rutina para Revalida.",
+    "name": "Nombre",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "passwordHelp": "Usa entre 12 y 128 caracteres.",
+    "validation": "Revisa los campos. La contraseña debe tener al menos 12 caracteres.",
+    "invalidCredentials": "No fue posible ingresar con esos datos. Revísalos e inténtalo de nuevo.",
+    "working": "Espera…",
+    "create": "Crear mi cuenta",
+    "enter": "Ingresar",
+    "forgot": "Olvidé mi contraseña",
+    "needAccount": "Crear cuenta",
+    "haveAccount": "Ya tengo una cuenta"
+  },
+  "recovery": {
+    "eyebrow": "Acceso MedCiclo",
+    "title": "Recuperar acceso",
+    "intro": "Indica tu correo. La recuperación por correo todavía no está activa.",
+    "email": "Correo electrónico",
+    "send": "Solicitar recuperación",
+    "working": "Espera…",
+    "invalidEmail": "Introduce una dirección de correo válida.",
+    "uniformResponse": "Si la dirección está registrada, enviaremos las instrucciones cuando esta función esté disponible.",
+    "back": "Volver a ingresar"
+  },
+  "app": {
+    "eyebrow": "Área del estudiante",
+    "title": "Hola, {name}",
+    "intro": "Tu cuenta está lista. El onboarding y las sesiones de estudio llegarán en el próximo ciclo de desarrollo.",
+    "signOut": "Cerrar sesión",
+    "signingOut": "Cerrando sesión…"
+  }
+}

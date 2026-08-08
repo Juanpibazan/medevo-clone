@@ -1,0 +1,66 @@
+{
+  "meta": {
+    "title": "MedCiclo — preparação inteligente para o Revalida",
+    "description": "Pratique, entenda seus erros e revise no momento certo."
+  },
+  "nav": {
+    "home": "Ir para o início",
+    "logoAlt": "MedCiclo",
+    "label": "Navegação principal",
+    "signIn": "Entrar",
+    "signUp": "Criar conta"
+  },
+  "language": {
+    "label": "Mudar idioma",
+    "portuguese": "PT",
+    "spanish": "ES"
+  },
+  "home": {
+    "eyebrow": "Preparação focada no Revalida",
+    "title": "Seu estudo ganha direção quando cada erro vira revisão.",
+    "description": "Pratique em sessões objetivas, entenda onde precisa avançar e retome o conteúdo no momento certo. Um ciclo simples para estudar com constância.",
+    "cta": "Começar meu ciclo",
+    "cycleLabel": "Ciclo de aprendizagem MedCiclo",
+    "practice": "Praticar com propósito",
+    "error": "Entender o erro",
+    "review": "Revisar no momento certo",
+    "progress": "Avançar com clareza"
+  },
+  "auth": {
+    "eyebrow": "Acesso MedCiclo",
+    "signInTitle": "Continue seu ciclo",
+    "signInIntro": "Entre para retomar seus estudos.",
+    "signUpTitle": "Comece seu ciclo",
+    "signUpIntro": "Crie sua conta e prepare sua rotina para o Revalida.",
+    "name": "Nome",
+    "email": "E-mail",
+    "password": "Senha",
+    "passwordHelp": "Use entre 12 e 128 caracteres.",
+    "validation": "Revise os campos. A senha deve ter pelo menos 12 caracteres.",
+    "invalidCredentials": "Não foi possível entrar com esses dados. Verifique-os e tente novamente.",
+    "working": "Aguarde…",
+    "create": "Criar minha conta",
+    "enter": "Entrar",
+    "forgot": "Esqueci minha senha",
+    "needAccount": "Criar conta",
+    "haveAccount": "Já tenho uma conta"
+  },
+  "recovery": {
+    "eyebrow": "Acesso MedCiclo",
+    "title": "Recuperar acesso",
+    "intro": "Informe seu e-mail. A recuperação por e-mail ainda não está ativa.",
+    "email": "E-mail",
+    "send": "Solicitar recuperação",
+    "working": "Aguarde…",
+    "invalidEmail": "Informe um endereço de e-mail válido.",
+    "uniformResponse": "Se o endereço estiver cadastrado, as instruções serão enviadas quando este recurso estiver disponível.",
+    "back": "Voltar para entrar"
+  },
+  "app": {
+    "eyebrow": "Área do estudante",
+    "title": "Olá, {name}",
+    "intro": "Sua conta está pronta. O onboarding e as sessões de estudo chegam no próximo ciclo de desenvolvimento.",
+    "signOut": "Sair",
+    "signingOut": "Saindo…"
+  }
+}

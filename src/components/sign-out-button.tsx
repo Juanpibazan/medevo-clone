@@ -3,13 +3,13 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { authClient } from "@/modules/identity/client";
 import { useRouter } from "@/i18n/navigation";
-export function SignOutButton() {
+export function SignOutButton({ compact = false }: { compact?: boolean }) {
   const t = useTranslations("app");
   const router = useRouter();
   const [pending, setPending] = useState(false);
   return (
     <button
-      className="button"
+      className={compact ? "text-button" : "button"}
       disabled={pending}
       onClick={async () => {
         setPending(true);

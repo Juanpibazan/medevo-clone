@@ -1,14 +1,17 @@
 import {
   boolean,
+  check,
   date,
   integer,
   pgEnum,
   pgTable,
   primaryKey,
+  smallint,
   text,
   timestamp,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 export const localeEnum = pgEnum("locale", ["pt-BR", "es"]);
 export const onboardingStatusEnum = pgEnum("onboarding_status", [
@@ -82,24 +85,49 @@ export const verifications = pgTable("verifications", {
     .notNull()
     .defaultNow(),
 });
-export const profiles = pgTable("profiles", {
-  userId: text("user_id")
-    .primaryKey()
-    .references(() => users.id, { onDelete: "cascade" }),
-  locale: localeEnum("locale").notNull().default("pt-BR"),
-  examGoal: text("exam_goal").notNull().default("revalida"),
-  tentativeExamDate: date("tentative_exam_date"),
-  weeklyStudyMinutes: integer("weekly_study_minutes"),
-  onboardingStatus: onboardingStatusEnum("onboarding_status")
-    .notNull()
-    .default("not_started"),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-});
+export const profiles = pgTable(
+  "profiles",
+  {
+    userId: text("user_id")
+      .primaryKey()
+      .references(() => users.id, { onDelete: "cascade" }),
+    locale: localeEnum("locale").notNull().default("pt-BR"),
+    examGoal: text("exam_goal").notNull().default("revalida"),
+    tentativeExamDate: date("tentative_exam_date"),
+    weeklyStudyMinutes: integer("weekly_study_minutes"),
+    onboardingStatus: onboardingStatusEnum("onboarding_status")
+      .notNull()
+      .default("not_started"),
+    onboardingCompletedStep: smallint("onboarding_completed_step")
+      .notNull()
+      .default(0),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    check("profiles_exam_goal_revalida", sql`${table.examGoal} = 'revalida'`),
+    check(
+      "profiles_onboarding_completed_step_range",
+      sql`${table.onboardingCompletedStep} between 0 and 3`,
+    ),
+    check(
+      "profiles_weekly_minutes_valid",
+      sql`${table.weeklyStudyMinutes} is null or (${table.weeklyStudyMinutes} between 60 and 2400 and ${table.weeklyStudyMinutes} % 30 = 0)`,
+    ),
+    check(
+      "profiles_onboarding_state_consistent",
+      sql`(${table.onboardingStatus} = 'not_started' and ${table.onboardingCompletedStep} = 0) or (${table.onboardingStatus} = 'in_progress' and ${table.onboardingCompletedStep} in (1, 2)) or (${table.onboardingStatus} = 'completed' and ${table.onboardingCompletedStep} = 3)`,
+    ),
+    check(
+      "profiles_completed_requires_minutes",
+      sql`${table.onboardingStatus} <> 'completed' or ${table.weeklyStudyMinutes} is not null`,
+    ),
+  ],
+);
 export const roles = pgTable("roles", {
   code: text("code").primaryKey(),
   description: text("description").notNull(),

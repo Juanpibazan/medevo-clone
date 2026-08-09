@@ -1,0 +1,6 @@
+ALTER TABLE "profiles" ADD COLUMN "onboarding_completed_step" smallint DEFAULT 0 NOT NULL;--> statement-breakpoint
+ALTER TABLE "profiles" ADD CONSTRAINT "profiles_exam_goal_revalida" CHECK ("profiles"."exam_goal" = 'revalida');--> statement-breakpoint
+ALTER TABLE "profiles" ADD CONSTRAINT "profiles_onboarding_completed_step_range" CHECK ("profiles"."onboarding_completed_step" between 0 and 3);--> statement-breakpoint
+ALTER TABLE "profiles" ADD CONSTRAINT "profiles_weekly_minutes_valid" CHECK ("profiles"."weekly_study_minutes" is null or ("profiles"."weekly_study_minutes" between 60 and 2400 and "profiles"."weekly_study_minutes" % 30 = 0));--> statement-breakpoint
+ALTER TABLE "profiles" ADD CONSTRAINT "profiles_onboarding_state_consistent" CHECK (("profiles"."onboarding_status" = 'not_started' and "profiles"."onboarding_completed_step" = 0) or ("profiles"."onboarding_status" = 'in_progress' and "profiles"."onboarding_completed_step" in (1, 2)) or ("profiles"."onboarding_status" = 'completed' and "profiles"."onboarding_completed_step" = 3));--> statement-breakpoint
+ALTER TABLE "profiles" ADD CONSTRAINT "profiles_completed_requires_minutes" CHECK ("profiles"."onboarding_status" <> 'completed' or "profiles"."weekly_study_minutes" is not null);

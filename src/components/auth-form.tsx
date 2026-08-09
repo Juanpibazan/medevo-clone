@@ -58,7 +58,7 @@ export function AuthForm({ mode }: { mode: "signIn" | "signUp" }) {
           return;
         }
       }
-      router.push(callback);
+      router.push(mode === "signUp" ? `/${locale}/onboarding` : callback);
       router.refresh();
     } finally {
       setPending(false);

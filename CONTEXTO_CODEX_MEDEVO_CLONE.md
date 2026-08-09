@@ -2,7 +2,7 @@
 
 > Documento de arranque para planificar y construir una plataforma fullstack de preparación médica inspirada funcionalmente en MedEvo, con identidad, contenido y código propios.
 >
-> Última actualización del contexto: 7 de agosto de 2026.
+> Última actualización del contexto: 8 de agosto de 2026.
 
 ## 1. Propósito de este documento
 
@@ -16,6 +16,27 @@ Este archivo es la fuente inicial de contexto para Codex. Debe permitir que un a
 6. preserve la seguridad, la trazabilidad médica y los derechos de autor.
 
 Antes de escribir código, Codex debe leer este archivo completo, inspeccionar el repositorio y producir un plan de ejecución. Si existe un `AGENTS.md`, sus instrucciones operativas complementan este documento.
+
+### 1.1 Estado actual del repositorio
+
+El bootstrap técnico y el tramo de identidad/onboarding están implementados. Este estado describe el código existente al 8 de agosto de 2026 y debe verificarse contra el repositorio antes de planificar cambios:
+
+- Next.js 16 con App Router, React 19, TypeScript estricto, Tailwind CSS 4, `src/`, npm y Node.js 24 LTS.
+- Interfaz mobile-first bilingüe desde el inicio, con prefijos obligatorios `pt-BR` y `es`, `next-intl`, Manrope y los tokens de marca de MedCiclo.
+- PostgreSQL 15 en Podman para desarrollo; `pg` mantiene el único pool y Drizzle es el único sistema de esquema y migraciones.
+- Better Auth con email y contraseña, sesiones por cookie y adaptador Drizzle. El registro concede acceso inmediato, sin verificación de correo.
+- Portada, registro, acceso, cierre de sesión, recuperación de contraseña deshabilitada de forma segura, health checks y área autenticada.
+- Aprovisionamiento idempotente del perfil y rol `student`; reparar el aprovisionamiento no modifica preferencias existentes.
+- Onboarding obligatorio, bilingüe y reanudable entre registro y `/app`, con tres pasos guardados incrementalmente: idioma/objetivo Revalida, fecha tentativa opcional y disponibilidad semanal.
+- `/app` protege el acceso y muestra un resumen localizado del perfil una vez completado el onboarding.
+- CI y scripts locales para formato, lint, tipos, migraciones, pruebas unitarias, integración, E2E y build.
+- ADR aceptados para monolito modular, PostgreSQL/`pg`/Drizzle y Better Auth; el ADR de despliegue permanece `proposed` sin proveedor elegido.
+
+El siguiente tramo prioritario del vertical slice inicial es:
+
+> sesión de 10 preguntas → corrección → resultado → cuaderno de errores → revisión programada
+
+No existen todavía tablas ni implementaciones de contenido médico, práctica, aprendizaje, billing, analítica externa o IA.
 
 ## 2. Visión del producto
 
@@ -241,7 +262,7 @@ La implementación debe usar tokens de diseño para colores y tipografía, en lu
 
 ### 6.1 Dentro del MVP
 
-- Autenticación y recuperación de cuenta.
+- Autenticación; la recuperación de cuenta conserva por ahora una respuesta genérica y segura, sin emitir tokens, hasta seleccionar un proveedor de correo.
 - Onboarding: idioma, objetivo Revalida, fecha tentativa y disponibilidad de estudio.
 - Perfil básico y preferencias.
 - Backoffice editorial con roles.
@@ -421,10 +442,23 @@ Los nombres exactos pueden cambiar. El diseño debe preservar las siguientes inv
 ### 9.1 Identidad
 
 - `users`
+- `sessions`
+- `accounts`
+- `verifications`
 - `profiles`
 - `roles`
 - `user_roles`
 - `consents`
+
+El esquema implementado mantiene el objetivo `revalida`, el locale `pt-BR | es`, la fecha tentativa, los minutos semanales y el estado explícito del onboarding. `onboarding_completed_step` representa el mayor paso confirmado:
+
+- `not_started` corresponde al paso `0`;
+- `in_progress` corresponde a los pasos `1` o `2`;
+- `completed` corresponde al paso `3` y exige disponibilidad informada.
+
+El paso pendiente se deriva de ese máximo. La URL puede solicitar un paso anterior desbloqueado para editarlo mientras el onboarding siga incompleto, pero nunca reduce el progreso. Una vez completado, el estado es terminal y los reenvíos antiguos no modifican el perfil.
+
+La fecha se interpreta como calendario estricto `YYYY-MM-DD` en `America/Sao_Paulo`, desde el día actual hasta dos años calendario inclusive. La disponibilidad admite entre 60 y 2.400 minutos semanales, en múltiplos de 30. Estas reglas se validan en dominio y mediante restricciones de base de datos cuando corresponde.
 
 ### 9.2 Exámenes y taxonomía
 
@@ -488,6 +522,12 @@ Invariantes:
 > registro → onboarding → sesión de 10 preguntas → corrección → resultado → cuaderno de errores → revisión programada
 
 Este flujo debe funcionar de extremo a extremo antes de ampliar el producto.
+
+Estado de avance:
+
+- **Completado:** registro, acceso, sesión persistente, cierre de sesión, guards y onboarding de tres pasos con resumen de perfil.
+- **Siguiente entrega:** sesión de 10 preguntas y su modelo mínimo de contenido/práctica.
+- **Pendiente después:** corrección, resultado, cuaderno de errores y revisión programada.
 
 ### 10.2 Publicación editorial
 
@@ -632,18 +672,17 @@ Criterio de salida: calidad clínica y costo por usuario dentro de umbrales defi
 
 ## 16. Orden recomendado de implementación
 
-1. Confirmar decisiones abiertas y crear ADR iniciales.
-2. Definir taxonomía, estados editoriales y versionado.
-3. Diseñar el esquema de datos y las amenazas principales.
-4. Crear autenticación, perfil y roles.
-5. Construir el backoffice editorial mínimo.
-6. Implementar filtros, conteos y generación de sesión.
-7. Implementar práctica, autosave y verificación.
-8. Añadir corrección, reporte, favoritos y marcas.
-9. Construir resultados y cuaderno de errores.
-10. Añadir FSRS, flashcards y recomendaciones.
-11. Instrumentar límites freemium, pagos y observabilidad.
-12. Ejecutar piloto cerrado antes de ampliar IA o gamificación.
+1. ~~Crear el bootstrap, ADR iniciales, autenticación, perfil, roles y onboarding.~~ **Completado.**
+2. Cerrar el origen legal del contenido inicial y definir taxonomía, estados editoriales y versionado.
+3. Diseñar el esquema mínimo de contenido y práctica, junto con sus amenazas e invariantes.
+4. Construir el backoffice editorial mínimo necesario para producir preguntas propias o licenciadas.
+5. Implementar la sesión de 10 preguntas con versiones congeladas, autosave e idempotencia.
+6. Añadir verificación, corrección, reporte, favoritos y marcas metacognitivas.
+7. Construir resultados y cuaderno de errores.
+8. Añadir revisión programada; incorporar FSRS y flashcards solo con el alcance aprobado.
+9. Implementar filtros, conteos y generación ampliada de sesiones.
+10. Instrumentar observabilidad, límites freemium y pagos cuando sus proveedores estén decididos.
+11. Ejecutar piloto cerrado antes de ampliar IA o gamificación.
 
 ## 17. Estrategia de pruebas
 
@@ -656,6 +695,8 @@ Criterio de salida: calidad clínica y costo por usuario dentro de umbrales defi
 - Rendimiento: consultas de filtros/conteos y creación de sesiones con un volumen representativo.
 
 Cada feature debe incluir pruebas relevantes y comandos de verificación reproducibles.
+
+El slice de onboarding quedó cubierto por pruebas unitarias de dominio/servicio, componentes accesibles, integración con PostgreSQL real y E2E en viewports Pixel 5 y 320 px. La verificación del 8 de agosto de 2026 pasó formato, lint, tipos, comprobación y aplicación de migraciones, 22 pruebas unitarias/de componentes, 6 de integración, 12 E2E, build y Axe en los tres pasos y el resumen. PostgreSQL quedó saludable y una revisión independiente de Seguridad/QA no encontró defectos bloqueantes. Estos conteos son una fotografía de esa entrega, no sustituyen ejecutar nuevamente la suite tras cambios futuros.
 
 ## 18. Criterios de aceptación esenciales
 
@@ -672,38 +713,47 @@ Cada feature debe incluir pruebas relevantes y comandos de verificación reprodu
 
 ## 19. Decisiones abiertas que Codex no debe inventar
 
+### 19.1 Decisiones ya cerradas
+
+- Autenticación: Better Auth con email/contraseña, adaptador Drizzle, acceso inmediato y correo no verificado por ahora.
+- Idiomas: interfaz bilingüe `pt-BR` y `es` desde el inicio; `pt-BR` es el fallback.
+- Onboarding: obligatorio, reanudable, objetivo Revalida fijo y perfil como fuente canónica del locale para usuarios autenticados.
+- Persistencia: PostgreSQL 15, un único pool `pg` y Drizzle como único sistema de esquema/migraciones.
+- Desarrollo local: solo PostgreSQL se ejecuta en Podman; Next.js corre con Node local.
+
+### 19.2 Decisiones que siguen abiertas
+
 Antes de cerrar la arquitectura o implementar las áreas afectadas, presentar opciones y obtener decisión del propietario:
 
 1. País de constitución, mercado de cobro inicial y proveedor de pagos.
-2. Proveedor de autenticación o implementación propia.
-3. Hosting y servicios administrados.
+2. Hosting y servicios administrados.
+3. Proveedor de correo transaccional y política de verificación/recuperación de cuenta.
 4. Fuente y licenciamiento de las primeras preguntas.
 5. Composición exacta del equipo editorial y política de doble revisión.
 6. Modelo freemium, cuotas y precio.
 7. Fecha objetivo del piloto.
-8. Portugués únicamente en MVP o interfaz bilingüe desde el inicio.
-9. Alcance exacto de flashcards/FSRS en la primera entrega.
-10. Proveedor de analítica y política de consentimiento.
-11. Activación, proveedor y presupuesto de IA.
+8. Alcance exacto de flashcards/FSRS en la primera entrega.
+9. Proveedor de analítica y política de consentimiento.
+10. Activación, proveedor y presupuesto de IA.
 
 Para avanzar sin una decisión, Codex puede crear una interfaz, stub o ADR con estado `proposed`; no debe acoplar el sistema a una elección irreversible.
 
-## 20. Primer encargo recomendado para Codex
+## 20. Próximo encargo recomendado para Codex
 
 Usar Plan mode y enviar:
 
 ```text
 Lee completamente CONTEXTO_CODEX_MEDEVO_CLONE.md y cualquier AGENTS.md del repositorio. Inspecciona el estado actual sin modificar archivos. Después:
 
-1. resume las decisiones firmes, hipótesis y decisiones abiertas;
-2. propón la arquitectura inicial y señala cualquier cambio respecto al brief;
-3. diseña un plan por hitos para construir primero el vertical slice registro → 10 preguntas → resultado → revisión;
-4. enumera los archivos y módulos que crearías;
-5. define esquema inicial, límites de seguridad, pruebas y criterios de aceptación;
-6. hazme únicamente las preguntas bloqueantes;
-7. espera mi aprobación antes de instalar dependencias o implementar.
+1. revisa el bootstrap y onboarding ya implementados, sin redefinir sus contratos;
+2. propón el modelo mínimo de contenido versionado y práctica para una sesión de 10 preguntas;
+3. preserva `question_version_id`, idempotencia, autosave, propiedad del recurso y no exposición de la respuesta correcta;
+4. define el origen legal y el fixture mínimo de preguntas necesario para probar el flujo sin copiar contenido de terceros;
+5. enumera módulos, migraciones, contratos, amenazas, pruebas y criterios de aceptación;
+6. identifica qué parte mínima del backoffice editorial debe preceder o acompañar este slice;
+7. hazme únicamente las preguntas bloqueantes y espera aprobación antes de implementar.
 
-No copies contenido ni diseño propietario de MedEvo. No incluyas funciones fuera del MVP. Si delegas, usa subagentes solo para tareas independientes y devuelve una síntesis unificada.
+No copies contenido ni diseño propietario de MedEvo. No incluyas pagos, IA, gamificación ni funciones fuera del MVP. Si delegas, usa subagentes solo para tareas independientes y devuelve una síntesis unificada.
 ```
 
 ## 21. Forma de trabajo esperada de Codex
@@ -721,7 +771,7 @@ No copies contenido ni diseño propietario de MedEvo. No incluyas funciones fuer
 
 ## 22. Definición de “hecho” para el arranque del proyecto
 
-El bootstrap inicial estará completo cuando existan:
+El bootstrap inicial se considera completo al 8 de agosto de 2026. Existen:
 
 - repositorio Git y estrategia de ramas;
 - `README.md` con setup reproducible;
@@ -732,8 +782,10 @@ El bootstrap inicial estará completo cuando existan:
 - PostgreSQL y migración inicial;
 - CI con format/lint/typecheck/tests/build;
 - observabilidad mínima;
-- primer vertical slice planificado con tickets y criterios de aceptación;
+- identidad y onboarding implementados como primer tramo del vertical slice, con el tramo de práctica identificado como siguiente prioridad;
 - ninguna dependencia crítica de contenido o infraestructura escondida.
+
+La observabilidad actual es deliberadamente mínima: health checks de vida y preparación sin exponer configuración ni errores internos. Antes de producción siguen pendientes proveedor de hosting, monitoreo operativo, backups/restauración, correo transaccional, rate limiting y revisión específica de privacidad/seguridad.
 
 ## 23. Riesgos principales
 

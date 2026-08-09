@@ -24,7 +24,7 @@ describe("student provisioning", () => {
         .from(userRoles)
         .where(eq(userRoles.userId, id));
       expect(profile).toHaveLength(1);
-      expect(profile[0]?.locale).toBe("pt-BR");
+      expect(profile[0]?.locale).toBe("es");
       expect(assignments).toEqual([
         expect.objectContaining({ roleCode: "student" }),
       ]);

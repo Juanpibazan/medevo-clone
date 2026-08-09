@@ -11,13 +11,7 @@ export async function ensureStudentProvisioning(
       .insert(roles)
       .values({ code: "student", description: "Student" })
       .onConflictDoNothing();
-    await tx
-      .insert(profiles)
-      .values({ userId, locale })
-      .onConflictDoUpdate({
-        target: profiles.userId,
-        set: { locale, updatedAt: new Date() },
-      });
+    await tx.insert(profiles).values({ userId, locale }).onConflictDoNothing();
     await tx
       .insert(userRoles)
       .values({ userId, roleCode: "student" })

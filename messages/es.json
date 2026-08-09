@@ -7,13 +7,15 @@
     "home": "Ir al inicio",
     "logoAlt": "MedCiclo",
     "label": "Navegación principal",
+    "studentLabel": "Navegación del estudiante",
     "signIn": "Ingresar",
     "signUp": "Crear cuenta"
   },
   "language": {
     "label": "Cambiar idioma",
     "portuguese": "PT",
-    "spanish": "ES"
+    "spanish": "ES",
+    "error": "No pudimos guardar el idioma. Inténtalo de nuevo."
   },
   "home": {
     "eyebrow": "Preparación enfocada en Revalida",
@@ -59,8 +61,59 @@
   "app": {
     "eyebrow": "Área del estudiante",
     "title": "Hola, {name}",
-    "intro": "Tu cuenta está lista. El onboarding y las sesiones de estudio llegarán en el próximo ciclo de desarrollo.",
+    "intro": "Tu preparación quedó configurada con estas preferencias.",
     "signOut": "Cerrar sesión",
-    "signingOut": "Cerrando sesión…"
+    "signingOut": "Cerrando sesión…",
+    "exam": "Objetivo",
+    "revalida": "Revalida",
+    "date": "Fecha tentativa",
+    "dateUnknown": "Aún no definida",
+    "weeklyTime": "Tiempo semanal",
+    "hours": "{hours} h por semana",
+    "language": "Idioma preferido",
+    "locales": { "pt-BR": "Portugués (Brasil)", "es": "Español" }
+  },
+  "onboarding": {
+    "progressLabel": "Progreso de configuración",
+    "steps": { "1": "Objetivo e idioma", "2": "Fecha", "3": "Disponibilidad" },
+    "eyebrow": "Paso {step} de 3",
+    "step1": {
+      "title": "Prepara tu experiencia",
+      "intro": "Confirma tu objetivo y el idioma que quieres usar.",
+      "legend": "Objetivo e idioma",
+      "examLabel": "Tu examen",
+      "examValue": "Revalida",
+      "locales": { "pt-BR": "Portugués (Brasil)", "es": "Español" }
+    },
+    "step2": {
+      "title": "¿Cuándo planeas presentar?",
+      "intro": "Una fecha tentativa nos ayuda a ordenar tu preparación. Si aún no la conoces, indícalo.",
+      "legend": "Fecha tentativa del examen",
+      "known": "Ya tengo una fecha",
+      "unknown": "Aún no lo sé",
+      "dateLabel": "Fecha tentativa",
+      "dateHelp": "Elige una fecha entre hoy y los próximos dos años."
+    },
+    "step3": {
+      "title": "¿Cuánto tiempo tienes por semana?",
+      "intro": "Usaremos esta disponibilidad para construir sesiones realistas.",
+      "legend": "Disponibilidad semanal",
+      "hours": "{hours} horas",
+      "custom": "Otro tiempo",
+      "customLabel": "Horas por semana",
+      "customHelp": "Entre 1 y 40 horas, en intervalos de media hora."
+    },
+    "continue": "Continuar",
+    "finish": "Finalizar configuración",
+    "saving": "Guardando…",
+    "back": "Atrás",
+    "errors": {
+      "invalid_fields": "Revisa los campos y vuelve a intentarlo.",
+      "invalid_date": "Introduce una fecha válida.",
+      "date_out_of_range": "La fecha debe estar entre hoy y los próximos dos años.",
+      "invalid_hours": "Introduce entre 1 y 40 horas, en intervalos de media hora.",
+      "invalid_sequence": "Este paso todavía no está disponible. Recarga para continuar.",
+      "invalid_profile": "Revisa la fecha y la disponibilidad antes de finalizar."
+    }
   }
 }

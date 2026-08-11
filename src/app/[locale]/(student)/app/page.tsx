@@ -9,6 +9,13 @@ import {
   type SupportedLocale,
 } from "@/modules/identity";
 import { StudentHeader } from "@/components/student-header";
+import { learningService } from "@/modules/learning";
+import { practiceService } from "@/modules/practice";
+import {
+  startPracticeSessionAction,
+  startReviewSessionAction,
+} from "./practice-actions";
+
 export default async function AppPage({
   params,
 }: {
@@ -20,9 +27,11 @@ export default async function AppPage({
     redirect(
       `/${locale}/entrar?callbackUrl=${encodeURIComponent(`/${locale}/app`)}`,
     );
+
   await ensureStudentProvisioning(session.user.id, locale);
   const profile = await profileService.getProfile(session.user.id);
   if (!profile) throw new Error("Student profile provisioning failed");
+
   if (profile.onboardingStatus !== "completed") {
     const onboardingLocale =
       profile.onboardingCompletedStep === 0 ? locale : profile.locale;
@@ -30,21 +39,40 @@ export default async function AppPage({
       `/${onboardingLocale}/onboarding?step=${pendingOnboardingStep(profile)}`,
     );
   }
+
   if (profile.locale !== locale) redirect(`/${profile.locale}/app`);
+
   const t = await getTranslations("app");
+  const tDashboard = await getTranslations("dashboard");
+
+  const dueQuestions = await learningService.getDueQuestions(
+    session.user.id,
+    100,
+  );
+  const dueCount = dueQuestions.length;
+
+  const roles = await profileService.getUserRoles(session.user.id);
+  const isEditorOrAdmin =
+    roles.includes("medical_editor") || roles.includes("admin");
+
+  const activeSession = await practiceService.getActiveSession(session.user.id);
+
   const date = profile.tentativeExamDate
     ? new Intl.DateTimeFormat(locale, {
         dateStyle: "long",
         timeZone: "UTC",
       }).format(new Date(`${profile.tentativeExamDate}T12:00:00Z`))
     : t("dateUnknown");
+
   const hours = new Intl.NumberFormat(locale, {
     maximumFractionDigits: 1,
   }).format((profile.weeklyStudyMinutes ?? 0) / 60);
+
   return (
     <main className="shell">
       <StudentHeader />
-      <section className="auth-wrap">
+      <section className="auth-wrap flex flex-col gap-6">
+        {/* Profile Card */}
         <div className="card app-panel">
           <p className="eyebrow">{t("eyebrow")}</p>
           <h1>{t("title", { name: session.user.name })}</h1>
@@ -67,6 +95,122 @@ export default async function AppPage({
               <dd>{t(`locales.${profile.locale}`)}</dd>
             </div>
           </dl>
+        </div>
+
+        {/* Practice and Spaced Repetition Panel */}
+        <div className="card app-panel">
+          <h2 className="mb-4 text-xl font-bold text-[#102A43]">
+            Ciclo de Práctica y Revisión
+          </h2>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            {/* Practice Card */}
+            <div className="flex flex-col justify-between rounded-xl border border-slate-100 bg-gradient-to-br from-slate-50 to-white p-5 shadow-sm transition-all hover:scale-[1.01] hover:shadow-md">
+              <div>
+                <h3 className="mb-2 text-lg font-semibold text-[#102A43]">
+                  {tDashboard("startPractice")}
+                </h3>
+                <p className="mb-4 text-sm text-slate-500">
+                  Resuelve 10 preguntas aleatorias de Revalida para mantener tu
+                  ritmo diario.
+                </p>
+              </div>
+              {activeSession ? (
+                <div className="flex flex-col gap-2">
+                  <a
+                    href={`/${locale}/app/practice/${activeSession.id}`}
+                    className="block w-full cursor-pointer rounded-lg bg-[#13A89E] px-4 py-2.5 text-center text-sm font-semibold text-white transition-colors hover:bg-[#0f8e85]"
+                  >
+                    {tDashboard("resumePractice")}
+                  </a>
+                  <form
+                    action={async () => {
+                      "use server";
+                      await startPracticeSessionAction(locale);
+                    }}
+                  >
+                    <button
+                      type="submit"
+                      className="block w-full cursor-pointer rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 text-center text-xs font-semibold transition-colors"
+                    >
+                      {tDashboard("startNewPractice")}
+                    </button>
+                  </form>
+                </div>
+              ) : (
+                <form
+                  action={async () => {
+                    "use server";
+                    await startPracticeSessionAction(locale);
+                  }}
+                >
+                  <button
+                    type="submit"
+                    className="block w-full cursor-pointer rounded-lg bg-[#13A89E] px-4 py-2.5 text-center text-sm font-medium text-white transition-colors hover:bg-[#0f8e85]"
+                  >
+                    {tDashboard("startPractice")}
+                  </button>
+                </form>
+              )}
+            </div>
+
+            {/* Review Card */}
+            <div className="flex flex-col justify-between rounded-xl border border-slate-100 bg-gradient-to-br from-slate-50 to-white p-5 shadow-sm transition-all hover:scale-[1.01] hover:shadow-md">
+              <div>
+                <h3 className="mb-2 text-lg font-semibold text-[#102A43]">
+                  {tDashboard("startReview")}
+                </h3>
+                <p className="mb-4 text-sm text-slate-500">
+                  {dueCount > 0
+                    ? tDashboard("reviewsDue", { count: dueCount })
+                    : tDashboard("noReviewsDue")}
+                </p>
+              </div>
+              <form
+                action={async () => {
+                  "use server";
+                  await startReviewSessionAction(locale);
+                }}
+              >
+                <button
+                  type="submit"
+                  disabled={dueCount === 0}
+                  className={`block w-full cursor-pointer rounded-lg px-4 py-2.5 text-center text-sm font-medium transition-colors ${
+                    dueCount > 0
+                      ? "bg-[#102A43] text-white hover:bg-[#1a3f60]"
+                      : "cursor-not-allowed bg-slate-200 text-slate-400"
+                  }`}
+                >
+                  {tDashboard("startReview")}
+                </button>
+              </form>
+            </div>
+          </div>
+
+          {/* Quick Access links */}
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 pt-6 text-sm">
+            <div className="flex gap-4">
+              <a
+                href={`/${locale}/app/errors`}
+                className="font-medium text-[#13A89E] transition-colors hover:text-[#0f8e85]"
+              >
+                {tDashboard("viewErrors")}
+              </a>
+              <a
+                href={`/${locale}/app/errors?tab=favorites`}
+                className="font-medium text-[#13A89E] transition-colors hover:text-[#0f8e85]"
+              >
+                {tDashboard("viewFavorites")}
+              </a>
+            </div>
+            {isEditorOrAdmin && (
+              <a
+                href={`/${locale}/app/backoffice`}
+                className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-800 transition-all hover:bg-amber-100"
+              >
+                {tDashboard("adminBackoffice")}
+              </a>
+            )}
+          </div>
         </div>
       </section>
     </main>

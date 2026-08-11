@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/db/client";
-import { profiles } from "@/db/schema";
+import { profiles, userRoles } from "@/db/schema";
 import type {
   ProfilePatch,
   ProfileRepository,
@@ -31,6 +31,14 @@ export class DrizzleProfileRepository implements ProfileRepository {
       .where(eq(profiles.userId, userId))
       .limit(1);
     return row ? toProfile(row) : null;
+  }
+
+  async getUserRoles(userId: string): Promise<string[]> {
+    const rows = await db
+      .select({ roleCode: userRoles.roleCode })
+      .from(userRoles)
+      .where(eq(userRoles.userId, userId));
+    return rows.map((r) => r.roleCode);
   }
 
   async updateLocked<T>(

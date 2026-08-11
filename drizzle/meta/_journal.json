@@ -15,6 +15,13 @@
       "when": 1786233151732,
       "tag": "0001_material_the_watchers",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1786401263914,
+      "tag": "0002_late_bulldozer",
+      "breakpoints": true
     }
   ]
 }

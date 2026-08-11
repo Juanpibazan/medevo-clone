@@ -115,5 +115,63 @@
       "invalid_sequence": "Este paso todavía no está disponible. Recarga para continuar.",
       "invalid_profile": "Revisa la fecha y la disponibilidad antes de finalizar."
     }
+  },
+  "dashboard": {
+    "reviewsDue": "Tienes {count} revisiones pendientes para hoy.",
+    "noReviewsDue": "No tienes revisiones pendientes para hoy. ¡Buen trabajo!",
+    "startPractice": "Iniciar Práctica (10 Preguntas)",
+    "resumePractice": "Reanudar Práctica en Progreso",
+    "startNewPractice": "Iniciar Nueva Práctica",
+    "startReview": "Iniciar Revisión Programada",
+    "viewErrors": "Ver Cuaderno de Errores",
+    "viewFavorites": "Ver Favoritos",
+    "adminBackoffice": "Administración / Backoffice"
+  },
+  "practice": {
+    "question": "Pregunta",
+    "of": "de",
+    "time": "Tiempo",
+    "verify": "Verificar respuesta",
+    "next": "Siguiente pregunta",
+    "finish": "Finalizar práctica",
+    "correct": "¡Correcto!",
+    "incorrect": "Incorrecto",
+    "explanation": "Explicación canónica",
+    "metacognitiveTitle": "¿Cómo evalúas tu desempeño en esta pregunta?",
+    "domine": "Dominé",
+    "duda": "Duda",
+    "vacile": "Vacilé",
+    "no_sabia": "No sabía",
+    "favorite": "Marcar como favorita",
+    "resultsTitle": "Resultados de la sesión",
+    "precision": "Precisión",
+    "timeTaken": "Tiempo empleado",
+    "backToDashboard": "Volver al inicio",
+    "viewErrorNotebook": "Ver Cuaderno de Errores"
+  },
+  "errors": {
+    "title": "Cuaderno de Errores",
+    "subtitle": "Aquí encontrarás las preguntas que has respondido de forma incorrecta. Resuélvelas correctamente para sacarlas de este cuaderno.",
+    "favoritesTitle": "Mis Preguntas Favoritas",
+    "emptyErrors": "No tienes errores registrados actualmente. ¡Sigue así!",
+    "emptyFavorites": "No tienes preguntas marcadas como favoritas.",
+    "resolveButton": "Resolver"
+  },
+  "backoffice": {
+    "title": "Panel Editorial",
+    "subtitle": "Crea y publica preguntas en el banco de MedCiclo.",
+    "listTitle": "Preguntas registradas",
+    "createTitle": "Crear nueva pregunta",
+    "qTitle": "Título de la pregunta",
+    "statement": "Enunciado de la pregunta",
+    "explanation": "Explicación canónica",
+    "taxonomy": "Taxonomía (Nodo ID)",
+    "alternatives": "Alternativas",
+    "altText": "Texto de la alternativa {letter}",
+    "isCorrect": "Es la alternativa correcta",
+    "save": "Guardar y Publicar",
+    "status": "Estado",
+    "version": "Versión",
+    "noQuestions": "No hay preguntas registradas."
   }
 }

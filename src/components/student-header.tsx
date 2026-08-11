@@ -11,7 +11,7 @@ export async function StudentHeader({
   const t = await getTranslations("nav");
   return (
     <header className="site-header">
-      <Link href="/" aria-label={t("home")}>
+      <Link href="/app" aria-label={t("home")}>
         <Brand alt={t("logoAlt")} />
       </Link>
       <nav className="nav-actions" aria-label={t("studentLabel")}>

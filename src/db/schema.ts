@@ -1,4 +1,5 @@
 import {
+  AnyPgColumn,
   boolean,
   check,
   date,
@@ -6,6 +7,7 @@ import {
   pgEnum,
   pgTable,
   primaryKey,
+  real,
   smallint,
   text,
   timestamp,
@@ -169,3 +171,162 @@ export const consents = pgTable(
     ),
   ],
 );
+
+export const taxonomyLevelEnum = pgEnum("taxonomy_level", [
+  "specialty",
+  "theme",
+  "focus",
+  "subfocus",
+]);
+
+export const questionStatusEnum = pgEnum("question_status", [
+  "draft",
+  "in_review",
+  "published",
+  "annulled",
+]);
+
+export const sessionStatusEnum = pgEnum("session_status", [
+  "in_progress",
+  "completed",
+]);
+
+export const metacognitiveMarkEnum = pgEnum("metacognitive_mark", [
+  "domine",
+  "duda",
+  "vacile",
+  "no_sabia",
+]);
+
+export const taxonomyNodes = pgTable("taxonomy_nodes", {
+  id: text("id").primaryKey(),
+  parentId: text("parent_id").references((): AnyPgColumn => taxonomyNodes.id, {
+    onDelete: "cascade",
+  }),
+  name: text("name").notNull(),
+  level: taxonomyLevelEnum("level").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const questions = pgTable("questions", {
+  id: text("id").primaryKey(),
+  publishedVersionId: text("published_version_id").references(
+    (): AnyPgColumn => questionVersions.id,
+    { onDelete: "set null" },
+  ),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const questionVersions = pgTable("question_versions", {
+  id: text("id").primaryKey(),
+  questionId: text("question_id")
+    .notNull()
+    .references((): AnyPgColumn => questions.id, { onDelete: "cascade" }),
+  versionNumber: integer("version_number").notNull(),
+  status: questionStatusEnum("status").notNull().default("draft"),
+  title: text("title").notNull(),
+  statement: text("statement").notNull(),
+  explanation: text("explanation").notNull(),
+  taxonomyNodeId: text("taxonomy_node_id")
+    .notNull()
+    .references(() => taxonomyNodes.id, { onDelete: "restrict" }),
+  createdBy: text("created_by")
+    .notNull()
+    .references(() => users.id, { onDelete: "restrict" }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const questionAlternatives = pgTable("question_alternatives", {
+  id: text("id").primaryKey(),
+  questionVersionId: text("question_version_id")
+    .notNull()
+    .references(() => questionVersions.id, { onDelete: "cascade" }),
+  optionLetter: text("option_letter").notNull(),
+  text: text("text").notNull(),
+  isCorrect: boolean("is_correct").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const studySessions = pgTable("study_sessions", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  status: sessionStatusEnum("status").notNull().default("in_progress"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
+});
+
+export const studySessionItems = pgTable("study_session_items", {
+  id: text("id").primaryKey(),
+  sessionId: text("session_id")
+    .notNull()
+    .references(() => studySessions.id, { onDelete: "cascade" }),
+  questionVersionId: text("question_version_id")
+    .notNull()
+    .references(() => questionVersions.id, { onDelete: "restrict" }),
+  position: integer("position").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const responses = pgTable("responses", {
+  id: text("id").primaryKey(),
+  sessionItemId: text("session_item_id")
+    .notNull()
+    .unique()
+    .references(() => studySessionItems.id, { onDelete: "cascade" }),
+  selectedAlternativeId: text("selected_alternative_id").references(
+    () => questionAlternatives.id,
+    { onDelete: "set null" },
+  ),
+  isCorrect: boolean("is_correct"),
+  timeTakenSeconds: integer("time_taken_seconds").notNull().default(0),
+  metacognitiveMark: metacognitiveMarkEnum("metacognitive_mark"),
+  isFavorite: boolean("is_favorite").notNull().default(false),
+  verifiedAt: timestamp("verified_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const reviewQueue = pgTable("review_queue", {
+  id: text("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  questionId: text("question_id")
+    .notNull()
+    .references(() => questions.id, { onDelete: "cascade" }),
+  stability: real("stability").notNull(),
+  difficulty: real("difficulty").notNull(),
+  elapsedDays: integer("elapsed_days").notNull(),
+  scheduledDays: integer("scheduled_days").notNull(),
+  repetition: integer("repetition").notNull(),
+  state: integer("state").notNull(),
+  lastReviewAt: timestamp("last_review_at", { withTimezone: true }),
+  nextReviewAt: timestamp("next_review_at", { withTimezone: true }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});

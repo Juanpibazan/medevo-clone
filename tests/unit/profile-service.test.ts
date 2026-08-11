@@ -14,6 +14,9 @@ class MemoryProfiles implements ProfileRepository {
   async findByUserId() {
     return { ...this.profile };
   }
+  async getUserRoles() {
+    return ["student"];
+  }
   async updateLocked<T>(
     _userId: string,
     mutate: (profile: StudentProfile) => { patch: ProfilePatch; result: T },

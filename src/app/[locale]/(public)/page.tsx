@@ -1,7 +1,21 @@
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { SiteHeader } from "@/components/site-header";
-export default async function HomePage() {
+import { auth, type SupportedLocale } from "@/modules/identity";
+
+export default async function HomePage({
+  params,
+}: {
+  params: Promise<{ locale: SupportedLocale }>;
+}) {
+  const { locale } = await params;
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (session) {
+    redirect(`/${locale}/app`);
+  }
+
   const t = await getTranslations("home");
   return (
     <main className="shell">

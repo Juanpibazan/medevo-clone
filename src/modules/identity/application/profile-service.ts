@@ -19,6 +19,7 @@ export type ProfilePatch = Partial<
 >;
 export interface ProfileRepository {
   findByUserId(userId: string): Promise<StudentProfile | null>;
+  getUserRoles(userId: string): Promise<string[]>;
   updateLocked<T>(
     userId: string,
     mutate: (profile: StudentProfile) => { patch: ProfilePatch; result: T },
@@ -46,6 +47,9 @@ export class ProfileService {
   ) {}
   getProfile(userId: string) {
     return this.repository.findByUserId(userId);
+  }
+  getUserRoles(userId: string) {
+    return this.repository.getUserRoles(userId);
   }
 
   async saveLanguage(

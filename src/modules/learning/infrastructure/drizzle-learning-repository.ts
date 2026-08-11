@@ -132,7 +132,9 @@ export class DrizzleLearningRepository implements LearningRepository {
     `;
 
     const result = await db.execute(query);
-    return result.rows.map((row: Record<string, unknown>) => row.question_id as string);
+    return result.rows.map(
+      (row: Record<string, unknown>) => row.question_id as string,
+    );
   }
 
   /**
@@ -155,6 +157,8 @@ export class DrizzleLearningRepository implements LearningRepository {
     `;
 
     const result = await db.execute(query);
-    return result.rows.map((row: Record<string, unknown>) => row.question_id as string);
+    return result.rows.map(
+      (row: Record<string, unknown>) => row.question_id as string,
+    );
   }
 }

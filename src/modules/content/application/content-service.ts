@@ -14,16 +14,12 @@ export interface ContentRepository {
       alternatives: Alternative[];
     }>
   >;
-  getQuestionVersion(
-    versionId: string,
-  ): Promise<{
+  getQuestionVersion(versionId: string): Promise<{
     question: Question;
     version: QuestionVersion;
     alternatives: Alternative[];
   } | null>;
-  getQuestionWithActiveVersion(
-    questionId: string,
-  ): Promise<{
+  getQuestionWithActiveVersion(questionId: string): Promise<{
     question: Question;
     activeVersion: QuestionVersion;
     alternatives: Alternative[];

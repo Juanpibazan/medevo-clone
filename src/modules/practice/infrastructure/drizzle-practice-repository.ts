@@ -2,13 +2,19 @@ import { eq, and, asc, inArray } from "drizzle-orm";
 import { db } from "@/db/client";
 import { studySessions, studySessionItems, responses } from "@/db/schema";
 import type { PracticeRepository } from "../application/practice-service";
-import type { Response, StudySession, StudySessionItem, SessionStatus, MetacognitiveMark } from "../domain/practice";
+import type {
+  Response,
+  StudySession,
+  StudySessionItem,
+  SessionStatus,
+  MetacognitiveMark,
+} from "../domain/practice";
 
 export class DrizzlePracticeRepository implements PracticeRepository {
   async createSession(
     sessionId: string,
     userId: string,
-    items: Array<{ id: string; questionVersionId: string; position: number }>
+    items: Array<{ id: string; questionVersionId: string; position: number }>,
   ): Promise<StudySession> {
     return db.transaction(async (tx) => {
       const now = new Date();
@@ -48,7 +54,7 @@ export class DrizzlePracticeRepository implements PracticeRepository {
 
   async getSession(
     sessionId: string,
-    userId: string
+    userId: string,
   ): Promise<{
     session: StudySession;
     items: Array<
@@ -61,7 +67,9 @@ export class DrizzlePracticeRepository implements PracticeRepository {
     const [sess] = await db
       .select()
       .from(studySessions)
-      .where(and(eq(studySessions.id, sessionId), eq(studySessions.userId, userId)))
+      .where(
+        and(eq(studySessions.id, sessionId), eq(studySessions.userId, userId)),
+      )
       .limit(1);
 
     if (!sess) return null;
@@ -107,7 +115,8 @@ export class DrizzlePracticeRepository implements PracticeRepository {
               selectedAlternativeId: resp.selectedAlternativeId,
               isCorrect: resp.isCorrect,
               timeTakenSeconds: resp.timeTakenSeconds,
-              metacognitiveMark: resp.metacognitiveMark as MetacognitiveMark | null,
+              metacognitiveMark:
+                resp.metacognitiveMark as MetacognitiveMark | null,
               isFavorite: resp.isFavorite,
               verifiedAt: resp.verifiedAt,
               createdAt: resp.createdAt,
@@ -132,7 +141,7 @@ export class DrizzlePracticeRepository implements PracticeRepository {
   async saveResponse(
     responseId: string,
     sessionItemId: string,
-    patch: Partial<Response>
+    patch: Partial<Response>,
   ): Promise<Response> {
     return db.transaction(async (tx) => {
       const [existing] = await tx
@@ -167,7 +176,10 @@ export class DrizzlePracticeRepository implements PracticeRepository {
           valuesToSet.verifiedAt = patch.verifiedAt;
         }
 
-        await tx.update(responses).set(valuesToSet).where(eq(responses.id, existing.id));
+        await tx
+          .update(responses)
+          .set(valuesToSet)
+          .where(eq(responses.id, existing.id));
       } else {
         // Insert
         await tx.insert(responses).values({
@@ -233,7 +245,12 @@ export class DrizzlePracticeRepository implements PracticeRepository {
     const [sess] = await db
       .select()
       .from(studySessions)
-      .where(and(eq(studySessions.userId, userId), eq(studySessions.status, "in_progress")))
+      .where(
+        and(
+          eq(studySessions.userId, userId),
+          eq(studySessions.status, "in_progress"),
+        ),
+      )
       .limit(1);
 
     if (!sess) return null;

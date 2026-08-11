@@ -10,10 +10,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { sessionId, itemId, alternativeId, elapsedSeconds } = await req.json();
+    const { sessionId, itemId, alternativeId, elapsedSeconds } =
+      await req.json();
 
-    if (!sessionId || !itemId || !alternativeId || elapsedSeconds === undefined) {
-      return NextResponse.json({ error: "Missing parameters" }, { status: 400 });
+    if (
+      !sessionId ||
+      !itemId ||
+      !alternativeId ||
+      elapsedSeconds === undefined
+    ) {
+      return NextResponse.json(
+        { error: "Missing parameters" },
+        { status: 400 },
+      );
     }
 
     await practiceService.saveDraftResponse(
@@ -21,7 +30,7 @@ export async function POST(req: Request) {
       itemId,
       session.user.id,
       alternativeId,
-      elapsedSeconds
+      elapsedSeconds,
     );
 
     return NextResponse.json({ success: true });

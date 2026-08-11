@@ -10,7 +10,8 @@ import * as schema from "./schema";
 import { eq } from "drizzle-orm";
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString:
+    process.env.MIGRATION_DATABASE_URL || process.env.DATABASE_URL,
 });
 const db = drizzle(pool, { schema });
 

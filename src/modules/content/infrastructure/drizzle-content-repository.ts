@@ -30,7 +30,9 @@ export class DrizzleContentRepository implements ContentRepository {
       .from(questions)
       .where(eq(questions.publishedVersionId, questions.publishedVersionId));
 
-    const filtered = activeQuestions.filter((q) => q.publishedVersionId !== null) as Array<
+    const filtered = activeQuestions.filter(
+      (q) => q.publishedVersionId !== null,
+    ) as Array<
       Omit<typeof questions.$inferSelect, "publishedVersionId"> & {
         publishedVersionId: string;
       }
@@ -52,7 +54,9 @@ export class DrizzleContentRepository implements ContentRepository {
 
     return filtered.map((q) => {
       const version = versions.find((v) => v.id === q.publishedVersionId)!;
-      const alts = alternatives.filter((a) => a.questionVersionId === version.id);
+      const alts = alternatives.filter(
+        (a) => a.questionVersionId === version.id,
+      );
       return {
         question: {
           id: q.id,
@@ -84,9 +88,7 @@ export class DrizzleContentRepository implements ContentRepository {
     });
   }
 
-  async getQuestionVersion(
-    versionId: string
-  ): Promise<{
+  async getQuestionVersion(versionId: string): Promise<{
     question: Question;
     version: QuestionVersion;
     alternatives: Alternative[];
@@ -142,9 +144,7 @@ export class DrizzleContentRepository implements ContentRepository {
     };
   }
 
-  async getQuestionWithActiveVersion(
-    questionId: string
-  ): Promise<{
+  async getQuestionWithActiveVersion(questionId: string): Promise<{
     question: Question;
     activeVersion: QuestionVersion;
     alternatives: Alternative[];
@@ -174,8 +174,14 @@ export class DrizzleContentRepository implements ContentRepository {
       QuestionVersion,
       "id" | "questionId" | "versionNumber" | "status" | "createdAt"
     >,
-    alternativesInput: Array<Omit<Alternative, "id" | "questionVersionId" | "createdAt">>
-  ): Promise<{ question: Question; version: QuestionVersion; alternatives: Alternative[] }> {
+    alternativesInput: Array<
+      Omit<Alternative, "id" | "questionVersionId" | "createdAt">
+    >,
+  ): Promise<{
+    question: Question;
+    version: QuestionVersion;
+    alternatives: Alternative[];
+  }> {
     return db.transaction(async (tx) => {
       await tx.insert(questions).values({
         id: questionId,
@@ -208,7 +214,10 @@ export class DrizzleContentRepository implements ContentRepository {
 
       await tx.insert(questionAlternatives).values(altsToInsert);
 
-      const [insertedQ] = await tx.select().from(questions).where(eq(questions.id, questionId));
+      const [insertedQ] = await tx
+        .select()
+        .from(questions)
+        .where(eq(questions.id, questionId));
       const [insertedV] = await tx
         .select()
         .from(questionVersions)
@@ -250,11 +259,16 @@ export class DrizzleContentRepository implements ContentRepository {
     const list = await db.select().from(questions);
     if (list.length === 0) return [];
 
-    const versionIds = list.map((q) => q.publishedVersionId).filter((id): id is string => id !== null);
+    const versionIds = list
+      .map((q) => q.publishedVersionId)
+      .filter((id): id is string => id !== null);
 
     const versions =
       versionIds.length > 0
-        ? await db.select().from(questionVersions).where(inArray(questionVersions.id, versionIds))
+        ? await db
+            .select()
+            .from(questionVersions)
+            .where(inArray(questionVersions.id, versionIds))
         : [];
 
     return list.map((q) => {

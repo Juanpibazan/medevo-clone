@@ -10,12 +10,12 @@ export interface PracticeRepository {
   createSession(
     sessionId: string,
     userId: string,
-    items: Array<{ id: string; questionVersionId: string; position: number }>
+    items: Array<{ id: string; questionVersionId: string; position: number }>,
   ): Promise<StudySession>;
 
   getSession(
     sessionId: string,
-    userId: string
+    userId: string,
   ): Promise<{
     session: StudySession;
     items: Array<
@@ -29,7 +29,7 @@ export interface PracticeRepository {
   saveResponse(
     responseId: string,
     sessionItemId: string,
-    patch: Partial<Response>
+    patch: Partial<Response>,
   ): Promise<Response>;
 
   finishSession(sessionId: string): Promise<StudySession>;
@@ -41,16 +41,14 @@ export interface PracticeRepository {
 export type ScheduleReviewFn = (
   userId: string,
   questionId: string,
-  rating: 1 | 2 | 3 | 4
+  rating: 1 | 2 | 3 | 4,
 ) => Promise<void>;
 
 export class PracticeService {
   constructor(
     private readonly repository: PracticeRepository,
     private readonly contentService: {
-      getQuestionVersion(
-        versionId: string
-      ): Promise<{
+      getQuestionVersion(versionId: string): Promise<{
         question: Question;
         version: QuestionVersion;
         alternatives: Alternative[];
@@ -63,7 +61,7 @@ export class PracticeService {
         }>
       >;
     },
-    private readonly scheduleReviewFn?: ScheduleReviewFn
+    private readonly scheduleReviewFn?: ScheduleReviewFn,
   ) {}
 
   async getActiveSession(userId: string) {
@@ -101,9 +99,13 @@ export class PracticeService {
 
     const mappedItems = await Promise.all(
       data.items.map(async (item) => {
-        const questionData = await this.contentService.getQuestionVersion(item.questionVersionId);
+        const questionData = await this.contentService.getQuestionVersion(
+          item.questionVersionId,
+        );
         if (!questionData) {
-          throw new Error(`Question version ${item.questionVersionId} not found`);
+          throw new Error(
+            `Question version ${item.questionVersionId} not found`,
+          );
         }
 
         const { version, alternatives } = questionData;
@@ -138,7 +140,7 @@ export class PracticeService {
           alternatives: safeAlternatives,
           response: item.response,
         };
-      })
+      }),
     );
 
     return {
@@ -152,7 +154,7 @@ export class PracticeService {
     itemId: string,
     userId: string,
     alternativeId: string,
-    elapsedSeconds: number
+    elapsedSeconds: number,
   ) {
     const data = await this.repository.getSession(sessionId, userId);
     if (!data || data.session.status !== "in_progress") {
@@ -180,7 +182,7 @@ export class PracticeService {
     itemId: string,
     userId: string,
     alternativeId: string,
-    elapsedSeconds: number
+    elapsedSeconds: number,
   ) {
     const data = await this.repository.getSession(sessionId, userId);
     if (!data || data.session.status !== "in_progress") {
@@ -194,7 +196,9 @@ export class PracticeService {
       throw new Error("Response already verified");
     }
 
-    const questionData = await this.contentService.getQuestionVersion(item.questionVersionId);
+    const questionData = await this.contentService.getQuestionVersion(
+      item.questionVersionId,
+    );
     if (!questionData) throw new Error("Question version not found");
 
     const correctAlt = questionData.alternatives.find((a) => a.isCorrect);
@@ -226,7 +230,7 @@ export class PracticeService {
     sessionId: string,
     itemId: string,
     userId: string,
-    mark: "domine" | "duda" | "vacile" | "no_sabia"
+    mark: "domine" | "duda" | "vacile" | "no_sabia",
   ) {
     const data = await this.repository.getSession(sessionId, userId);
     if (!data) throw new Error("Session not found");
@@ -237,13 +241,19 @@ export class PracticeService {
       throw new Error("Cannot save mark before response is verified");
     }
 
-    const response = await this.repository.saveResponse(item.response.id, itemId, {
-      metacognitiveMark: mark,
-      updatedAt: new Date(),
-    });
+    const response = await this.repository.saveResponse(
+      item.response.id,
+      itemId,
+      {
+        metacognitiveMark: mark,
+        updatedAt: new Date(),
+      },
+    );
 
     if (this.scheduleReviewFn && response.isCorrect !== null) {
-      const questionData = await this.contentService.getQuestionVersion(item.questionVersionId);
+      const questionData = await this.contentService.getQuestionVersion(
+        item.questionVersionId,
+      );
       if (questionData) {
         let rating: 1 | 2 | 3 | 4 = 3;
         if (response.isCorrect === false) {
@@ -285,7 +295,9 @@ export class PracticeService {
     const updated = await this.repository.getSession(sessionId, userId);
     if (!updated) throw new Error("Session failed to load");
 
-    const responsesList = updated.items.map((i) => i.response).filter((r): r is Response => r !== null);
+    const responsesList = updated.items
+      .map((i) => i.response)
+      .filter((r): r is Response => r !== null);
     const metrics = calculateSessionResults(responsesList);
 
     return {

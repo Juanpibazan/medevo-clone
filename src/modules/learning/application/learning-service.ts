@@ -23,9 +23,7 @@ export class LearningService {
   constructor(
     private readonly repository: LearningRepository,
     private readonly contentService: {
-      getQuestionWithActiveVersion(
-        questionId: string,
-      ): Promise<{
+      getQuestionWithActiveVersion(questionId: string): Promise<{
         question: Question;
         activeVersion: QuestionVersion;
         alternatives: Alternative[];

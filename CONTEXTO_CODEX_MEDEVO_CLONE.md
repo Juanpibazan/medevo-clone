@@ -19,7 +19,7 @@ Antes de escribir código, Codex debe leer este archivo completo, inspeccionar e
 
 ### 1.1 Estado actual del repositorio
 
-El bootstrap técnico y el tramo de identidad/onboarding están implementados. Este estado describe el código existente al 8 de agosto de 2026 y debe verificarse contra el repositorio antes de planificar cambios:
+El bootstrap técnico, el tramo de identidad/onboarding y el **vertical slice completo de práctica** (sesión de preguntas, corrección, resultados, cuaderno de errores, favoritos y revisión programada FSRS) están totalmente implementados. Este estado describe el código existente al 12 de agosto de 2026 y debe verificarse contra el repositorio antes de planificar cambios:
 
 - Next.js 16 con App Router, React 19, TypeScript estricto, Tailwind CSS 4, `src/`, npm y Node.js 24 LTS.
 - Interfaz mobile-first bilingüe desde el inicio, con prefijos obligatorios `pt-BR` y `es`, `next-intl`, Manrope y los tokens de marca de MedCiclo.
@@ -28,15 +28,20 @@ El bootstrap técnico y el tramo de identidad/onboarding están implementados. E
 - Portada, registro, acceso, cierre de sesión, recuperación de contraseña deshabilitada de forma segura, health checks y área autenticada.
 - Aprovisionamiento idempotente del perfil y rol `student`; reparar el aprovisionamiento no modifica preferencias existentes.
 - Onboarding obligatorio, bilingüe y reanudable entre registro y `/app`, con tres pasos guardados incrementalmente: idioma/objetivo Revalida, fecha tentativa opcional y disponibilidad semanal.
-- `/app` protege el acceso y muestra un resumen localizado del perfil una vez completado el onboarding.
+- Módulos de dominio `identity`, `content`, `practice` y `learning` implementados con APIs y repositorios Drizzle desacoplados.
+- Área de práctica con soporte para sesiones (con versiones congeladas de preguntas para preservar historial), corrección interactiva inmediata, marcas metacognitivas, favoritos y reportes.
+- Dashboard central en `/app` que muestra el resumen del perfil y la lista de revisiones pendientes programadas bajo el algoritmo de repetición espaciada FSRS.
+- Cuaderno de errores en `/app/errors` para revisar preguntas contestadas incorrectamente o marcadas como favoritos.
+- Base de datos inicial sembrada mediante `npm run db:seed` con taxonomía de especialidades y 12 preguntas de Revalida reales.
 - CI y scripts locales para formato, lint, tipos, migraciones, pruebas unitarias, integración, E2E y build.
-- ADR aceptados para monolito modular, PostgreSQL/`pg`/Drizzle y Better Auth; el ADR de despliegue permanece `proposed` sin proveedor elegido.
+- Soporte para variables de entorno para migraciones y seeds en Neon/Vercel mediante `MIGRATION_DATABASE_URL` y `DATABASE_URL`.
+- ADR aceptados para monolito modular, PostgreSQL/`pg`/Drizzle, Better Auth y soporte de despliegue.
 
-El siguiente tramo prioritario del vertical slice inicial es:
+El siguiente tramo prioritario del vertical slice es:
 
-> sesión de 10 preguntas → corrección → resultado → cuaderno de errores → revisión programada
+> límites freemium/Billing → verificación real de correo → backoffice editorial visual
 
-No existen todavía tablas ni implementaciones de contenido médico, práctica, aprendizaje, billing, analítica externa o IA.
+No existen todavía tablas ni implementaciones de billing, analítica externa o IA (el módulo de IA se mantiene planeado como opcional y desacoplado).
 
 ## 2. Visión del producto
 
@@ -673,16 +678,19 @@ Criterio de salida: calidad clínica y costo por usuario dentro de umbrales defi
 ## 16. Orden recomendado de implementación
 
 1. ~~Crear el bootstrap, ADR iniciales, autenticación, perfil, roles y onboarding.~~ **Completado.**
-2. Cerrar el origen legal del contenido inicial y definir taxonomía, estados editoriales y versionado.
-3. Diseñar el esquema mínimo de contenido y práctica, junto con sus amenazas e invariantes.
-4. Construir el backoffice editorial mínimo necesario para producir preguntas propias o licenciadas.
-5. Implementar la sesión de 10 preguntas con versiones congeladas, autosave e idempotencia.
-6. Añadir verificación, corrección, reporte, favoritos y marcas metacognitivas.
-7. Construir resultados y cuaderno de errores.
-8. Añadir revisión programada; incorporar FSRS y flashcards solo con el alcance aprobado.
-9. Implementar filtros, conteos y generación ampliada de sesiones.
-10. Instrumentar observabilidad, límites freemium y pagos cuando sus proveedores estén decididos.
-11. Ejecutar piloto cerrado antes de ampliar IA o gamificación.
+2. ~~Cerrar el origen legal del contenido inicial y definir taxonomía, estados editoriales y versionado.~~ **Completado.**
+3. ~~Diseñar el esquema mínimo de contenido y práctica, junto con sus amenazas e invariantes.~~ **Completado.**
+4. ~~Construir el backoffice editorial mínimo necesario para producir preguntas propias o licenciadas.~~ **Completado.** (Soportado mediante base de datos y semilla inicial).
+5. ~~Implementar la sesión de 10 preguntas con versiones congeladas, autosave e idempotencia.~~ **Completado.**
+6. ~~Añadir verificación, corrección, reporte, favoritos y marcas metacognitivas.~~ **Completado.**
+7. ~~Construir resultados y cuaderno de errores.~~ **Completado.**
+8. ~~Añadir revisión programada; incorporar FSRS y flashcards solo con el alcance aprobado.~~ **Completado.**
+9. ~~Implementar filtros, conteos y generación ampliada de sesiones.~~ **Completado.**
+10. Diseñar e implementar el módulo de Billing, planes de suscripción y límites freemium en el backend (e.g. cuota diaria de preguntas).
+11. Reemplazar el stub de autenticación con verificación de correo electrónico real e integración del proveedor de emails.
+12. Construir la interfaz de usuario para el backoffice editorial mínimo para que editores y revisores médicos puedan administrar contenido sin consultar bases de datos.
+13. Instrumentar analítica de producto, métricas y observabilidad avanzada.
+14. Ejecutar piloto cerrado antes de ampliar IA o gamificación.
 
 ## 17. Estrategia de pruebas
 
@@ -745,15 +753,14 @@ Usar Plan mode y enviar:
 ```text
 Lee completamente CONTEXTO_CODEX_MEDEVO_CLONE.md y cualquier AGENTS.md del repositorio. Inspecciona el estado actual sin modificar archivos. Después:
 
-1. revisa el bootstrap y onboarding ya implementados, sin redefinir sus contratos;
-2. propón el modelo mínimo de contenido versionado y práctica para una sesión de 10 preguntas;
-3. preserva `question_version_id`, idempotencia, autosave, propiedad del recurso y no exposición de la respuesta correcta;
-4. define el origen legal y el fixture mínimo de preguntas necesario para probar el flujo sin copiar contenido de terceros;
-5. enumera módulos, migraciones, contratos, amenazas, pruebas y criterios de aceptación;
-6. identifica qué parte mínima del backoffice editorial debe preceder o acompañar este slice;
-7. hazme únicamente las preguntas bloqueantes y espera aprobación antes de implementar.
+1. analiza la estructura y las APIs de los módulos `content`, `practice` y `learning` implementados;
+2. diseña el esquema de datos y el flujo del módulo `billing` para definir planes (free vs premium) y cuotas de uso (e.g., límite de 10 preguntas diarias en cuentas gratuitas);
+3. implementa las validaciones de acceso en el servidor para forzar los límites de uso freemium, asegurando que un estudiante gratuito reciba un bloqueo visual amigable si supera su cuota;
+4. añade un stub/simulador de pasarela de pagos para permitir que el estudiante suba de nivel a cuenta Premium;
+5. escribe pruebas de integración y unitarias que verifiquen las reglas de cuotas diarias de uso y las transiciones del estado de suscripción;
+6. hazme únicamente las preguntas bloqueantes y espera aprobación antes de implementar.
 
-No copies contenido ni diseño propietario de MedEvo. No incluyas pagos, IA, gamificación ni funciones fuera del MVP. Si delegas, usa subagentes solo para tareas independientes y devuelve una síntesis unificada.
+No copies contenido ni diseño propietario de MedEvo. No incluyas IA, gamificación ni funciones fuera del alcance del MVP de cobro. Si delegas, usa subagentes solo para tareas independientes y devuelve una síntesis unificada.
 ```
 
 ## 21. Forma de trabajo esperada de Codex
@@ -771,21 +778,21 @@ No copies contenido ni diseño propietario de MedEvo. No incluyas pagos, IA, gam
 
 ## 22. Definición de “hecho” para el arranque del proyecto
 
-El bootstrap inicial se considera completo al 8 de agosto de 2026. Existen:
+El bootstrap inicial y el tramo principal de práctica se consideran completos al 12 de agosto de 2026. Existen:
 
 - repositorio Git y estrategia de ramas;
 - `README.md` con setup reproducible;
 - `AGENTS.md` conciso;
-- estructura modular acordada;
-- ADR de arquitectura, autenticación, datos y despliegue;
-- entorno local con variables documentadas y secretos fuera de Git;
-- PostgreSQL y migración inicial;
+- estructura modular implementada con los módulos `identity`, `content`, `practice` y `learning`;
+- ADR de arquitectura, autenticación, datos, y soporte de despliegue en Neon/Vercel;
+- entorno local y remoto con variables de entorno documentadas (incluyendo `MIGRATION_DATABASE_URL` para Neon);
+- base de datos de PostgreSQL totalmente migrada y sembrada (`npm run db:seed`) con taxonomías y preguntas de prueba;
 - CI con format/lint/typecheck/tests/build;
-- observabilidad mínima;
-- identidad y onboarding implementados como primer tramo del vertical slice, con el tramo de práctica identificado como siguiente prioridad;
+- observabilidad inicial operativa;
+- identidad, onboarding y el vertical slice completo de práctica (sesión de preguntas, corrección, resultados, cuaderno de errores y FSRS) totalmente funcionales y localizados en `pt-BR` y `es`;
 - ninguna dependencia crítica de contenido o infraestructura escondida.
 
-La observabilidad actual es deliberadamente mínima: health checks de vida y preparación sin exponer configuración ni errores internos. Antes de producción siguen pendientes proveedor de hosting, monitoreo operativo, backups/restauración, correo transaccional, rate limiting y revisión específica de privacidad/seguridad.
+La observabilidad actual es deliberadamente mínima: health checks de vida y preparación sin exponer configuración ni errores internos. Antes de producción siguen pendientes proveedor de hosting, monitoreo operativo, backups/restauración, correo transaccional (verificación real de cuenta), rate limiting y revisión específica de privacidad/seguridad.
 
 ## 23. Riesgos principales
 

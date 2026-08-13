@@ -173,5 +173,34 @@
     "status": "Status",
     "version": "Versão",
     "noQuestions": "Nenhuma questão cadastrada."
+  },
+  "billing": {
+    "title": "Assinatura e Limites",
+    "currentPlan": "Seu plano atual",
+    "freePlan": "Gratuito",
+    "premiumPlan": "Premium",
+    "statusActive": "Ativo",
+    "statusExpired": "Expirado",
+    "expiresAt": "Vence em {date}",
+    "upgradeTitle": "Melhorar para Premium",
+    "upgradeDesc": "Obtenha acesso ilimitado a todas as questões, explicações detalhadas e revisões programadas.",
+    "upgradeNow": "Assinar Premium",
+    "formTitle": "Simulador de Pagamento Seguro",
+    "formCardholder": "Nome do titular",
+    "formCardNumber": "Número do cartão",
+    "formExpiry": "Data de vencimento (MM/AA)",
+    "formCvv": "CVV",
+    "formSubmit": "Simular pagamento de R$ 29,90/mês",
+    "formSuccess": "Pagamento processado com sucesso! Sua assinatura Premium já está ativa.",
+    "dailyUsage": "Uso diário de questões",
+    "usageLimitText": "Você resolveu {answered} de {limit} questões hoje.",
+    "quotaBannerTitle": "Limite diário atingido",
+    "quotaBannerDesc": "Você completou suas 10 questões gratuitas de hoje. Assine o Premium para continuar praticando sem limites.",
+    "quotaBannerBtn": "Assinar Premium agora",
+    "modalTitle": "Você atingiu seu limite diário!",
+    "modalDesc": "Estudantes do plano Gratuito têm um limite de 10 questões diárias. Para continuar estudando hoje e desbloquear o acesso ilimitado, melhore sua conta.",
+    "modalButton": "Ver Planos e Assinar",
+    "goBack": "Voltar para o aplicativo"
   }
 }
+

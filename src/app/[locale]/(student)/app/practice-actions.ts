@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/modules/identity";
 import { practiceService } from "@/modules/practice";
 import { learningService } from "@/modules/learning";
+import { billingService } from "@/modules/billing";
 
 async function requireAuth() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -16,12 +17,20 @@ async function requireAuth() {
 
 export async function startPracticeSessionAction(locale: string) {
   const session = await requireAuth();
+  const quota = await billingService.checkDailyQuota(session.user.id);
+  if (quota.isBlocked) {
+    redirect(`/${locale}/app/billing`);
+  }
   const studySession = await practiceService.createSession(session.user.id);
   redirect(`/${locale}/app/practice/${studySession.id}`);
 }
 
 export async function startReviewSessionAction(locale: string) {
   const session = await requireAuth();
+  const quota = await billingService.checkDailyQuota(session.user.id);
+  if (quota.isBlocked) {
+    redirect(`/${locale}/app/billing`);
+  }
   const dueQuestions = await learningService.getDueQuestions(
     session.user.id,
     10,
@@ -61,6 +70,10 @@ export async function verifyResponseAction(
   elapsedSeconds: number,
 ) {
   const session = await requireAuth();
+  const quota = await billingService.checkDailyQuota(session.user.id);
+  if (quota.isBlocked) {
+    return { error: "quota_exceeded" as const };
+  }
   return practiceService.verifyResponse(
     sessionId,
     itemId,
@@ -100,8 +113,13 @@ export async function startSingleQuestionSessionAction(
   questionVersionId: string,
 ) {
   const session = await requireAuth();
+  const quota = await billingService.checkDailyQuota(session.user.id);
+  if (quota.isBlocked) {
+    redirect(`/${locale}/app/billing`);
+  }
   const studySession = await practiceService.createSession(session.user.id, [
     questionVersionId,
   ]);
   redirect(`/${locale}/app/practice/${studySession.id}`);
 }
+

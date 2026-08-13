@@ -173,5 +173,34 @@
     "status": "Estado",
     "version": "Versión",
     "noQuestions": "No hay preguntas registradas."
+  },
+  "billing": {
+    "title": "Suscripción y Límites",
+    "currentPlan": "Tu plan actual",
+    "freePlan": "Gratuito",
+    "premiumPlan": "Premium",
+    "statusActive": "Activo",
+    "statusExpired": "Expirado",
+    "expiresAt": "Vence el {date}",
+    "upgradeTitle": "Mejora a Premium",
+    "upgradeDesc": "Obtén acceso ilimitado a todas las preguntas, explicaciones detalladas y revisiones programadas.",
+    "upgradeNow": "Actualizar a Premium",
+    "formTitle": "Simulador de Pago Seguro",
+    "formCardholder": "Nombre del titular",
+    "formCardNumber": "Número de tarjeta",
+    "formExpiry": "Fecha de vencimiento (MM/AA)",
+    "formCvv": "CVV",
+    "formSubmit": "Simular pago de R$ 29,90/mes",
+    "formSuccess": "¡Pago procesado con éxito! Tu suscripción Premium ya está activa.",
+    "dailyUsage": "Uso diario de preguntas",
+    "usageLimitText": "Has resuelto {answered} de {limit} preguntas hoy.",
+    "quotaBannerTitle": "Límite diario alcanzado",
+    "quotaBannerDesc": "Has completado tus 10 preguntas gratuitas de hoy. Actualiza a Premium para seguir practicando sin límites.",
+    "quotaBannerBtn": "Mejorar a Premium ahora",
+    "modalTitle": "¡Has alcanzado tu límite diario!",
+    "modalDesc": "Los estudiantes del plan Gratuito tienen un límite de 10 preguntas diarias. Para seguir estudiando hoy y desbloquear el acceso ilimitado, mejora tu cuenta.",
+    "modalButton": "Ver Planes y Mejorar",
+    "goBack": "Volver a la aplicación"
   }
 }
+

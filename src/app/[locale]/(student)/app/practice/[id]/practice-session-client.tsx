@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
+
 import {
   verifyResponseAction,
   saveMetacognitiveMarkAction,
@@ -53,6 +55,9 @@ export function PracticeSessionClient({
   const [, startTransition] = useTransition();
   const [items, setItems] = useState<Item[]>(initialItems);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const tBilling = useTranslations("billing");
+  const [showQuotaModal, setShowQuotaModal] = useState(false);
+
 
   // Store selections and elapsed seconds as maps keyed by item ID
   const [selections, setSelections] = useState<Record<string, string | null>>(
@@ -200,27 +205,33 @@ export function PracticeSessionClient({
           seconds,
         );
 
-        setItems((prev) =>
-          prev.map((it) =>
-            it.id === activeItemId
-              ? {
-                  ...it,
-                  explanation: result.explanation,
-                  alternatives: it.alternatives.map((alt) =>
-                    alt.id === result.correctAlternativeId
-                      ? { ...alt, isCorrect: true }
-                      : { ...alt, isCorrect: false },
-                  ),
-                  response: {
-                    ...it.response!,
-                    isCorrect: result.response.isCorrect,
-                    verifiedAt: result.response.verifiedAt,
-                    timeTakenSeconds: seconds,
-                  },
-                }
-              : it,
-          ),
-        );
+        if (result && "response" in result) {
+          const { explanation, correctAlternativeId, response } = result;
+
+          setItems((prev) =>
+            prev.map((it) =>
+              it.id === activeItemId
+                ? {
+                    ...it,
+                    explanation,
+                    alternatives: it.alternatives.map((alt) =>
+                      alt.id === correctAlternativeId
+                        ? { ...alt, isCorrect: true }
+                        : { ...alt, isCorrect: false },
+                    ),
+                    response: {
+                      ...it.response!,
+                      isCorrect: response.isCorrect,
+                      verifiedAt: response.verifiedAt,
+                      timeTakenSeconds: seconds,
+                    },
+                  }
+                : it,
+            ),
+          );
+        } else if (result && "error" in result && result.error === "quota_exceeded") {
+          setShowQuotaModal(true);
+        }
       } catch (err) {
         console.error("Verification failed:", err);
       }
@@ -562,6 +573,38 @@ export function PracticeSessionClient({
           </div>
         )}
       </div>
+      {showQuotaModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="w-full max-w-md bg-white rounded-2xl border border-slate-100 p-6 shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-600 mb-4">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-6 w-6">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m0-10.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.249-8.25-3.286zm0 13.036h.008v.008H12v-.008z" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold text-[#102A43]">
+              {tBilling("modalTitle")}
+            </h3>
+            <p className="text-slate-500 text-sm mt-2 leading-relaxed">
+              {tBilling("modalDesc")}
+            </p>
+            <div className="mt-6 flex flex-col gap-2">
+              <a
+                href={`/${locale}/app/billing`}
+                className="block w-full text-center text-sm font-semibold bg-[#13A89E] hover:bg-[#0f8e85] text-white py-2.5 px-4 rounded-lg transition-colors shadow-sm"
+              >
+                {tBilling("modalButton")}
+              </a>
+              <a
+                href={`/${locale}/app`}
+                className="block w-full text-center text-sm font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 px-4 rounded-lg transition-colors"
+              >
+                {tBilling("goBack")}
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+

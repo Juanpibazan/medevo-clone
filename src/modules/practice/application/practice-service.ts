@@ -109,7 +109,7 @@ export class PracticeService {
         }
 
         const { version, alternatives } = questionData;
-        const isVerified = item.response?.verifiedAt !== null;
+        const isVerified = item.response?.verifiedAt !== null && item.response?.verifiedAt !== undefined;
 
         // If not verified, strip the isCorrect property and the explanation
         const safeAlternatives = alternatives.map((alt) => {

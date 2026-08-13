@@ -15,6 +15,8 @@ import {
   startPracticeSessionAction,
   startReviewSessionAction,
 } from "./practice-actions";
+import { billingService } from "@/modules/billing";
+
 
 export default async function AppPage({
   params,
@@ -44,6 +46,10 @@ export default async function AppPage({
 
   const t = await getTranslations("app");
   const tDashboard = await getTranslations("dashboard");
+  const tBilling = await getTranslations("billing");
+
+  const quota = await billingService.checkDailyQuota(session.user.id);
+
 
   const dueQuestions = await learningService.getDueQuestions(
     session.user.id,
@@ -94,11 +100,46 @@ export default async function AppPage({
               <dt>{t("language")}</dt>
               <dd>{t(`locales.${profile.locale}`)}</dd>
             </div>
+            <div>
+              <dt>{tBilling("currentPlan")}</dt>
+              <dd>
+                <a href={`/${locale}/app/billing`} className="font-semibold text-[#13A89E] hover:underline">
+                  {quota.tier === "premium" ? tBilling("premiumPlan") : tBilling("freePlan")}
+                </a>
+              </dd>
+            </div>
+            {quota.tier === "free" && (
+              <div>
+                <dt>{tBilling("dailyUsage")}</dt>
+                <dd className="font-semibold text-slate-700">
+                  {quota.answeredToday} / {quota.limit}
+                </dd>
+              </div>
+            )}
           </dl>
         </div>
 
         {/* Practice and Spaced Repetition Panel */}
         <div className="card app-panel">
+          {quota.isBlocked && (
+            <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-800 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <h3 className="font-bold text-base text-[#102A43]">
+                  {tBilling("quotaBannerTitle")}
+                </h3>
+                <p className="text-sm text-slate-600 mt-1">
+                  {tBilling("quotaBannerDesc")}
+                </p>
+              </div>
+              <a
+                href={`/${locale}/app/billing`}
+                className="inline-block text-center whitespace-nowrap bg-[#13A89E] hover:bg-[#0f8e85] text-white font-semibold py-2 px-4 rounded-lg text-sm transition-colors shadow-sm"
+              >
+                {tBilling("quotaBannerBtn")}
+              </a>
+            </div>
+          )}
+
           <h2 className="mb-4 text-xl font-bold text-[#102A43]">
             Ciclo de Práctica y Revisión
           </h2>
@@ -117,8 +158,13 @@ export default async function AppPage({
               {activeSession ? (
                 <div className="flex flex-col gap-2">
                   <a
-                    href={`/${locale}/app/practice/${activeSession.id}`}
-                    className="block w-full cursor-pointer rounded-lg bg-[#13A89E] px-4 py-2.5 text-center text-sm font-semibold text-white transition-colors hover:bg-[#0f8e85]"
+                    href={quota.isBlocked ? "#" : `/${locale}/app/practice/${activeSession.id}`}
+                    aria-disabled={quota.isBlocked}
+                    className={`block w-full text-center text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors ${
+                      quota.isBlocked
+                        ? "bg-slate-200 text-slate-400 cursor-not-allowed pointer-events-none"
+                        : "bg-[#13A89E] text-white hover:bg-[#0f8e85] cursor-pointer"
+                    }`}
                   >
                     {tDashboard("resumePractice")}
                   </a>
@@ -130,7 +176,12 @@ export default async function AppPage({
                   >
                     <button
                       type="submit"
-                      className="block w-full cursor-pointer rounded-lg bg-slate-100 px-4 py-2 text-center text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-200"
+                      disabled={quota.isBlocked}
+                      className={`block w-full text-center text-xs font-semibold px-4 py-2 rounded-lg transition-colors ${
+                        quota.isBlocked
+                          ? "bg-slate-100 text-slate-300 cursor-not-allowed"
+                          : "bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer"
+                      }`}
                     >
                       {tDashboard("startNewPractice")}
                     </button>
@@ -145,7 +196,12 @@ export default async function AppPage({
                 >
                   <button
                     type="submit"
-                    className="block w-full cursor-pointer rounded-lg bg-[#13A89E] px-4 py-2.5 text-center text-sm font-medium text-white transition-colors hover:bg-[#0f8e85]"
+                    disabled={quota.isBlocked}
+                    className={`block w-full text-center text-sm font-medium px-4 py-2.5 rounded-lg transition-colors ${
+                      quota.isBlocked
+                        ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+                        : "bg-[#13A89E] text-white hover:bg-[#0f8e85] cursor-pointer"
+                    }`}
                   >
                     {tDashboard("startPractice")}
                   </button>
@@ -173,9 +229,9 @@ export default async function AppPage({
               >
                 <button
                   type="submit"
-                  disabled={dueCount === 0}
+                  disabled={dueCount === 0 || quota.isBlocked}
                   className={`block w-full cursor-pointer rounded-lg px-4 py-2.5 text-center text-sm font-medium transition-colors ${
-                    dueCount > 0
+                    dueCount > 0 && !quota.isBlocked
                       ? "bg-[#102A43] text-white hover:bg-[#1a3f60]"
                       : "cursor-not-allowed bg-slate-200 text-slate-400"
                   }`}
@@ -200,6 +256,12 @@ export default async function AppPage({
                 className="font-medium text-[#13A89E] transition-colors hover:text-[#0f8e85]"
               >
                 {tDashboard("viewFavorites")}
+              </a>
+              <a
+                href={`/${locale}/app/billing`}
+                className="font-medium text-[#13A89E] transition-colors hover:text-[#0f8e85]"
+              >
+                {tBilling("title")}
               </a>
             </div>
             {isEditorOrAdmin && (

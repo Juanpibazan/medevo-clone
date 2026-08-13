@@ -49,7 +49,7 @@ describe("Practice, Correction and Spaced Repetition Integration", () => {
       // Question 1
       await db
         .insert(questions)
-        .values({ id: questionId1, publishedVersionId: versionId1 });
+        .values({ id: questionId1 });
       await db.insert(questionVersions).values({
         id: versionId1,
         questionId: questionId1,
@@ -61,6 +61,10 @@ describe("Practice, Correction and Spaced Repetition Integration", () => {
         taxonomyNodeId: taxonomyId,
         createdBy: userId,
       });
+      await db
+        .update(questions)
+        .set({ publishedVersionId: versionId1 })
+        .where(eq(questions.id, questionId1));
       await db.insert(questionAlternatives).values([
         {
           id: altId1Correct,
@@ -81,7 +85,7 @@ describe("Practice, Correction and Spaced Repetition Integration", () => {
       // Question 2
       await db
         .insert(questions)
-        .values({ id: questionId2, publishedVersionId: versionId2 });
+        .values({ id: questionId2 });
       await db.insert(questionVersions).values({
         id: versionId2,
         questionId: questionId2,
@@ -93,6 +97,10 @@ describe("Practice, Correction and Spaced Repetition Integration", () => {
         taxonomyNodeId: taxonomyId,
         createdBy: userId,
       });
+      await db
+        .update(questions)
+        .set({ publishedVersionId: versionId2 })
+        .where(eq(questions.id, questionId2));
       await db.insert(questionAlternatives).values([
         {
           id: altId2Correct,

@@ -46,7 +46,6 @@ export class ResendEmailService implements EmailService {
 
       if (
         this.apiKey.includes("dummy") ||
-        this.apiKey.includes("test") ||
         this.apiKey.includes("your_api_key")
       ) {
         console.log(

@@ -107,7 +107,10 @@ describe("Billing & Subscription Integration Tests", () => {
         taxonomyNodeId: taxonomyId,
         createdBy: userId,
       });
-      await db.update(questions).set({ publishedVersionId: versionId1 }).where(eq(questions.id, questionId1));
+      await db
+        .update(questions)
+        .set({ publishedVersionId: versionId1 })
+        .where(eq(questions.id, questionId1));
       await db.insert(questionAlternatives).values({
         id: altId1,
         questionVersionId: versionId1,
@@ -128,7 +131,10 @@ describe("Billing & Subscription Integration Tests", () => {
         taxonomyNodeId: taxonomyId,
         createdBy: userId,
       });
-      await db.update(questions).set({ publishedVersionId: versionId2 }).where(eq(questions.id, questionId2));
+      await db
+        .update(questions)
+        .set({ publishedVersionId: versionId2 })
+        .where(eq(questions.id, questionId2));
       await db.insert(questionAlternatives).values({
         id: altId2,
         questionVersionId: versionId2,
@@ -150,8 +156,20 @@ describe("Billing & Subscription Integration Tests", () => {
       const itemId1 = randomUUID();
       const itemId2 = randomUUID();
       await db.insert(studySessionItems).values([
-        { id: itemId1, sessionId, questionVersionId: versionId1, position: 0, createdAt: now },
-        { id: itemId2, sessionId, questionVersionId: versionId2, position: 1, createdAt: now },
+        {
+          id: itemId1,
+          sessionId,
+          questionVersionId: versionId1,
+          position: 0,
+          createdAt: now,
+        },
+        {
+          id: itemId2,
+          sessionId,
+          questionVersionId: versionId2,
+          position: 1,
+          createdAt: now,
+        },
       ]);
 
       // Initially, 0 verified responses today
@@ -186,29 +204,47 @@ describe("Billing & Subscription Integration Tests", () => {
       expect(quota2.answeredToday).toBe(1); // remains 1 because yesterday's response is excluded
     } finally {
       // Cleanup
-      await db.delete(responses).where(
-        inArray(
-          responses.sessionItemId,
-          db
-            .select({ id: studySessionItems.id })
-            .from(studySessionItems)
-            .innerJoin(studySessions, eq(studySessionItems.sessionId, studySessions.id))
-            .where(eq(studySessions.userId, userId))
-        )
-      );
-      await db.delete(studySessionItems).where(
-        inArray(
-          studySessionItems.sessionId,
-          db
-            .select({ id: studySessions.id })
-            .from(studySessions)
-            .where(eq(studySessions.userId, userId))
-        )
-      );
+      await db
+        .delete(responses)
+        .where(
+          inArray(
+            responses.sessionItemId,
+            db
+              .select({ id: studySessionItems.id })
+              .from(studySessionItems)
+              .innerJoin(
+                studySessions,
+                eq(studySessionItems.sessionId, studySessions.id),
+              )
+              .where(eq(studySessions.userId, userId)),
+          ),
+        );
+      await db
+        .delete(studySessionItems)
+        .where(
+          inArray(
+            studySessionItems.sessionId,
+            db
+              .select({ id: studySessions.id })
+              .from(studySessions)
+              .where(eq(studySessions.userId, userId)),
+          ),
+        );
       await db.delete(studySessions).where(eq(studySessions.userId, userId));
-      await db.delete(questionAlternatives).where(inArray(questionAlternatives.questionVersionId, [versionId1, versionId2]));
-      await db.delete(questionVersions).where(inArray(questionVersions.id, [versionId1, versionId2]));
-      await db.delete(questions).where(inArray(questions.id, [questionId1, questionId2]));
+      await db
+        .delete(questionAlternatives)
+        .where(
+          inArray(questionAlternatives.questionVersionId, [
+            versionId1,
+            versionId2,
+          ]),
+        );
+      await db
+        .delete(questionVersions)
+        .where(inArray(questionVersions.id, [versionId1, versionId2]));
+      await db
+        .delete(questions)
+        .where(inArray(questions.id, [questionId1, questionId2]));
       await db.delete(taxonomyNodes).where(eq(taxonomyNodes.id, taxonomyId));
       await db.delete(users).where(eq(users.id, userId));
     }

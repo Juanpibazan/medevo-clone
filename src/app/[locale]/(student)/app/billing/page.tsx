@@ -30,7 +30,7 @@ export default async function BillingPage({
 
   const progressPercentage = Math.min(
     100,
-    Math.round(((quota.answeredToday ?? 0) / (quota.limit || 10)) * 100)
+    Math.round(((quota.answeredToday ?? 0) / (quota.limit || 10)) * 100),
   );
 
   const isSuccess = success === "true";
@@ -38,15 +38,17 @@ export default async function BillingPage({
   return (
     <main className="shell">
       <StudentHeader />
-      <section className="auth-wrap flex flex-col gap-6 max-w-xl mx-auto mt-6">
+      <section className="auth-wrap mx-auto mt-6 flex max-w-xl flex-col gap-6">
         <div className="card app-panel">
           <p className="eyebrow">{t("title")}</p>
-          <h1 className="text-2xl font-bold text-[#102A43] mt-1">{t("upgradeTitle")}</h1>
-          <p className="text-slate-500 text-sm mt-2">{t("upgradeDesc")}</p>
+          <h1 className="mt-1 text-2xl font-bold text-[#102A43]">
+            {t("upgradeTitle")}
+          </h1>
+          <p className="mt-2 text-sm text-slate-500">{t("upgradeDesc")}</p>
         </div>
 
         {isSuccess && (
-          <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-800 shadow-sm animate-fade-in">
+          <div className="animate-fade-in rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-800 shadow-sm">
             <p className="text-sm font-semibold">{t("formSuccess")}</p>
           </div>
         )}
@@ -54,10 +56,10 @@ export default async function BillingPage({
         <div className="card app-panel flex flex-col gap-6">
           <div className="flex items-center justify-between border-b border-slate-100 pb-4">
             <div>
-              <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">
+              <h2 className="text-sm font-semibold tracking-wider text-slate-500 uppercase">
                 {t("currentPlan")}
               </h2>
-              <p className="text-lg font-bold text-[#102A43] mt-0.5">
+              <p className="mt-0.5 text-lg font-bold text-[#102A43]">
                 {quota.tier === "premium" ? t("premiumPlan") : t("freePlan")}
               </p>
             </div>
@@ -79,10 +81,13 @@ export default async function BillingPage({
                 <h3 className="text-sm font-medium text-slate-700">
                   {t("dailyUsage")}
                 </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  {t("usageLimitText", { answered: quota.answeredToday, limit: quota.limit })}
+                <p className="mt-0.5 text-xs text-slate-500">
+                  {t("usageLimitText", {
+                    answered: quota.answeredToday,
+                    limit: quota.limit,
+                  })}
                 </p>
-                <div className="mt-2 h-2.5 w-full rounded-full bg-slate-100 overflow-hidden">
+                <div className="mt-2 h-2.5 w-full overflow-hidden rounded-full bg-slate-100">
                   <div
                     className={`h-full rounded-full transition-all duration-500 ${
                       quota.isBlocked ? "bg-amber-500" : "bg-[#13A89E]"
@@ -94,7 +99,7 @@ export default async function BillingPage({
 
               {/* Checkout Form Simulator */}
               <div className="border-t border-slate-100 pt-6">
-                <h3 className="text-base font-bold text-[#102A43] mb-4">
+                <h3 className="mb-4 text-base font-bold text-[#102A43]">
                   {t("formTitle")}
                 </h3>
                 <form
@@ -105,7 +110,10 @@ export default async function BillingPage({
                   className="flex flex-col gap-4"
                 >
                   <div className="flex flex-col gap-1.5">
-                    <label htmlFor="cardholder" className="text-xs font-semibold text-slate-600">
+                    <label
+                      htmlFor="cardholder"
+                      className="text-xs font-semibold text-slate-600"
+                    >
                       {t("formCardholder")}
                     </label>
                     <input
@@ -119,7 +127,10 @@ export default async function BillingPage({
                   </div>
 
                   <div className="flex flex-col gap-1.5">
-                    <label htmlFor="cardNumber" className="text-xs font-semibold text-slate-600">
+                    <label
+                      htmlFor="cardNumber"
+                      className="text-xs font-semibold text-slate-600"
+                    >
                       {t("formCardNumber")}
                     </label>
                     <input
@@ -136,7 +147,10 @@ export default async function BillingPage({
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="flex flex-col gap-1.5">
-                      <label htmlFor="expiry" className="text-xs font-semibold text-slate-600">
+                      <label
+                        htmlFor="expiry"
+                        className="text-xs font-semibold text-slate-600"
+                      >
                         {t("formExpiry")}
                       </label>
                       <input
@@ -151,7 +165,10 @@ export default async function BillingPage({
                       />
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <label htmlFor="cvv" className="text-xs font-semibold text-slate-600">
+                      <label
+                        htmlFor="cvv"
+                        className="text-xs font-semibold text-slate-600"
+                      >
                         {t("formCvv")}
                       </label>
                       <input
@@ -169,7 +186,7 @@ export default async function BillingPage({
 
                   <button
                     type="submit"
-                    className="mt-2 block w-full cursor-pointer rounded-xl bg-[#13A89E] py-3 text-center text-sm font-semibold text-white transition-colors hover:bg-[#0f8e85] shadow-sm"
+                    className="mt-2 block w-full cursor-pointer rounded-xl bg-[#13A89E] py-3 text-center text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#0f8e85]"
                   >
                     {t("formSubmit")}
                   </button>

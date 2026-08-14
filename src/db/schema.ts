@@ -338,8 +338,12 @@ export const subscriptions = pgTable("subscriptions", {
     .references(() => users.id, { onDelete: "cascade" }),
   status: text("status").notNull(), // 'active' | 'cancelled' | 'expired'
   planCode: text("plan_code").notNull().default("premium"),
-  currentPeriodStart: timestamp("current_period_start", { withTimezone: true }).notNull(),
-  currentPeriodEnd: timestamp("current_period_end", { withTimezone: true }).notNull(),
+  currentPeriodStart: timestamp("current_period_start", {
+    withTimezone: true,
+  }).notNull(),
+  currentPeriodEnd: timestamp("current_period_end", {
+    withTimezone: true,
+  }).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -348,3 +352,19 @@ export const subscriptions = pgTable("subscriptions", {
     .defaultNow(),
 });
 
+export const editorialReviews = pgTable("editorial_reviews", {
+  id: text("id").primaryKey(),
+  questionVersionId: text("question_version_id")
+    .notNull()
+    .references(() => questionVersions.id, { onDelete: "cascade" }),
+  reviewerId: text("reviewer_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "restrict" }),
+  status: text("status", {
+    enum: ["approved", "changes_requested", "annulled"],
+  }).notNull(),
+  comments: text("comments"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});

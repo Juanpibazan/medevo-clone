@@ -1,12 +1,23 @@
 import { eq, and, gte, lt, sql } from "drizzle-orm";
 import { db } from "@/db/client";
-import { subscriptions, responses, studySessionItems, studySessions } from "@/db/schema";
+import {
+  subscriptions,
+  responses,
+  studySessionItems,
+  studySessions,
+} from "@/db/schema";
 import type { Subscription } from "../domain/billing";
 
 export interface BillingRepository {
   getActiveSubscription(userId: string): Promise<Subscription | null>;
-  createOrUpdateSubscription(subscription: Omit<Subscription, "createdAt" | "updatedAt">): Promise<Subscription>;
-  getVerifiedResponsesCountToday(userId: string, startOfDay: Date, endOfDay: Date): Promise<number>;
+  createOrUpdateSubscription(
+    subscription: Omit<Subscription, "createdAt" | "updatedAt">,
+  ): Promise<Subscription>;
+  getVerifiedResponsesCountToday(
+    userId: string,
+    startOfDay: Date,
+    endOfDay: Date,
+  ): Promise<number>;
 }
 
 export class DrizzleBillingRepository implements BillingRepository {
@@ -19,8 +30,8 @@ export class DrizzleBillingRepository implements BillingRepository {
         and(
           eq(subscriptions.userId, userId),
           eq(subscriptions.status, "active"),
-          gte(subscriptions.currentPeriodEnd, now)
-        )
+          gte(subscriptions.currentPeriodEnd, now),
+        ),
       )
       .limit(1);
 
@@ -39,10 +50,10 @@ export class DrizzleBillingRepository implements BillingRepository {
   }
 
   async createOrUpdateSubscription(
-    subscription: Omit<Subscription, "createdAt" | "updatedAt">
+    subscription: Omit<Subscription, "createdAt" | "updatedAt">,
   ): Promise<Subscription> {
     const now = new Date();
-    
+
     // Check if subscription already exists for this user
     const [existing] = await db
       .select()
@@ -99,19 +110,25 @@ export class DrizzleBillingRepository implements BillingRepository {
   async getVerifiedResponsesCountToday(
     userId: string,
     startOfDay: Date,
-    endOfDay: Date
+    endOfDay: Date,
   ): Promise<number> {
     const [result] = await db
       .select({ count: sql<number>`count(*)` })
       .from(responses)
-      .innerJoin(studySessionItems, eq(responses.sessionItemId, studySessionItems.id))
-      .innerJoin(studySessions, eq(studySessionItems.sessionId, studySessions.id))
+      .innerJoin(
+        studySessionItems,
+        eq(responses.sessionItemId, studySessionItems.id),
+      )
+      .innerJoin(
+        studySessions,
+        eq(studySessionItems.sessionId, studySessions.id),
+      )
       .where(
         and(
           eq(studySessions.userId, userId),
           gte(responses.verifiedAt, startOfDay),
-          lt(responses.verifiedAt, endOfDay)
-        )
+          lt(responses.verifiedAt, endOfDay),
+        ),
       );
 
     return Number(result?.count ?? 0);

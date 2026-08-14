@@ -45,7 +45,13 @@
     "enter": "Ingresar",
     "forgot": "Olvidé mi contraseña",
     "needAccount": "Crear cuenta",
-    "haveAccount": "Ya tengo una cuenta"
+    "haveAccount": "Ya tengo una cuenta",
+    "errors": {
+      "emailNotVerified": "Tu correo electrónico no ha sido verificado. Por favor, revisa tu bandeja de entrada o haz clic abajo para reenviar el correo de verificación.",
+      "resendLink": "Reenviar correo de verificación",
+      "resendSuccess": "¡Correo de verificación reenviado con éxito!",
+      "resendError": "Error al reenviar el correo de verificación. Inténtalo de nuevo."
+    }
   },
   "recovery": {
     "eyebrow": "Acceso MedCiclo",
@@ -201,6 +207,16 @@
     "modalDesc": "Los estudiantes del plan Gratuito tienen un límite de 10 preguntas diarias. Para seguir estudiando hoy y desbloquear el acceso ilimitado, mejora tu cuenta.",
     "modalButton": "Ver Planes y Mejorar",
     "goBack": "Volver a la aplicación"
+  },
+  "cadastroConfirmar": {
+    "eyebrow": "Verificación de cuenta",
+    "title": "¡Casi listo!",
+    "intro": "Hemos enviado un enlace de verificación a su correo electrónico.",
+    "checkInbox": "Por favor, revisa tu bandeja de entrada (y la carpeta de spam) y haz clic en el enlace para activar tu cuenta.",
+    "resendBtn": "Reenviar correo de verificación",
+    "resending": "Reenviando...",
+    "resendSuccess": "¡Correo de verificación reenviado con éxito!",
+    "resendError": "Error al reenviar el correo de verificación. Inténtalo de nuevo.",
+    "backToLogin": "Volver a ingresar"
   }
 }
-

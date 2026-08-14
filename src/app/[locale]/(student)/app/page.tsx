@@ -17,7 +17,6 @@ import {
 } from "./practice-actions";
 import { billingService } from "@/modules/billing";
 
-
 export default async function AppPage({
   params,
 }: {
@@ -49,7 +48,6 @@ export default async function AppPage({
   const tBilling = await getTranslations("billing");
 
   const quota = await billingService.checkDailyQuota(session.user.id);
-
 
   const dueQuestions = await learningService.getDueQuestions(
     session.user.id,
@@ -103,8 +101,13 @@ export default async function AppPage({
             <div>
               <dt>{tBilling("currentPlan")}</dt>
               <dd>
-                <a href={`/${locale}/app/billing`} className="font-semibold text-[#13A89E] hover:underline">
-                  {quota.tier === "premium" ? tBilling("premiumPlan") : tBilling("freePlan")}
+                <a
+                  href={`/${locale}/app/billing`}
+                  className="font-semibold text-[#13A89E] hover:underline"
+                >
+                  {quota.tier === "premium"
+                    ? tBilling("premiumPlan")
+                    : tBilling("freePlan")}
                 </a>
               </dd>
             </div>
@@ -122,18 +125,18 @@ export default async function AppPage({
         {/* Practice and Spaced Repetition Panel */}
         <div className="card app-panel">
           {quota.isBlocked && (
-            <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-800 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="mb-6 flex flex-col justify-between gap-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-800 shadow-sm md:flex-row md:items-center">
               <div>
-                <h3 className="font-bold text-base text-[#102A43]">
+                <h3 className="text-base font-bold text-[#102A43]">
                   {tBilling("quotaBannerTitle")}
                 </h3>
-                <p className="text-sm text-slate-600 mt-1">
+                <p className="mt-1 text-sm text-slate-600">
                   {tBilling("quotaBannerDesc")}
                 </p>
               </div>
               <a
                 href={`/${locale}/app/billing`}
-                className="inline-block text-center whitespace-nowrap bg-[#13A89E] hover:bg-[#0f8e85] text-white font-semibold py-2 px-4 rounded-lg text-sm transition-colors shadow-sm"
+                className="inline-block rounded-lg bg-[#13A89E] px-4 py-2 text-center text-sm font-semibold whitespace-nowrap text-white shadow-sm transition-colors hover:bg-[#0f8e85]"
               >
                 {tBilling("quotaBannerBtn")}
               </a>
@@ -158,12 +161,16 @@ export default async function AppPage({
               {activeSession ? (
                 <div className="flex flex-col gap-2">
                   <a
-                    href={quota.isBlocked ? "#" : `/${locale}/app/practice/${activeSession.id}`}
-                    aria-disabled={quota.isBlocked}
-                    className={`block w-full text-center text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors ${
+                    href={
                       quota.isBlocked
-                        ? "bg-slate-200 text-slate-400 cursor-not-allowed pointer-events-none"
-                        : "bg-[#13A89E] text-white hover:bg-[#0f8e85] cursor-pointer"
+                        ? "#"
+                        : `/${locale}/app/practice/${activeSession.id}`
+                    }
+                    aria-disabled={quota.isBlocked}
+                    className={`block w-full rounded-lg px-4 py-2.5 text-center text-sm font-semibold transition-colors ${
+                      quota.isBlocked
+                        ? "pointer-events-none cursor-not-allowed bg-slate-200 text-slate-400"
+                        : "cursor-pointer bg-[#13A89E] text-white hover:bg-[#0f8e85]"
                     }`}
                   >
                     {tDashboard("resumePractice")}
@@ -177,10 +184,10 @@ export default async function AppPage({
                     <button
                       type="submit"
                       disabled={quota.isBlocked}
-                      className={`block w-full text-center text-xs font-semibold px-4 py-2 rounded-lg transition-colors ${
+                      className={`block w-full rounded-lg px-4 py-2 text-center text-xs font-semibold transition-colors ${
                         quota.isBlocked
-                          ? "bg-slate-100 text-slate-300 cursor-not-allowed"
-                          : "bg-slate-100 text-slate-700 hover:bg-slate-200 cursor-pointer"
+                          ? "cursor-not-allowed bg-slate-100 text-slate-300"
+                          : "cursor-pointer bg-slate-100 text-slate-700 hover:bg-slate-200"
                       }`}
                     >
                       {tDashboard("startNewPractice")}
@@ -197,10 +204,10 @@ export default async function AppPage({
                   <button
                     type="submit"
                     disabled={quota.isBlocked}
-                    className={`block w-full text-center text-sm font-medium px-4 py-2.5 rounded-lg transition-colors ${
+                    className={`block w-full rounded-lg px-4 py-2.5 text-center text-sm font-medium transition-colors ${
                       quota.isBlocked
-                        ? "bg-slate-200 text-slate-400 cursor-not-allowed"
-                        : "bg-[#13A89E] text-white hover:bg-[#0f8e85] cursor-pointer"
+                        ? "cursor-not-allowed bg-slate-200 text-slate-400"
+                        : "cursor-pointer bg-[#13A89E] text-white hover:bg-[#0f8e85]"
                     }`}
                   >
                     {tDashboard("startPractice")}

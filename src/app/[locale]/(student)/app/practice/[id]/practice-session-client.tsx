@@ -58,7 +58,6 @@ export function PracticeSessionClient({
   const tBilling = useTranslations("billing");
   const [showQuotaModal, setShowQuotaModal] = useState(false);
 
-
   // Store selections and elapsed seconds as maps keyed by item ID
   const [selections, setSelections] = useState<Record<string, string | null>>(
     () => {
@@ -229,7 +228,11 @@ export function PracticeSessionClient({
                 : it,
             ),
           );
-        } else if (result && "error" in result && result.error === "quota_exceeded") {
+        } else if (
+          result &&
+          "error" in result &&
+          result.error === "quota_exceeded"
+        ) {
           setShowQuotaModal(true);
         }
       } catch (err) {
@@ -574,29 +577,40 @@ export function PracticeSessionClient({
         )}
       </div>
       {showQuotaModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="w-full max-w-md bg-white rounded-2xl border border-slate-100 p-6 shadow-2xl animate-in zoom-in-95 duration-200">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-600 mb-4">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-6 w-6">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m0-10.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.249-8.25-3.286zm0 13.036h.008v.008H12v-.008z" />
+        <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
+          <div className="animate-in zoom-in-95 w-full max-w-md rounded-2xl border border-slate-100 bg-white p-6 shadow-2xl duration-200">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={2}
+                stroke="currentColor"
+                className="h-6 w-6"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 9v3.75m0-10.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.249-8.25-3.286zm0 13.036h.008v.008H12v-.008z"
+                />
               </svg>
             </div>
             <h3 className="text-xl font-bold text-[#102A43]">
               {tBilling("modalTitle")}
             </h3>
-            <p className="text-slate-500 text-sm mt-2 leading-relaxed">
+            <p className="mt-2 text-sm leading-relaxed text-slate-500">
               {tBilling("modalDesc")}
             </p>
             <div className="mt-6 flex flex-col gap-2">
               <a
                 href={`/${locale}/app/billing`}
-                className="block w-full text-center text-sm font-semibold bg-[#13A89E] hover:bg-[#0f8e85] text-white py-2.5 px-4 rounded-lg transition-colors shadow-sm"
+                className="block w-full rounded-lg bg-[#13A89E] px-4 py-2.5 text-center text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#0f8e85]"
               >
                 {tBilling("modalButton")}
               </a>
               <a
                 href={`/${locale}/app`}
-                className="block w-full text-center text-sm font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 px-4 rounded-lg transition-colors"
+                className="block w-full rounded-lg bg-slate-100 px-4 py-2 text-center text-sm font-medium text-slate-700 transition-colors hover:bg-slate-200"
               >
                 {tBilling("goBack")}
               </a>
@@ -607,4 +621,3 @@ export function PracticeSessionClient({
     </div>
   );
 }
-

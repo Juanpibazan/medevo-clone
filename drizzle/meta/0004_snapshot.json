@@ -1,6 +1,6 @@
 {
-  "id": "89888ae1-e10a-400a-9e42-1a98bf13073c",
-  "prevId": "e1e9e43b-81e3-457c-b1ae-859422dea42f",
+  "id": "53dd9710-8622-400c-aeee-6a8f259d1abd",
+  "prevId": "89888ae1-e10a-400a-9e42-1a98bf13073c",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -186,6 +186,75 @@
           "columnsFrom": ["user_id"],
           "columnsTo": ["id"],
           "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.editorial_reviews": {
+      "name": "editorial_reviews",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "question_version_id": {
+          "name": "question_version_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reviewer_id": {
+          "name": "reviewer_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "comments": {
+          "name": "comments",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "editorial_reviews_question_version_id_question_versions_id_fk": {
+          "name": "editorial_reviews_question_version_id_question_versions_id_fk",
+          "tableFrom": "editorial_reviews",
+          "tableTo": "question_versions",
+          "columnsFrom": ["question_version_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "editorial_reviews_reviewer_id_users_id_fk": {
+          "name": "editorial_reviews_reviewer_id_users_id_fk",
+          "tableFrom": "editorial_reviews",
+          "tableTo": "users",
+          "columnsFrom": ["reviewer_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
           "onUpdate": "no action"
         }
       },

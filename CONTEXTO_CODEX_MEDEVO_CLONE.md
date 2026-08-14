@@ -24,7 +24,7 @@ El bootstrap técnico, el tramo de identidad/onboarding y el **vertical slice co
 - Next.js 16 con App Router, React 19, TypeScript estricto, Tailwind CSS 4, `src/`, npm y Node.js 24 LTS.
 - Interfaz mobile-first bilingüe desde el inicio, con prefijos obligatorios `pt-BR` y `es`, `next-intl`, Manrope y los tokens de marca de MedCiclo.
 - PostgreSQL 15 en Podman para desarrollo; `pg` mantiene el único pool y Drizzle es el único sistema de esquema y migraciones.
-- Better Auth con email y contraseña, sesiones por cookie y adaptador Drizzle. El registro concede acceso inmediato, sin verificación de correo.
+- Better Auth con email y contraseña, sesiones por cookie, adaptador Drizzle y verificación obligatoria de correo electrónico activa.
 - Portada, registro, acceso, cierre de sesión, recuperación de contraseña deshabilitada de forma segura, health checks y área autenticada.
 - Aprovisionamiento idempotente del perfil y rol `student`; reparar el aprovisionamiento no modifica preferencias existentes.
 - Onboarding obligatorio, bilingüe y reanudable entre registro y `/app`, con tres pasos guardados incrementalmente: idioma/objetivo Revalida, fecha tentativa opcional y disponibilidad semanal.
@@ -36,11 +36,13 @@ El bootstrap técnico, el tramo de identidad/onboarding y el **vertical slice co
 - CI y scripts locales para formato, lint, tipos, migraciones, pruebas unitarias, integración, E2E y build.
 - Soporte para variables de entorno para migraciones y seeds en Neon/Vercel mediante `MIGRATION_DATABASE_URL` y `DATABASE_URL`.
 - Módulo de Billing y límites Freemium completamente funcional (con cuota de 4 preguntas diarias para cuentas gratuitas, simulación de pagos, bloqueo visual y pruebas correspondientes).
+- Verificación obligatoria de correo electrónico tras el registro, integrada con Resend (llamadas directas de fetch) y Better Auth (requireEmailVerification: true), con pantalla de espera de confirmación y reenvío en `/cadastro/confirmar`, control de error en el inicio de sesión (`/entrar`) y suites de prueba unitaria/integración correspondientes.
+- Backoffice Editorial Visual completamente funcional (con panel unificado en `/app/backoffice`, editor de borradores con taxonomía jerárquica y alternativas, flujo de aprobación/comentado para revisores, e inmutabilidad de versiones publicadas mediante auto-incremento de rascunhos nuevos; además de un selector dev-only de roles integrado en la cabecera) y pruebas automatizadas correspondientes.
 - ADR aceptados para monolito modular, PostgreSQL/`pg`/Drizzle, Better Auth y soporte de despliegue.
 
 El siguiente tramo prioritario del vertical slice es:
 
-> verificación real de correo → backoffice editorial visual
+> analítica de producto y observabilidad
 
 No existen todavía implementaciones de analítica externa o IA (el módulo de IA se mantiene planeado como opcional y desacoplado).
 
@@ -688,10 +690,10 @@ Criterio de salida: calidad clínica y costo por usuario dentro de umbrales defi
 8. ~~Añadir revisión programada; incorporar FSRS y flashcards solo con el alcance aprobado.~~ **Completado.**
 9. ~~Implementar filtros, conteos y generación ampliada de sesiones.~~ **Completado.**
 10. ~~Diseñar e implementar el módulo de Billing, planes de suscripción y límites freemium en el backend (e.g. cuota diaria de preguntas).~~ **Completado.**
-11. Reemplazar el stub de autenticación con verificación de correo electrónico real e integración del proveedor de emails.
-12. Construir la interfaz de usuario para el backoffice editorial mínimo para que editores y revisores médicos puedan administrar contenido sin consultar bases de datos.
-13. Instrumentar analítica de producto, métricas y observabilidad avanzada.
-14. Ejecutar piloto cerrado antes de ampliar IA o gamificación.
+11. ~~**Vertical Slice — Verificación de correo electrónico real**: Implementar flujo completo de registro con verificación obligatoria. UI: pantalla de espera de confirmación y opción de reenvío en `/cadastro/confirmar`, más aviso y reenvío en `/entrar` ante el error `EMAIL_NOT_VERIFIED`. Backend: Better Auth con `requireEmailVerification: true`, integración de Resend SDK, y límite de 2 correos en tests para evitar abusar del API. Pruebas: unitarias del servicio e integración de envío.~~ **Completado.**
+12. **Vertical Slice — Backoffice Editorial Visual**: Interfaz web completa para que editores y revisores médicos gestionen preguntas. UI: listado, creación, edición, borrador, revisión y publicación de preguntas con alternativas. Backend: Server Actions con roles `medical_editor` y `medical_reviewer`. BD: persistencia en `question_versions`, `question_alternatives` y `editorial_reviews`. Pruebas: flujo editorial completo por rol.
+13. **Vertical Slice — Analítica de Producto y Observabilidad**: UI: instrumentar eventos de práctica y visualización de progreso. Backend: cola de eventos y reportes agregados. BD: tablas para eventos de analítica. Pruebas: agregación e ingesta.
+14. **Vertical Slice — Piloto cerrado**: Puesta en marcha con un volumen inicial de usuarios reales para validar la estabilidad de la plataforma y el hábito antes de gamificar o agregar IA.
 
 ## 17. Estrategia de pruebas
 

@@ -1,4 +1,4 @@
-import { eq, inArray } from "drizzle-orm";
+import { eq, inArray, and, desc } from "drizzle-orm";
 import { db } from "@/db/client";
 import {
   questions,
@@ -45,19 +45,26 @@ export class DrizzleContentRepository implements ContentRepository {
     const versions = await db
       .select()
       .from(questionVersions)
-      .where(inArray(questionVersions.id, versionIds));
+      .where(
+        and(
+          inArray(questionVersions.id, versionIds),
+          eq(questionVersions.status, "published"),
+        ),
+      );
 
     const alternatives = await db
       .select()
       .from(questionAlternatives)
       .where(inArray(questionAlternatives.questionVersionId, versionIds));
 
-    return filtered.map((q) => {
-      const version = versions.find((v) => v.id === q.publishedVersionId)!;
+    const results = [];
+    for (const q of filtered) {
+      const version = versions.find((v) => v.id === q.publishedVersionId);
+      if (!version) continue;
       const alts = alternatives.filter(
         (a) => a.questionVersionId === version.id,
       );
-      return {
+      results.push({
         question: {
           id: q.id,
           publishedVersionId: q.publishedVersionId,
@@ -84,8 +91,9 @@ export class DrizzleContentRepository implements ContentRepository {
           isCorrect: a.isCorrect,
           createdAt: a.createdAt,
         })),
-      };
-    });
+      });
+    }
+    return results;
   }
 
   async getQuestionVersion(versionId: string): Promise<{
@@ -293,6 +301,40 @@ export class DrizzleContentRepository implements ContentRepository {
       return {
         question: q as Question,
         activeVersion,
+      };
+    });
+  }
+
+  async listAllQuestionsWithVersions(): Promise<
+    Array<{
+      question: Question;
+      versions: QuestionVersion[];
+    }>
+  > {
+    const list = await db.select().from(questions);
+    if (list.length === 0) return [];
+
+    const versions = await db
+      .select()
+      .from(questionVersions)
+      .orderBy(desc(questionVersions.versionNumber));
+
+    return list.map((q) => {
+      const qVersions = versions.filter((v) => v.questionId === q.id);
+      return {
+        question: q as Question,
+        versions: qVersions.map((v) => ({
+          id: v.id,
+          questionId: v.questionId,
+          versionNumber: v.versionNumber,
+          status: v.status as QuestionStatus,
+          title: v.title,
+          statement: v.statement,
+          explanation: v.explanation,
+          taxonomyNodeId: v.taxonomyNodeId,
+          createdBy: v.createdBy,
+          createdAt: v.createdAt,
+        })),
       };
     });
   }

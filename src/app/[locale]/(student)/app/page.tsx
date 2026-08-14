@@ -63,9 +63,9 @@ export default async function AppPage({
 
   const date = profile.tentativeExamDate
     ? new Intl.DateTimeFormat(locale, {
-      dateStyle: "long",
-      timeZone: "UTC",
-    }).format(new Date(`${profile.tentativeExamDate}T12:00:00Z`))
+        dateStyle: "long",
+        timeZone: "UTC",
+      }).format(new Date(`${profile.tentativeExamDate}T12:00:00Z`))
     : t("dateUnknown");
 
   const hours = new Intl.NumberFormat(locale, {
@@ -167,10 +167,11 @@ export default async function AppPage({
                         : `/${locale}/app/practice/${activeSession.id}`
                     }
                     aria-disabled={quota.isBlocked}
-                    className={`block w-full rounded-lg px-4 py-2.5 text-center text-sm font-semibold transition-colors ${quota.isBlocked
-                      ? "pointer-events-none cursor-not-allowed bg-slate-200 text-slate-400"
-                      : "cursor-pointer bg-[#13A89E] text-white hover:bg-[#0f8e85]"
-                      }`}
+                    className={`block w-full rounded-lg px-4 py-2.5 text-center text-sm font-semibold transition-colors ${
+                      quota.isBlocked
+                        ? "pointer-events-none cursor-not-allowed bg-slate-200 text-slate-400"
+                        : "cursor-pointer bg-[#13A89E] text-white hover:bg-[#0f8e85]"
+                    }`}
                   >
                     {tDashboard("resumePractice")}
                   </a>
@@ -183,10 +184,11 @@ export default async function AppPage({
                     <button
                       type="submit"
                       disabled={quota.isBlocked}
-                      className={`block w-full rounded-lg px-4 py-2 text-center text-xs font-semibold transition-colors ${quota.isBlocked
-                        ? "cursor-not-allowed bg-slate-100 text-slate-300"
-                        : "cursor-pointer bg-slate-100 text-slate-700 hover:bg-slate-200"
-                        }`}
+                      className={`block w-full rounded-lg px-4 py-2 text-center text-xs font-semibold transition-colors ${
+                        quota.isBlocked
+                          ? "cursor-not-allowed bg-slate-100 text-slate-300"
+                          : "cursor-pointer bg-slate-100 text-slate-700 hover:bg-slate-200"
+                      }`}
                     >
                       {tDashboard("startNewPractice")}
                     </button>
@@ -202,10 +204,11 @@ export default async function AppPage({
                   <button
                     type="submit"
                     disabled={quota.isBlocked}
-                    className={`block w-full rounded-lg px-4 py-2.5 text-center text-sm font-medium transition-colors ${quota.isBlocked
-                      ? "cursor-not-allowed bg-slate-200 text-slate-400"
-                      : "cursor-pointer bg-[#13A89E] text-white hover:bg-[#0f8e85]"
-                      }`}
+                    className={`block w-full rounded-lg px-4 py-2.5 text-center text-sm font-medium transition-colors ${
+                      quota.isBlocked
+                        ? "cursor-not-allowed bg-slate-200 text-slate-400"
+                        : "cursor-pointer bg-[#13A89E] text-white hover:bg-[#0f8e85]"
+                    }`}
                   >
                     {tDashboard("startPractice")}
                   </button>
@@ -234,10 +237,11 @@ export default async function AppPage({
                 <button
                   type="submit"
                   disabled={dueCount === 0 || quota.isBlocked}
-                  className={`block w-full cursor-pointer rounded-lg px-4 py-2.5 text-center text-sm font-medium transition-colors ${dueCount > 0 && !quota.isBlocked
-                    ? "bg-[#102A43] text-white hover:bg-[#1a3f60]"
-                    : "cursor-not-allowed bg-slate-200 text-slate-400"
-                    }`}
+                  className={`block w-full cursor-pointer rounded-lg px-4 py-2.5 text-center text-sm font-medium transition-colors ${
+                    dueCount > 0 && !quota.isBlocked
+                      ? "bg-[#102A43] text-white hover:bg-[#1a3f60]"
+                      : "cursor-not-allowed bg-slate-200 text-slate-400"
+                  }`}
                 >
                   {tDashboard("startReview")}
                 </button>

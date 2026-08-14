@@ -26,9 +26,11 @@ body {
   margin: 0;
   min-width: 320px;
   background:
-    radial-gradient(circle at 85% 8%,
+    radial-gradient(
+      circle at 85% 8%,
       rgba(19, 168, 158, 0.12),
-      transparent 25rem),
+      transparent 25rem
+    ),
     var(--surface);
   font-family: "Manrope Variable", "Manrope", sans-serif;
 }
@@ -588,7 +590,6 @@ h1 {
 }
 
 @media (max-width: 560px) {
-
   .choice-grid,
   .profile-summary {
     grid-template-columns: 1fr;
@@ -617,7 +618,6 @@ h1 {
 }
 
 @media (prefers-reduced-motion: reduce) {
-
   *,
   *::before,
   *::after {

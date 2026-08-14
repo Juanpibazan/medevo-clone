@@ -1,5 +1,9 @@
 import { todayInSaoPaulo } from "@/modules/identity";
-import { type Subscription, type SubscriptionTier, DAILY_LIMIT_FREE } from "../domain/billing";
+import {
+  type Subscription,
+  type SubscriptionTier,
+  DAILY_LIMIT_FREE,
+} from "../domain/billing";
 import type { BillingRepository } from "../infrastructure/drizzle-billing-repository";
 
 export class BillingService {
@@ -14,7 +18,7 @@ export class BillingService {
     const now = new Date();
     // Premium subscription active for 1 year
     const nextYear = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000);
-    
+
     return this.repository.createOrUpdateSubscription({
       id,
       userId,
@@ -51,7 +55,7 @@ export class BillingService {
     const answeredToday = await this.repository.getVerifiedResponsesCountToday(
       userId,
       startOfDay,
-      endOfDay
+      endOfDay,
     );
 
     return {

@@ -34,4 +34,8 @@ export {
   supportedLocales,
 } from "./domain/identity";
 export type { SupportedLocale } from "./domain/identity";
-export { requestPasswordRecovery } from "./application/email-service";
+export {
+  requestPasswordRecovery,
+  ResendEmailService,
+} from "./application/email-service";
+export { emailService } from "./infrastructure/email-service-instance";

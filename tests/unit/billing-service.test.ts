@@ -1,7 +1,10 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { BillingService } from "../../src/modules/billing/application/billing-service";
 import type { BillingRepository } from "../../src/modules/billing/infrastructure/drizzle-billing-repository";
-import { type Subscription, DAILY_LIMIT_FREE } from "../../src/modules/billing/domain/billing";
+import {
+  type Subscription,
+  DAILY_LIMIT_FREE,
+} from "../../src/modules/billing/domain/billing";
 
 describe("BillingService Unit Tests", () => {
   let mockRepository: BillingRepository;
@@ -28,7 +31,9 @@ describe("BillingService Unit Tests", () => {
   });
 
   it("should return premium status when subscription is active", async () => {
-    vi.mocked(mockRepository.getActiveSubscription).mockResolvedValue(mockSubscription);
+    vi.mocked(mockRepository.getActiveSubscription).mockResolvedValue(
+      mockSubscription,
+    );
 
     const quota = await service.checkDailyQuota("user-1");
 
@@ -39,7 +44,9 @@ describe("BillingService Unit Tests", () => {
 
   it("should return free status with 0 usage when no active subscription exists", async () => {
     vi.mocked(mockRepository.getActiveSubscription).mockResolvedValue(null);
-    vi.mocked(mockRepository.getVerifiedResponsesCountToday).mockResolvedValue(0);
+    vi.mocked(mockRepository.getVerifiedResponsesCountToday).mockResolvedValue(
+      0,
+    );
 
     const quota = await service.checkDailyQuota("user-1");
 
@@ -51,7 +58,9 @@ describe("BillingService Unit Tests", () => {
 
   it("should block user when daily free limit is reached", async () => {
     vi.mocked(mockRepository.getActiveSubscription).mockResolvedValue(null);
-    vi.mocked(mockRepository.getVerifiedResponsesCountToday).mockResolvedValue(DAILY_LIMIT_FREE);
+    vi.mocked(mockRepository.getVerifiedResponsesCountToday).mockResolvedValue(
+      DAILY_LIMIT_FREE,
+    );
 
     const quota = await service.checkDailyQuota("user-1");
 
@@ -62,7 +71,9 @@ describe("BillingService Unit Tests", () => {
 
   it("should block user when daily free limit is exceeded", async () => {
     vi.mocked(mockRepository.getActiveSubscription).mockResolvedValue(null);
-    vi.mocked(mockRepository.getVerifiedResponsesCountToday).mockResolvedValue(DAILY_LIMIT_FREE + 2);
+    vi.mocked(mockRepository.getVerifiedResponsesCountToday).mockResolvedValue(
+      DAILY_LIMIT_FREE + 2,
+    );
 
     const quota = await service.checkDailyQuota("user-1");
 
@@ -72,11 +83,13 @@ describe("BillingService Unit Tests", () => {
   });
 
   it("should successfully upgrade a user to premium subscription", async () => {
-    vi.mocked(mockRepository.createOrUpdateSubscription).mockImplementation(async (sub) => ({
-      ...sub,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }));
+    vi.mocked(mockRepository.createOrUpdateSubscription).mockImplementation(
+      async (sub) => ({
+        ...sub,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }),
+    );
 
     const subscription = await service.upgradeToPremium("user-1");
 

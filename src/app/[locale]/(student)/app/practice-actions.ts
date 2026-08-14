@@ -122,4 +122,3 @@ export async function startSingleQuestionSessionAction(
   ]);
   redirect(`/${locale}/app/practice/${studySession.id}`);
 }
-

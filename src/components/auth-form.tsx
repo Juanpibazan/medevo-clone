@@ -18,9 +18,37 @@ export function AuthForm({ mode }: { mode: "signIn" | "signUp" }) {
   const router = useRouter();
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
+
+  const [unverifiedEmail, setUnverifiedEmail] = useState("");
+  const [resendPending, setResendPending] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState(false);
+
+  async function handleResendVerification() {
+    if (!unverifiedEmail) return;
+    setResendPending(true);
+    setResendSuccess(false);
+    try {
+      const { error: resendError } = await authClient.sendVerificationEmail({
+        email: unverifiedEmail,
+        callbackURL: `${window.location.origin}/pt-BR/onboarding`,
+      });
+      if (resendError) {
+        setError(t("errors.resendError"));
+      } else {
+        setResendSuccess(true);
+      }
+    } catch {
+      setError(t("errors.resendError"));
+    } finally {
+      setResendPending(false);
+    }
+  }
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
+    setUnverifiedEmail("");
+    setResendSuccess(false);
     const data = Object.fromEntries(new FormData(event.currentTarget));
     setPending(true);
     const callback = sanitizeLocalizedCallback(
@@ -38,11 +66,16 @@ export function AuthForm({ mode }: { mode: "signIn" | "signUp" }) {
           name: parsed.data.name,
           email: parsed.data.email,
           password: parsed.data.password,
+          callbackURL: `${window.location.origin}/pt-BR/onboarding`,
         });
         if (result.error) {
           setError(t("invalidCredentials"));
           return;
         }
+        router.push(
+          `/${locale}/cadastro/confirmar?email=${encodeURIComponent(parsed.data.email)}`,
+        );
+        return;
       } else {
         const parsed = credentialsSchema.safeParse(data);
         if (!parsed.success) {
@@ -54,11 +87,16 @@ export function AuthForm({ mode }: { mode: "signIn" | "signUp" }) {
           password: parsed.data.password,
         });
         if (result.error) {
-          setError(t("invalidCredentials"));
+          if (result.error.code === "EMAIL_NOT_VERIFIED") {
+            setUnverifiedEmail(parsed.data.email);
+            setError(t("errors.emailNotVerified"));
+          } else {
+            setError(t("invalidCredentials"));
+          }
           return;
         }
       }
-      router.push(mode === "signUp" ? `/${locale}/onboarding` : callback);
+      router.push(callback);
       router.refresh();
     } finally {
       setPending(false);
@@ -108,9 +146,27 @@ export function AuthForm({ mode }: { mode: "signIn" | "signUp" }) {
         )}
       </div>
       {error && (
-        <p className="error" role="alert">
-          {error}
-        </p>
+        <div
+          className="flex flex-col gap-2 rounded-lg border border-red-200 bg-red-50 p-3.5 text-xs text-red-800"
+          role="alert"
+        >
+          <p>{error}</p>
+          {unverifiedEmail && (
+            <button
+              type="button"
+              disabled={resendPending}
+              onClick={handleResendVerification}
+              className="mt-1 cursor-pointer self-start font-bold text-[#102A43] hover:underline disabled:opacity-50"
+            >
+              {resendPending ? t("working") : t("errors.resendLink")}
+            </button>
+          )}
+          {resendSuccess && (
+            <p className="mt-1 font-semibold text-emerald-800">
+              {t("errors.resendSuccess")}
+            </p>
+          )}
+        </div>
       )}
       <button className="button" disabled={pending} type="submit">
         {pending ? t("working") : t(mode === "signUp" ? "create" : "enter")}

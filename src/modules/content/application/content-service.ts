@@ -42,6 +42,12 @@ export interface ContentRepository {
   listQuestions(): Promise<
     Array<{ question: Question; activeVersion: QuestionVersion | null }>
   >;
+  listAllQuestionsWithVersions(): Promise<
+    Array<{
+      question: Question;
+      versions: QuestionVersion[];
+    }>
+  >;
   listTaxonomyNodes(): Promise<TaxonomyNode[]>;
   getTaxonomyAncestors(nodeId: string): Promise<TaxonomyNode[]>;
 }
@@ -99,6 +105,10 @@ export class ContentService {
 
   async listQuestions() {
     return this.repository.listQuestions();
+  }
+
+  async listAllQuestionsWithVersions() {
+    return this.repository.listAllQuestionsWithVersions();
   }
 
   async listTaxonomyNodes() {

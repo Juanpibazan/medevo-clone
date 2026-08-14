@@ -47,9 +47,7 @@ describe("Practice, Correction and Spaced Repetition Integration", () => {
       });
 
       // Question 1
-      await db
-        .insert(questions)
-        .values({ id: questionId1 });
+      await db.insert(questions).values({ id: questionId1 });
       await db.insert(questionVersions).values({
         id: versionId1,
         questionId: questionId1,
@@ -83,9 +81,7 @@ describe("Practice, Correction and Spaced Repetition Integration", () => {
       ]);
 
       // Question 2
-      await db
-        .insert(questions)
-        .values({ id: questionId2 });
+      await db.insert(questions).values({ id: questionId2 });
       await db.insert(questionVersions).values({
         id: versionId2,
         questionId: questionId2,

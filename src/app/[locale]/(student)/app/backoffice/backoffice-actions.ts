@@ -103,10 +103,21 @@ export async function annulQuestionAction(locale: string, questionId: string) {
 }
 
 export async function switchRoleAction(roleCode: string) {
-  if (process.env.NODE_ENV !== "development") {
-    throw new Error("This action is only available in development mode.");
-  }
   const session = await getRequiredSession();
+  const isDev = process.env.NODE_ENV === "development";
+
+  // Fetch current roles in database to verify permissions
+  const rolesList = await profileService.getUserRoles(session.user.id);
+  const hasAccess =
+    isDev ||
+    rolesList.includes("admin") ||
+    rolesList.includes("medical_editor");
+
+  if (!hasAccess) {
+    throw new Error(
+      "Unauthorized. Only administrators and medical editors can switch roles in production.",
+    );
+  }
 
   await db.transaction(async (tx) => {
     // Delete existing roles

@@ -14,16 +14,18 @@ export async function StudentHeader({
 }) {
   const t = await getTranslations("nav");
 
+  const isDev = process.env.NODE_ENV === "development";
   let currentRole = "student";
-  const isDev = process.env.NODE_ENV === "development" || process.env.NODE_ENV === "production";
+  let showSwitcher = isDev;
 
-  if (isDev) {
-    const session = await auth.api.getSession({ headers: await headers() });
-    if (session) {
-      const roles = await profileService.getUserRoles(session.user.id);
-      if (roles.length > 0) {
-        currentRole = roles[0];
-      }
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (session) {
+    const rolesList = await profileService.getUserRoles(session.user.id);
+    if (rolesList.length > 0) {
+      currentRole = rolesList[0];
+    }
+    if (rolesList.includes("admin") || rolesList.includes("medical_editor")) {
+      showSwitcher = true;
     }
   }
 
@@ -33,7 +35,7 @@ export async function StudentHeader({
         <Brand alt={t("logoAlt")} />
       </Link>
       <nav className="nav-actions" aria-label={t("studentLabel")}>
-        {isDev && <DevRoleSwitcher initialRole={currentRole} />}
+        {showSwitcher && <DevRoleSwitcher initialRole={currentRole} />}
         {showLocale && <LocaleSwitcher />}
         <SignOutButton compact />
       </nav>

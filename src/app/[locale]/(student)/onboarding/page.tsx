@@ -43,6 +43,7 @@ export default async function OnboardingPage({
       <StudentHeader showLocale={false} />
       <section className="onboarding-wrap">
         <OnboardingForm
+          key={resolved.step}
           locale={canonicalLocale}
           profile={profile}
           step={resolved.step}

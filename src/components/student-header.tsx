@@ -15,7 +15,7 @@ export async function StudentHeader({
   const t = await getTranslations("nav");
 
   let currentRole = "student";
-  const isDev = process.env.NODE_ENV === "development";
+  const isDev = process.env.NODE_ENV === "development" || process.env.NODE_ENV === "production";
 
   if (isDev) {
     const session = await auth.api.getSession({ headers: await headers() });

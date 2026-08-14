@@ -330,7 +330,7 @@ export function PracticeSessionClient({
           {/* Question Grid */}
           <div className="grid grid-cols-5 gap-2">
             {items.map((item, idx) => {
-              const itemVerified = item.response?.verifiedAt !== null;
+              const itemVerified = !!item.response?.verifiedAt;
               const itemCorrect = item.response?.isCorrect;
               const itemHasDraft = selections[item.id] !== null;
 

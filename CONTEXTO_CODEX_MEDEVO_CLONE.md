@@ -35,13 +35,14 @@ El bootstrap técnico, el tramo de identidad/onboarding y el **vertical slice co
 - Base de datos inicial sembrada mediante `npm run db:seed` con taxonomía de especialidades y 12 preguntas de Revalida reales.
 - CI y scripts locales para formato, lint, tipos, migraciones, pruebas unitarias, integración, E2E y build.
 - Soporte para variables de entorno para migraciones y seeds en Neon/Vercel mediante `MIGRATION_DATABASE_URL` y `DATABASE_URL`.
+- Módulo de Billing y límites Freemium completamente funcional (con cuota de 4 preguntas diarias para cuentas gratuitas, simulación de pagos, bloqueo visual y pruebas correspondientes).
 - ADR aceptados para monolito modular, PostgreSQL/`pg`/Drizzle, Better Auth y soporte de despliegue.
 
 El siguiente tramo prioritario del vertical slice es:
 
-> límites freemium/Billing → verificación real de correo → backoffice editorial visual
+> verificación real de correo → backoffice editorial visual
 
-No existen todavía tablas ni implementaciones de billing, analítica externa o IA (el módulo de IA se mantiene planeado como opcional y desacoplado).
+No existen todavía implementaciones de analítica externa o IA (el módulo de IA se mantiene planeado como opcional y desacoplado).
 
 ## 2. Visión del producto
 
@@ -686,7 +687,7 @@ Criterio de salida: calidad clínica y costo por usuario dentro de umbrales defi
 7. ~~Construir resultados y cuaderno de errores.~~ **Completado.**
 8. ~~Añadir revisión programada; incorporar FSRS y flashcards solo con el alcance aprobado.~~ **Completado.**
 9. ~~Implementar filtros, conteos y generación ampliada de sesiones.~~ **Completado.**
-10. Diseñar e implementar el módulo de Billing, planes de suscripción y límites freemium en el backend (e.g. cuota diaria de preguntas).
+10. ~~Diseñar e implementar el módulo de Billing, planes de suscripción y límites freemium en el backend (e.g. cuota diaria de preguntas).~~ **Completado.**
 11. Reemplazar el stub de autenticación con verificación de correo electrónico real e integración del proveedor de emails.
 12. Construir la interfaz de usuario para el backoffice editorial mínimo para que editores y revisores médicos puedan administrar contenido sin consultar bases de datos.
 13. Instrumentar analítica de producto, métricas y observabilidad avanzada.

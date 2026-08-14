@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { BillingService } from "../../src/modules/billing/application/billing-service";
 import type { BillingRepository } from "../../src/modules/billing/infrastructure/drizzle-billing-repository";
-import type { Subscription } from "../../src/modules/billing/domain/billing";
+import { type Subscription, DAILY_LIMIT_FREE } from "../../src/modules/billing/domain/billing";
 
 describe("BillingService Unit Tests", () => {
   let mockRepository: BillingRepository;
@@ -46,29 +46,29 @@ describe("BillingService Unit Tests", () => {
     expect(quota.tier).toBe("free");
     expect(quota.isBlocked).toBe(false);
     expect(quota.answeredToday).toBe(0);
-    expect(quota.limit).toBe(10);
+    expect(quota.limit).toBe(DAILY_LIMIT_FREE);
   });
 
   it("should block user when daily free limit is reached", async () => {
     vi.mocked(mockRepository.getActiveSubscription).mockResolvedValue(null);
-    vi.mocked(mockRepository.getVerifiedResponsesCountToday).mockResolvedValue(10);
+    vi.mocked(mockRepository.getVerifiedResponsesCountToday).mockResolvedValue(DAILY_LIMIT_FREE);
 
     const quota = await service.checkDailyQuota("user-1");
 
     expect(quota.tier).toBe("free");
     expect(quota.isBlocked).toBe(true);
-    expect(quota.answeredToday).toBe(10);
+    expect(quota.answeredToday).toBe(DAILY_LIMIT_FREE);
   });
 
   it("should block user when daily free limit is exceeded", async () => {
     vi.mocked(mockRepository.getActiveSubscription).mockResolvedValue(null);
-    vi.mocked(mockRepository.getVerifiedResponsesCountToday).mockResolvedValue(12);
+    vi.mocked(mockRepository.getVerifiedResponsesCountToday).mockResolvedValue(DAILY_LIMIT_FREE + 2);
 
     const quota = await service.checkDailyQuota("user-1");
 
     expect(quota.tier).toBe("free");
     expect(quota.isBlocked).toBe(true);
-    expect(quota.answeredToday).toBe(12);
+    expect(quota.answeredToday).toBe(DAILY_LIMIT_FREE + 2);
   });
 
   it("should successfully upgrade a user to premium subscription", async () => {

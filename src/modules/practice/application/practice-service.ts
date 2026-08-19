@@ -68,13 +68,43 @@ export class PracticeService {
     return this.repository.getActiveSession(userId);
   }
 
-  async createSession(userId: string, specificQuestionVersionIds?: string[]) {
+  async createSession(
+    userId: string,
+    specificQuestionVersionIds?: string[],
+    options?: { taxonomyNodeId?: string },
+  ) {
     let versionIds = specificQuestionVersionIds;
 
     if (!versionIds) {
-      const published = await this.contentService.getPublishedQuestions();
+      let published = await this.contentService.getPublishedQuestions();
       if (published.length === 0) {
         throw new Error("No published questions available to practice");
+      }
+
+      if (options?.taxonomyNodeId) {
+        const allNodes = await this.contentService.listTaxonomyNodes();
+        const allowedNodeIds = new Set<string>();
+
+        const resolveChildren = (parentId: string) => {
+          const children = allNodes.filter((n) => n.parentId === parentId);
+          for (const child of children) {
+            if (!allowedNodeIds.has(child.id)) {
+              allowedNodeIds.add(child.id);
+              resolveChildren(child.id);
+            }
+          }
+        };
+
+        allowedNodeIds.add(options.taxonomyNodeId);
+        resolveChildren(options.taxonomyNodeId);
+
+        published = published.filter((q) =>
+          allowedNodeIds.has(q.activeVersion.taxonomyNodeId),
+        );
+
+        if (published.length === 0) {
+          throw new Error("no_questions_for_filters");
+        }
       }
 
       // Shuffle and pick up to 10

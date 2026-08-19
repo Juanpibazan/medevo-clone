@@ -1,4 +1,4 @@
-# MedEvo Clone — Contexto maestro para Codex
+# MedEvo Clone — Contexto maestro para el Agente
 
 > Documento de arranque para planificar y construir una plataforma fullstack de preparación médica inspirada funcionalmente en MedEvo, con identidad, contenido y código propios.
 >
@@ -690,10 +690,12 @@ Criterio de salida: calidad clínica y costo por usuario dentro de umbrales defi
 8. ~~Añadir revisión programada; incorporar FSRS y flashcards solo con el alcance aprobado.~~ **Completado.**
 9. ~~Implementar filtros, conteos y generación ampliada de sesiones.~~ **Completado.**
 10. ~~Diseñar e implementar el módulo de Billing, planes de suscripción y límites freemium en el backend (e.g. cuota diaria de preguntas).~~ **Completado.**
-11. ~~**Vertical Slice — Verificación de correo electrónico real**: Implementar flujo completo de registro con verificación obligatoria. UI: pantalla de espera de confirmación y opción de reenvío en `/cadastro/confirmar`, más aviso y reenvío en `/entrar` ante el error `EMAIL_NOT_VERIFIED`. Backend: Better Auth con `requireEmailVerification: true`, integración de Resend SDK, y límite de 2 correos en tests para evitar abusar del API. Pruebas: unitarias del servicio e integración de envío.~~ **Completado.**
-12. **Vertical Slice — Backoffice Editorial Visual**: Interfaz web completa para que editores y revisores médicos gestionen preguntas. UI: listado, creación, edición, borrador, revisión y publicación de preguntas con alternativas. Backend: Server Actions con roles `medical_editor` y `medical_reviewer`. BD: persistencia en `question_versions`, `question_alternatives` y `editorial_reviews`. Pruebas: flujo editorial completo por rol.
-13. **Vertical Slice — Analítica de Producto y Observabilidad**: UI: instrumentar eventos de práctica y visualización de progreso. Backend: cola de eventos y reportes agregados. BD: tablas para eventos de analítica. Pruebas: agregación e ingesta.
-14. **Vertical Slice — Piloto cerrado**: Puesta en marcha con un volumen inicial de usuarios reales para validar la estabilidad de la plataforma y el hábito antes de gamificar o agregar IA.
+11. ~~**Vertical Slice — Simulación de pago y límites freemium (Billing)**: Implementar la UI para el flujo de pago con un formulario simulado de tarjeta en `/app/billing` y la lógica para activar inmediatamente el plan Premium al enviar el formulario, desbloqueando los límites diarios en la práctica de preguntas y mostrando el estado activo en el panel del estudiante. Pruebas: integración de transiciones del estado de suscripción y límites freemium.~~ **Completado.**
+12. ~~**Vertical Slice — Verificación de correo electrónico real**: Implementar flujo completo de registro con verificación obligatoria. UI: pantalla de espera de confirmación y opción de reenvío en `/cadastro/confirmar`, más aviso y reenvío en `/entrar` ante el error `EMAIL_NOT_VERIFIED`. Backend: Better Auth con `requireEmailVerification: true`, integración de Resend SDK, y límite de 2 correos en tests para evitar abusar del API. Pruebas: unitarias del servicio e integración de envío.~~ **Completado.**
+13. ~~**Vertical Slice — Backoffice Editorial Visual**: Interfaz web completa para que editores y revisores médicos gestionen preguntas. UI: listado, creación, edición, borrador, revisión y publicación de preguntas con alternativas. Backend: Server Actions con roles `medical_editor` y `medical_reviewer`. BD: persistencia en `question_versions`, `question_alternatives` y `editorial_reviews`. Pruebas: flujo editorial completo por rol.~~ **Completado.**
+14. **Vertical Slice — Selección de preguntas por taxonomía (Filtros)**: Permitir que el estudiante elija qué especialidades, temas, focos o subfocos quiere practicar en cascada antes de iniciar una sesión de 10 preguntas. UI: Selectores en cascada en el Dashboard. Backend: Actualizar `createSession` en `PracticeService` para admitir y resolver de forma recursiva los descendientes del nodo de taxonomía filtrado. Pruebas: Selección de preguntas filtradas y creación de sesión correspondiente.
+15. **Vertical Slice — Analítica de Producto y Observabilidad**: UI: instrumentar eventos de práctica y visualización de progreso. Backend: cola de eventos y reportes agregados. BD: tablas para eventos de analítica. Pruebas: agregación e ingesta.
+16. **Vertical Slice — Piloto cerrado**: Puesta en marcha con un volumen inicial de usuarios reales para validar la estabilidad de la plataforma y el hábito antes de gamificar o agregar IA.
 
 ## 17. Estrategia de pruebas
 
@@ -749,7 +751,7 @@ Antes de cerrar la arquitectura o implementar las áreas afectadas, presentar op
 
 Para avanzar sin una decisión, Codex puede crear una interfaz, stub o ADR con estado `proposed`; no debe acoplar el sistema a una elección irreversible.
 
-## 20. Próximo encargo recomendado para Codex
+## 20. Próximo encargo recomendado para el Agente
 
 Usar Plan mode y enviar:
 
@@ -766,7 +768,7 @@ Lee completamente CONTEXTO_CODEX_MEDEVO_CLONE.md y cualquier AGENTS.md del repos
 No copies contenido ni diseño propietario de MedEvo. No incluyas IA, gamificación ni funciones fuera del alcance del MVP de cobro. Si delegas, usa subagentes solo para tareas independientes y devuelve una síntesis unificada.
 ```
 
-## 21. Forma de trabajo esperada de Codex
+## 21. Forma de trabajo esperada del Agente
 
 - Liderar con el resultado esperado y mantener cambios pequeños y revisables.
 - Inspeccionar antes de editar.

@@ -15,14 +15,28 @@ async function requireAuth() {
   return session;
 }
 
-export async function startPracticeSessionAction(locale: string) {
+export async function startPracticeSessionAction(
+  locale: string,
+  taxonomyNodeId?: string,
+): Promise<{ sessionId?: string; error?: string }> {
   const session = await requireAuth();
   const quota = await billingService.checkDailyQuota(session.user.id);
   if (quota.isBlocked) {
-    redirect(`/${locale}/app/billing`);
+    return { error: "quota_exceeded" };
   }
-  const studySession = await practiceService.createSession(session.user.id);
-  redirect(`/${locale}/app/practice/${studySession.id}`);
+  try {
+    const studySession = await practiceService.createSession(
+      session.user.id,
+      undefined,
+      { taxonomyNodeId },
+    );
+    return { sessionId: studySession.id };
+  } catch (err: any) {
+    if (err.message === "no_questions_for_filters") {
+      return { error: "no_questions_for_filters" };
+    }
+    return { error: "failed_to_create_session" };
+  }
 }
 
 export async function startReviewSessionAction(locale: string) {

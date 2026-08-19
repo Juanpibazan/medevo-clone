@@ -131,7 +131,15 @@
     "startReview": "Iniciar Revisión Programada",
     "viewErrors": "Ver Cuaderno de Errores",
     "viewFavorites": "Ver Favoritos",
-    "adminBackoffice": "Administración / Backoffice"
+    "adminBackoffice": "Administración / Backoffice",
+    "filterSpecialty": "Especialidad (Opcional)",
+    "filterTheme": "Tema (Opcional)",
+    "filterFocus": "Foco (Opcional)",
+    "filterSubfocus": "Subfoco (Opcional)",
+    "selectAll": "Todos",
+    "noQuestionsForFilters": "No hay preguntas suficientes con los filtros seleccionados.",
+    "failedToCreateSession": "Error al crear la sesión. Inténtalo de nuevo.",
+    "working": "Cargando..."
   },
   "practice": {
     "question": "Pregunta",

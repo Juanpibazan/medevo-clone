@@ -11,11 +11,10 @@ import {
 import { StudentHeader } from "@/components/student-header";
 import { learningService } from "@/modules/learning";
 import { practiceService } from "@/modules/practice";
-import {
-  startPracticeSessionAction,
-  startReviewSessionAction,
-} from "./practice-actions";
+import { startReviewSessionAction } from "./practice-actions";
 import { billingService } from "@/modules/billing";
+import { contentService } from "@/modules/content";
+import { PracticeFilters } from "@/components/practice-filters";
 
 export default async function AppPage({
   params,
@@ -60,6 +59,7 @@ export default async function AppPage({
     roles.includes("medical_editor") || roles.includes("admin");
 
   const activeSession = await practiceService.getActiveSession(session.user.id);
+  const taxonomyNodes = await contentService.listTaxonomyNodes();
 
   const date = profile.tentativeExamDate
     ? new Intl.DateTimeFormat(locale, {
@@ -158,62 +158,11 @@ export default async function AppPage({
                   ritmo diario.
                 </p>
               </div>
-              {activeSession ? (
-                <div className="flex flex-col gap-2">
-                  <a
-                    href={
-                      quota.isBlocked
-                        ? "#"
-                        : `/${locale}/app/practice/${activeSession.id}`
-                    }
-                    aria-disabled={quota.isBlocked}
-                    className={`block w-full rounded-lg px-4 py-2.5 text-center text-sm font-semibold transition-colors ${
-                      quota.isBlocked
-                        ? "pointer-events-none cursor-not-allowed bg-slate-200 text-slate-400"
-                        : "cursor-pointer bg-[#13A89E] text-white hover:bg-[#0f8e85]"
-                    }`}
-                  >
-                    {tDashboard("resumePractice")}
-                  </a>
-                  <form
-                    action={async () => {
-                      "use server";
-                      await startPracticeSessionAction(locale);
-                    }}
-                  >
-                    <button
-                      type="submit"
-                      disabled={quota.isBlocked}
-                      className={`block w-full rounded-lg px-4 py-2 text-center text-xs font-semibold transition-colors ${
-                        quota.isBlocked
-                          ? "cursor-not-allowed bg-slate-100 text-slate-300"
-                          : "cursor-pointer bg-slate-100 text-slate-700 hover:bg-slate-200"
-                      }`}
-                    >
-                      {tDashboard("startNewPractice")}
-                    </button>
-                  </form>
-                </div>
-              ) : (
-                <form
-                  action={async () => {
-                    "use server";
-                    await startPracticeSessionAction(locale);
-                  }}
-                >
-                  <button
-                    type="submit"
-                    disabled={quota.isBlocked}
-                    className={`block w-full rounded-lg px-4 py-2.5 text-center text-sm font-medium transition-colors ${
-                      quota.isBlocked
-                        ? "cursor-not-allowed bg-slate-200 text-slate-400"
-                        : "cursor-pointer bg-[#13A89E] text-white hover:bg-[#0f8e85]"
-                    }`}
-                  >
-                    {tDashboard("startPractice")}
-                  </button>
-                </form>
-              )}
+              <PracticeFilters
+                taxonomyNodes={taxonomyNodes}
+                quota={quota}
+                activeSession={activeSession}
+              />
             </div>
 
             {/* Review Card */}

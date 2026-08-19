@@ -25,7 +25,7 @@ export class ResendEmailService implements EmailService {
   constructor(
     private readonly apiKey: string,
     private readonly fromEmail: string,
-  ) {}
+  ) { }
 
   async sendPasswordReset(): Promise<void> {
     return Promise.resolve();
@@ -36,17 +36,24 @@ export class ResendEmailService implements EmailService {
     verificationUrl: string;
     locale: "pt-BR" | "es";
   }): Promise<void> {
-    if (process.env.NODE_ENV === "test") {
-      if (this.sentCount >= 2) {
-        throw new Error(
-          "Test email limit reached (max 2 emails per test session)",
-        );
+    const isTest = process.env.NODE_ENV === "test";
+    const isDev = process.env.NODE_ENV === "development";
+
+    if (isTest || isDev) {
+      if (isTest) {
+        if (this.sentCount >= 2) {
+          throw new Error(
+            "Test email limit reached (max 2 emails per test session)",
+          );
+        }
+        this.sentCount++;
       }
-      this.sentCount++;
 
       if (
+        !this.apiKey ||
         this.apiKey.includes("dummy") ||
-        this.apiKey.includes("your_api_key")
+        this.apiKey.includes("your_api_key") ||
+        this.apiKey === process.env.RESEND_API_KEY
       ) {
         console.log(
           `[TEST MOCK EMAIL] Sent verification email to ${input.recipient}: ${input.verificationUrl}`,

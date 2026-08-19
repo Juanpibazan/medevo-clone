@@ -1,3 +1,7 @@
+import * as dotenv from "dotenv";
+import { resolve } from "path";
+dotenv.config({ path: resolve(process.cwd(), ".env.local") });
+
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 test("redirects root and renders an accessible localized landing page", async ({
@@ -48,6 +52,20 @@ test("registers, resumes onboarding, blocks skips and shows the real summary", a
   await page.getByLabel("Correo electrónico").fill(email);
   await page.getByLabel("Contraseña").fill(password);
   await page.getByRole("button", { name: "Crear mi cuenta" }).click();
+  await expect(page).toHaveURL(/\/es\/cadastro\/confirmar\?email=/);
+
+  const { db } = await import("@/db/client");
+  const { users } = await import("@/db/schema");
+  const { eq } = await import("drizzle-orm");
+  await db
+    .update(users)
+    .set({ emailVerified: true })
+    .where(eq(users.email, email));
+
+  await page.goto("/es/entrar");
+  await page.getByLabel("Correo electrónico").fill(email);
+  await page.getByLabel("Contraseña").fill(password);
+  await page.getByRole("button", { name: "Ingresar" }).click();
   await expect(page).toHaveURL(/\/es\/onboarding\?step=1$/);
   await expect(page.locator('select[name="locale"]')).toHaveCount(0);
   await expect(page.getByRole("radio", { name: "Español" })).toBeChecked();

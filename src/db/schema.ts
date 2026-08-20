@@ -12,6 +12,7 @@ import {
   text,
   timestamp,
   uniqueIndex,
+  jsonb,
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
@@ -364,6 +365,19 @@ export const editorialReviews = pgTable("editorial_reviews", {
     enum: ["approved", "changes_requested", "annulled"],
   }).notNull(),
   comments: text("comments"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const analyticsEvents = pgTable("analytics_events", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").references(() => users.id, { onDelete: "cascade" }),
+  eventType: text("event_type").notNull(),
+  properties: jsonb("properties")
+    .$type<Record<string, unknown>>()
+    .notNull()
+    .default({}),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

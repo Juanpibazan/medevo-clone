@@ -25,7 +25,7 @@ export class ResendEmailService implements EmailService {
   constructor(
     private readonly apiKey: string,
     private readonly fromEmail: string,
-  ) { }
+  ) {}
 
   async sendPasswordReset(): Promise<void> {
     return Promise.resolve();

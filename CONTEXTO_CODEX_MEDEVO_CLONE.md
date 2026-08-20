@@ -37,12 +37,13 @@ El bootstrap técnico, el tramo de identidad/onboarding y el **vertical slice co
 - Soporte para variables de entorno para migraciones y seeds en Neon/Vercel mediante `MIGRATION_DATABASE_URL` y `DATABASE_URL`.
 - Módulo de Billing y límites Freemium completamente funcional (con cuota de 4 preguntas diarias para cuentas gratuitas, simulación de pagos, bloqueo visual y pruebas correspondientes).
 - Verificación obligatoria de correo electrónico tras el registro, integrada con Resend (llamadas directas de fetch) y Better Auth (requireEmailVerification: true), con pantalla de espera de confirmación y reenvío en `/cadastro/confirmar`, control de error en el inicio de sesión (`/entrar`) y suites de prueba unitaria/integración correspondientes.
-- Backoffice Editorial Visual completamente funcional (con panel unificado en `/app/backoffice`, editor de borradores con taxonomía jerárquica y alternativas, flujo de aprobación/comentado para revisores, e inmutabilidad de versiones publicadas mediante auto-incremento de rascunhos nuevos; además de un selector de roles integrado en la cabecera visible en desarrollo y para usuarios administradores/editores en producción) y pruebas automatizadas correspondientes.
+- Backoffice Editorial Visual completamente funcional (con panel unificado en `/app/backoffice`, editor de borradores con taxonomía jerárquica y alternativas, flujo de aprobación/comentado para revisores, e inmutabilidad de versiones publicadas mediante auto-incremento de rascunhos novos; además de un selector de roles integrado en la cabecera visible en desarrollo y para usuarios administradores/editores en producción) y pruebas automatizadas correspondientes.
+- Analítica de Producto y Observabilidad en tiempo real completamente funcional, con el módulo modular `src/modules/analytics`, la tabla `analytics_events` persistiendo los eventos de práctica asíncronamente en segundo plano, visualización interactiva de progreso diario, precisión global, tiempo medio y rendimiento por especialidad raíz en el Dashboard, así como pruebas de integración robustas en Vitest.
 - ADR aceptados para monolito modular, PostgreSQL/`pg`/Drizzle, Better Auth y soporte de despliegue.
 
 El siguiente tramo prioritario del vertical slice es:
 
-> analítica de producto y observabilidad
+> piloto cerrado (Puesta en marcha con un volumen inicial de usuarios reales)
 
 No existen todavía implementaciones de analítica externa o IA (el módulo de IA se mantiene planeado como opcional y desacoplado).
 
@@ -693,8 +694,8 @@ Criterio de salida: calidad clínica y costo por usuario dentro de umbrales defi
 11. ~~**Vertical Slice — Simulación de pago y límites freemium (Billing)**: Implementar la UI para el flujo de pago con un formulario simulado de tarjeta en `/app/billing` y la lógica para activar inmediatamente el plan Premium al enviar el formulario, desbloqueando los límites diarios en la práctica de preguntas y mostrando el estado activo en el panel del estudiante. Pruebas: integración de transiciones del estado de suscripción y límites freemium.~~ **Completado.**
 12. ~~**Vertical Slice — Verificación de correo electrónico real**: Implementar flujo completo de registro con verificación obligatoria. UI: pantalla de espera de confirmación y opción de reenvío en `/cadastro/confirmar`, más aviso y reenvío en `/entrar` ante el error `EMAIL_NOT_VERIFIED`. Backend: Better Auth con `requireEmailVerification: true`, integración de Resend SDK, y límite de 2 correos en tests para evitar abusar del API. Pruebas: unitarias del servicio e integración de envío.~~ **Completado.**
 13. ~~**Vertical Slice — Backoffice Editorial Visual**: Interfaz web completa para que editores y revisores médicos gestionen preguntas. UI: listado, creación, edición, borrador, revisión y publicación de preguntas con alternativas. Backend: Server Actions con roles `medical_editor` y `medical_reviewer`. BD: persistencia en `question_versions`, `question_alternatives` y `editorial_reviews`. Pruebas: flujo editorial completo por rol.~~ **Completado.**
-14. **Vertical Slice — Selección de preguntas por taxonomía (Filtros)**: Permitir que el estudiante elija qué especialidades, temas, focos o subfocos quiere practicar en cascada antes de iniciar una sesión de 10 preguntas. UI: Selectores en cascada en el Dashboard. Backend: Actualizar `createSession` en `PracticeService` para admitir y resolver de forma recursiva los descendientes del nodo de taxonomía filtrado. Pruebas: Selección de preguntas filtradas y creación de sesión correspondiente.
-15. **Vertical Slice — Analítica de Producto y Observabilidad**: UI: instrumentar eventos de práctica y visualización de progreso. Backend: cola de eventos y reportes agregados. BD: tablas para eventos de analítica. Pruebas: agregación e ingesta.
+14. ~~**Vertical Slice — Selección de preguntas por taxonomía (Filtros)**: Permitir que el estudiante elija qué especialidades, temas, focos o subfocos quiere practicar en cascada antes de iniciar una sesión de 10 preguntas. UI: Selectores en cascada en el Dashboard. Backend: Actualizar `createSession` en `PracticeService` para admitir y resolver de forma recursiva los descendientes del nodo de taxonomía filtrado. Pruebas: Selección de preguntas filtradas y creación de sesión correspondiente.~~ **Completado.**
+15. ~~**Vertical Slice — Analítica de Producto y Observabilidad**: UI: instrumentar eventos de práctica y visualización de progreso. Backend: cola de eventos y reportes agregados. BD: tablas para eventos de analítica. Pruebas: agregación e ingesta.~~ **Completado.** (Implementado el almacenamiento asíncrono no bloqueante de eventos de práctica, cálculo de precisión, tiempo promedio y desempeño por especialidad en tiempo real, widgets visuales en el Dashboard, linter a cero y pruebas aprobadas).
 16. **Vertical Slice — Piloto cerrado**: Puesta en marcha con un volumen inicial de usuarios reales para validar la estabilidad de la plataforma y el hábito antes de gamificar o agregar IA.
 
 ## 17. Estrategia de pruebas
@@ -758,14 +759,12 @@ Usar Plan mode y enviar:
 ```text
 Lee completamente CONTEXTO_CODEX_MEDEVO_CLONE.md y cualquier AGENTS.md del repositorio. Inspecciona el estado actual sin modificar archivos. Después:
 
-1. analiza la estructura y las APIs de los módulos `content`, `practice` y `learning` implementados;
-2. diseña el esquema de datos y el flujo del módulo `billing` para definir planes (free vs premium) y cuotas de uso (e.g., límite de 10 preguntas diarias en cuentas gratuitas);
-3. implementa las validaciones de acceso en el servidor para forzar los límites de uso freemium, asegurando que un estudiante gratuito reciba un bloqueo visual amigable si supera su cuota;
-4. añade un stub/simulador de pasarela de pagos para permitir que el estudiante suba de nivel a cuenta Premium;
-5. escribe pruebas de integración y unitarias que verifiquen las reglas de cuotas diarias de uso y las transiciones del estado de suscripción;
-6. hazme únicamente las preguntas bloqueantes y espera aprobación antes de implementar.
+1. revisa la cobertura de pruebas de extremo a extremo (E2E) mediante Playwright en `tests/e2e/` para asegurar que el flujo crítico de práctica, billing, onboarding y backoffice pase limpiamente;
+2. realiza una auditoría detallada de seguridad y autorización en servidor para asegurar que los endpoints, Server Actions y APIs validen correctamente los roles (`medical_editor`, `medical_reviewer`, `admin`) y que los datos sensibles de los estudiantes no estén expuestos;
+3. prepara y optimiza las consultas a la base de datos de los filtros de taxonomía y métricas agregadas de analítica mediante índices si es necesario;
+4. hazme únicamente las preguntas bloqueantes y espera aprobación antes de implementar.
 
-No copies contenido ni diseño propietario de MedEvo. No incluyas IA, gamificación ni funciones fuera del alcance del MVP de cobro. Si delegas, usa subagentes solo para tareas independientes y devuelve una síntesis unificada.
+No copies contenido ni diseño de MedEvo.
 ```
 
 ## 21. Forma de trabajo esperada del Agente

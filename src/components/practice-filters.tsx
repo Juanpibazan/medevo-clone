@@ -220,7 +220,7 @@ export function PracticeFilters({
               aria-disabled={quota.isBlocked}
               className={`block w-full rounded-lg px-4 py-2.5 text-center text-sm font-semibold transition-colors ${
                 quota.isBlocked
-                  ? "pointer-events-none cursor-not-allowed bg-slate-200 text-slate-400"
+                  ? "pointer-events-none cursor-not-allowed bg-slate-200"
                   : "cursor-pointer bg-[#102A43] text-white hover:bg-[#1a3f60]"
               }`}
             >

@@ -15,6 +15,7 @@ import { startReviewSessionAction } from "./practice-actions";
 import { billingService } from "@/modules/billing";
 import { contentService } from "@/modules/content";
 import { PracticeFilters } from "@/components/practice-filters";
+import { analyticsService } from "@/modules/analytics";
 
 export default async function AppPage({
   params,
@@ -53,6 +54,13 @@ export default async function AppPage({
     100,
   );
   const dueCount = dueQuestions.length;
+
+  // Recuperar métricas de analítica agregadas en tiempo real para el estudiante
+  const metrics = await analyticsService.getUserMetrics(session.user.id);
+  const dailyQuestionsGoal = Math.max(
+    5,
+    Math.round((profile.weeklyStudyMinutes || 300) / 10),
+  );
 
   const roles = await profileService.getUserRoles(session.user.id);
   const isEditorOrAdmin =
@@ -143,6 +151,124 @@ export default async function AppPage({
             </div>
           )}
 
+          {/* Sección de Mi Progreso */}
+          <div className="mb-8 rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+            <h2 className="mb-6 text-xl font-bold text-[#102A43]">
+              {tDashboard("myProgress")}
+            </h2>
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+              {/* Tarjeta Meta Diaria */}
+              <div className="flex flex-col justify-between rounded-xl border border-slate-100 bg-slate-50 p-4">
+                <div>
+                  <span className="mb-1 block text-xs font-semibold tracking-wider text-slate-500 uppercase">
+                    {tDashboard("dailyGoal")}
+                  </span>
+                  <span className="text-lg font-extrabold text-[#102A43]">
+                    {tDashboard("answeredToday", {
+                      count: metrics.answeredToday,
+                      goal: dailyQuestionsGoal,
+                    })}
+                  </span>
+                </div>
+                <div className="mt-4">
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-[#13A89E] to-teal-400 transition-all duration-500"
+                      style={{
+                        width: `${Math.min(100, Math.round((metrics.answeredToday / dailyQuestionsGoal) * 100))}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Tarjeta Precisión */}
+              <div className="flex flex-col justify-between rounded-xl border border-slate-100 bg-slate-50 p-4">
+                <div>
+                  <span className="mb-1 block text-xs font-semibold tracking-wider text-slate-500 uppercase">
+                    {tDashboard("precisionGlobal")}
+                  </span>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-3xl font-black text-[#13A89E]">
+                      {metrics.precisionGlobal}%
+                    </span>
+                  </div>
+                </div>
+                <div className="mt-3 text-xs font-medium text-slate-400">
+                  {tDashboard("answeredToday", {
+                    count: metrics.answeredToday,
+                    goal: dailyQuestionsGoal,
+                  })
+                    .split(" ")
+                    .slice(1)
+                    .join(" ")}
+                </div>
+              </div>
+
+              {/* Tarjeta Tiempo Promedio */}
+              <div className="flex flex-col justify-between rounded-xl border border-slate-100 bg-slate-50 p-4">
+                <div>
+                  <span className="mb-1 block text-xs font-semibold tracking-wider text-slate-500 uppercase">
+                    {tDashboard("averageTime")}
+                  </span>
+                  <span className="text-3xl font-black text-[#102A43]">
+                    {metrics.averageTimeSeconds > 0
+                      ? tDashboard("timeSeconds", {
+                          seconds: metrics.averageTimeSeconds,
+                        })
+                      : tDashboard("noTimeData")}
+                  </span>
+                </div>
+                <div className="mt-3 text-xs font-medium text-slate-400">
+                  {tDashboard("averageTime")}
+                </div>
+              </div>
+            </div>
+
+            {/* Rendimiento por Especialidad */}
+            {metrics.precisionBySpecialty.length > 0 && (
+              <div className="mt-6 border-t border-slate-100 pt-6">
+                <h3 className="mb-4 text-xs font-bold tracking-wider text-slate-500 uppercase">
+                  {tDashboard("performanceBySpecialty")}
+                </h3>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
+                  {metrics.precisionBySpecialty.map((spec) => (
+                    <div
+                      key={spec.specialtyId}
+                      className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50/50 p-3"
+                    >
+                      <div className="min-w-0 pr-2">
+                        <p
+                          className="truncate text-xs font-bold text-[#102A43]"
+                          title={spec.specialtyName}
+                        >
+                          {spec.specialtyName}
+                        </p>
+                        <p className="text-[10px] text-slate-400">
+                          {tDashboard("answeredToday", {
+                            count: spec.correctCount,
+                            goal: spec.totalCount,
+                          })}
+                        </p>
+                      </div>
+                      <span
+                        className={`rounded-md px-2.5 py-1 text-sm font-extrabold ${
+                          spec.precision >= 70
+                            ? "border border-emerald-100 bg-emerald-50 text-emerald-700"
+                            : spec.precision >= 50
+                              ? "border border-amber-100 bg-amber-50 text-amber-700"
+                              : "border border-red-100 bg-red-50 text-red-700"
+                        }`}
+                      >
+                        {spec.precision}%
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
           <h2 className="mb-4 text-xl font-bold text-[#102A43]">
             Ciclo de Práctica y Revisión
           </h2>
@@ -203,19 +329,19 @@ export default async function AppPage({
             <div className="flex gap-4">
               <a
                 href={`/${locale}/app/errors`}
-                className="font-medium text-[#13A89E] transition-colors hover:text-[#0f8e85]"
+                className="rounded-lg border border-[#13A89E] bg-slate-50 px-3 py-1.5 font-medium text-[#13A89E] transition-colors hover:bg-[#13A89E] hover:text-white"
               >
                 {tDashboard("viewErrors")}
               </a>
               <a
                 href={`/${locale}/app/errors?tab=favorites`}
-                className="font-medium text-[#13A89E] transition-colors hover:text-[#0f8e85]"
+                className="rounded-lg border border-[#13A89E] bg-slate-50 px-3 py-1.5 font-medium text-[#13A89E] transition-colors hover:bg-[#13A89E] hover:text-white"
               >
                 {tDashboard("viewFavorites")}
               </a>
               <a
                 href={`/${locale}/app/billing`}
-                className="font-medium text-[#13A89E] transition-colors hover:text-[#0f8e85]"
+                className="rounded-lg border border-[#13A89E] bg-slate-50 px-3 py-1.5 font-medium text-[#13A89E] transition-colors hover:bg-[#13A89E] hover:text-white"
               >
                 {tBilling("title")}
               </a>

@@ -139,7 +139,16 @@
     "selectAll": "Todos",
     "noQuestionsForFilters": "Não há questões suficientes com os filtros selecionados.",
     "failedToCreateSession": "Erro ao criar a sessão. Tente novamente.",
-    "working": "Carregando..."
+    "working": "Carregando...",
+    "myProgress": "Meu Progresso",
+    "dailyGoal": "Meta Diária",
+    "answeredToday": "{count} de {goal} respondidas hoje",
+    "precisionGlobal": "Precisão",
+    "averageTime": "Tempo Médio",
+    "timeSeconds": "{seconds} s / quest",
+    "noTimeData": "--",
+    "performanceBySpecialty": "Desempenho por Especialidade",
+    "noSpecialtyData": "Sem prática em especialidades ainda."
   },
   "practice": {
     "question": "Questão",

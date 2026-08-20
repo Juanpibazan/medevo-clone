@@ -8,7 +8,7 @@
   --coral: #b83a32;
   --coral-bright: #ff7a6b;
   --surface: #f4f9fb;
-  --white: #fff;
+  --white: #ffffff;
   --line: #c9dce3;
   --muted: #526b7a;
 }
@@ -17,26 +17,28 @@
   box-sizing: border-box;
 }
 
-html {
-  background: var(--surface);
-  color: var(--navy);
-}
+@layer base {
+  html {
+    background: var(--surface);
+    color: var(--navy);
+  }
 
-body {
-  margin: 0;
-  min-width: 320px;
-  background:
-    radial-gradient(
-      circle at 85% 8%,
-      rgba(19, 168, 158, 0.12),
-      transparent 25rem
-    ),
-    var(--surface);
-  font-family: "Manrope Variable", "Manrope", sans-serif;
-}
+  body {
+    margin: 0;
+    min-width: 320px;
+    background:
+      radial-gradient(
+        circle at 85% 8%,
+        rgba(19, 168, 158, 0.12),
+        transparent 25rem
+      ),
+      var(--surface);
+    font-family: "Manrope Variable", "Manrope", sans-serif;
+  }
 
-a {
-  color: inherit;
+  a {
+    color: inherit;
+  }
 }
 
 button,

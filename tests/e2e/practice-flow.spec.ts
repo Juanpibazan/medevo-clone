@@ -93,7 +93,9 @@ test("complete practice and review flow", async ({ page }, testInfo) => {
   await expect(page).toHaveURL(/\/es\/app\/errors$/);
 });
 
-test("cascading taxonomy filtering practice flow", async ({ page }, testInfo) => {
+test("cascading taxonomy filtering practice flow", async ({
+  page,
+}, testInfo) => {
   const email = `practice-tax-e2e-${testInfo.project.name}-${Date.now()}@example.test`;
   const password = "a-secure-e2e-practice-password";
 
@@ -133,10 +135,10 @@ test("cascading taxonomy filtering practice flow", async ({ page }, testInfo) =>
   // 2. Select cascading taxonomy filters
   // Select specialty: Pediatria
   await page.selectOption("#specialty-filter", "ped");
-  
+
   // Select theme: Neonatologia
   await page.selectOption("#theme-filter", "ped-neo");
-  
+
   // Select focus: Reanimação Neonatal
   await page.selectOption("#focus-filter", "ped-neo-reanim");
 
@@ -144,7 +146,9 @@ test("cascading taxonomy filtering practice flow", async ({ page }, testInfo) =>
   await page.selectOption("#subfocus-filter", "ped-neo-reanim-passos");
 
   // Start practice session
-  await page.getByRole("button", { name: "Iniciar Práctica (10 Preguntas)" }).click();
+  await page
+    .getByRole("button", { name: "Iniciar Práctica (10 Preguntas)" })
+    .click();
 
   // Expect to go to the practice page
   await expect(page).toHaveURL(/\/es\/app\/practice\/[a-f0-9-]+$/);

@@ -4,7 +4,7 @@ import {
   type StudySessionItem,
   calculateSessionResults,
 } from "../domain/practice";
-import type { Question, QuestionVersion, Alternative } from "@/modules/content";
+import type { Question, QuestionVersion, Alternative, TaxonomyNode } from "@/modules/content";
 
 export interface PracticeRepository {
   createSession(
@@ -60,6 +60,7 @@ export class PracticeService {
           alternatives: Alternative[];
         }>
       >;
+      listTaxonomyNodes(): Promise<TaxonomyNode[]>;
     },
     private readonly scheduleReviewFn?: ScheduleReviewFn,
   ) {}

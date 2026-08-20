@@ -6,6 +6,7 @@ import { auth } from "@/modules/identity";
 import { practiceService } from "@/modules/practice";
 import { learningService } from "@/modules/learning";
 import { billingService } from "@/modules/billing";
+import { analyticsService } from "@/modules/analytics";
 
 async function requireAuth() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -30,9 +31,14 @@ export async function startPracticeSessionAction(
       undefined,
       { taxonomyNodeId },
     );
+    analyticsService.trackEvent(session.user.id, "practice_session_started", {
+      sessionId: studySession.id,
+      taxonomyNodeId: taxonomyNodeId || null,
+    });
     return { sessionId: studySession.id };
-  } catch (err: any) {
-    if (err.message === "no_questions_for_filters") {
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : "";
+    if (errorMsg === "no_questions_for_filters") {
       return { error: "no_questions_for_filters" };
     }
     return { error: "failed_to_create_session" };
@@ -58,6 +64,10 @@ export async function startReviewSessionAction(locale: string) {
     session.user.id,
     versionIds,
   );
+  analyticsService.trackEvent(session.user.id, "review_session_started", {
+    sessionId: studySession.id,
+    questionCount: versionIds.length,
+  });
   redirect(`/${locale}/app/practice/${studySession.id}`);
 }
 
@@ -88,13 +98,21 @@ export async function verifyResponseAction(
   if (quota.isBlocked) {
     return { error: "quota_exceeded" as const };
   }
-  return practiceService.verifyResponse(
+  const result = await practiceService.verifyResponse(
     sessionId,
     itemId,
     session.user.id,
     alternativeId,
     elapsedSeconds,
   );
+  analyticsService.trackEvent(session.user.id, "question_answered", {
+    sessionId,
+    itemId,
+    alternativeId,
+    isCorrect: result.response.isCorrect,
+    timeTakenSeconds: elapsedSeconds,
+  });
+  return result;
 }
 
 export async function saveMetacognitiveMarkAction(
@@ -103,22 +121,48 @@ export async function saveMetacognitiveMarkAction(
   mark: "domine" | "duda" | "vacile" | "no_sabia",
 ) {
   const session = await requireAuth();
-  return practiceService.saveMetacognitiveMark(
+  const result = await practiceService.saveMetacognitiveMark(
     sessionId,
     itemId,
     session.user.id,
     mark,
   );
+  analyticsService.trackEvent(session.user.id, "metacognitive_marked", {
+    sessionId,
+    itemId,
+    mark,
+  });
+  return result;
 }
 
 export async function toggleFavoriteAction(sessionId: string, itemId: string) {
   const session = await requireAuth();
-  return practiceService.toggleFavorite(sessionId, itemId, session.user.id);
+  const result = await practiceService.toggleFavorite(
+    sessionId,
+    itemId,
+    session.user.id,
+  );
+  analyticsService.trackEvent(session.user.id, "favorite_toggled", {
+    sessionId,
+    itemId,
+    isFavorite: result.isFavorite,
+  });
+  return result;
 }
 
 export async function finishSessionAction(sessionId: string, locale: string) {
   const session = await requireAuth();
-  await practiceService.finishSession(sessionId, session.user.id);
+  const result = await practiceService.finishSession(
+    sessionId,
+    session.user.id,
+  );
+  analyticsService.trackEvent(session.user.id, "session_completed", {
+    sessionId,
+    precision: result.metrics.precision,
+    correctCount: result.metrics.correctCount,
+    totalCount: result.metrics.totalCount,
+    totalTimeSeconds: result.metrics.totalTimeSeconds,
+  });
   redirect(`/${locale}/app/practice/${sessionId}/results`);
 }
 
@@ -134,5 +178,13 @@ export async function startSingleQuestionSessionAction(
   const studySession = await practiceService.createSession(session.user.id, [
     questionVersionId,
   ]);
+  analyticsService.trackEvent(
+    session.user.id,
+    "single_question_practice_started",
+    {
+      sessionId: studySession.id,
+      questionVersionId,
+    },
+  );
   redirect(`/${locale}/app/practice/${studySession.id}`);
 }

@@ -4,7 +4,13 @@ import {
   type StudySessionItem,
   calculateSessionResults,
 } from "../domain/practice";
-import type { Question, QuestionVersion, Alternative, TaxonomyNode } from "@/modules/content";
+import type {
+  Question,
+  QuestionVersion,
+  Alternative,
+  TaxonomyNode,
+  QuestionImage,
+} from "@/modules/content";
 
 export interface PracticeRepository {
   createSession(
@@ -52,12 +58,14 @@ export class PracticeService {
         question: Question;
         version: QuestionVersion;
         alternatives: Alternative[];
+        images: QuestionImage[];
       } | null>;
       getPublishedQuestions(): Promise<
         Array<{
           question: Question;
           activeVersion: QuestionVersion;
           alternatives: Alternative[];
+          images: QuestionImage[];
         }>
       >;
       listTaxonomyNodes(): Promise<TaxonomyNode[]>;
@@ -139,7 +147,7 @@ export class PracticeService {
           );
         }
 
-        const { version, alternatives } = questionData;
+        const { version, alternatives, images } = questionData;
         const isVerified =
           item.response?.verifiedAt !== null &&
           item.response?.verifiedAt !== undefined;
@@ -169,8 +177,14 @@ export class PracticeService {
           createdAt: item.createdAt,
           title: version.title,
           statement: version.statement,
+          type: version.type,
           explanation: isVerified ? version.explanation : null,
           alternatives: safeAlternatives,
+          images: images.map((img) => ({
+            id: img.id,
+            url: img.url,
+            position: img.position,
+          })),
           response: item.response,
         };
       }),
@@ -186,8 +200,9 @@ export class PracticeService {
     sessionId: string,
     itemId: string,
     userId: string,
-    alternativeId: string,
+    alternativeId: string | null,
     elapsedSeconds: number,
+    responseText?: string,
   ) {
     const data = await this.repository.getSession(sessionId, userId);
     if (!data || data.session.status !== "in_progress") {
@@ -205,6 +220,7 @@ export class PracticeService {
 
     return this.repository.saveResponse(responseId, itemId, {
       selectedAlternativeId: alternativeId,
+      responseText: responseText ?? null,
       timeTakenSeconds: elapsedSeconds,
       updatedAt: new Date(),
     });
@@ -214,8 +230,9 @@ export class PracticeService {
     sessionId: string,
     itemId: string,
     userId: string,
-    alternativeId: string,
+    alternativeId: string | null,
     elapsedSeconds: number,
+    isCorrectOverride?: boolean,
   ) {
     const data = await this.repository.getSession(sessionId, userId);
     if (!data || data.session.status !== "in_progress") {
@@ -234,8 +251,21 @@ export class PracticeService {
     );
     if (!questionData) throw new Error("Question version not found");
 
-    const correctAlt = questionData.alternatives.find((a) => a.isCorrect);
-    const isCorrect = correctAlt?.id === alternativeId;
+    let isCorrect = false;
+    if (questionData.version.type === "open_ended") {
+      if (isCorrectOverride === undefined) {
+        throw new Error("Self-evaluation is required for discursive questions");
+      }
+      isCorrect = isCorrectOverride;
+    } else {
+      if (!alternativeId) {
+        throw new Error(
+          "Alternative selection is required for multiple choice questions",
+        );
+      }
+      const correctAlt = questionData.alternatives.find((a) => a.isCorrect);
+      isCorrect = correctAlt?.id === alternativeId;
+    }
 
     const responseId = item.response?.id ?? crypto.randomUUID();
 
@@ -254,7 +284,10 @@ export class PracticeService {
 
     return {
       response,
-      correctAlternativeId: correctAlt?.id ?? null,
+      correctAlternativeId:
+        questionData.version.type === "open_ended"
+          ? null
+          : (questionData.alternatives.find((a) => a.isCorrect)?.id ?? null),
       explanation: questionData.version.explanation,
     };
   }

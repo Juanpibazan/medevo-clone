@@ -11,3 +11,5 @@ coverage/
 *.tsbuildinfo
 dist/
 drizzle/meta/_journal.json.tmp
+/public/uploads/
+

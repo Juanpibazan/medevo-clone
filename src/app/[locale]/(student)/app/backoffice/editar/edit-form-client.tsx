@@ -2,13 +2,25 @@
 
 import { useState, useEffect, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { saveDraftAction } from "../backoffice-actions";
-import type { TaxonomyNode, AlternativeLetter } from "@/modules/content";
+import {
+  saveDraftAction,
+  getUploadPresignedUrlAction,
+} from "../backoffice-actions";
+import type {
+  TaxonomyNode,
+  AlternativeLetter,
+  QuestionType,
+} from "@/modules/content";
 
 interface AlternativeInput {
   optionLetter: AlternativeLetter;
   text: string;
   isCorrect: boolean;
+}
+
+interface ImageInput {
+  url: string;
+  position: number;
 }
 
 interface EditFormClientProps {
@@ -20,7 +32,9 @@ interface EditFormClientProps {
     statement: string;
     explanation: string;
     taxonomyNodeId: string;
+    type?: QuestionType;
     alternatives: AlternativeInput[];
+    images?: ImageInput[];
   } | null;
 }
 
@@ -33,6 +47,7 @@ export function EditFormClient({
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState("");
+  const [uploading, setUploading] = useState(false);
 
   // Form states
   const [title, setTitle] = useState(initialData?.title || "");
@@ -40,6 +55,10 @@ export function EditFormClient({
   const [explanation, setExplanation] = useState(
     initialData?.explanation || "",
   );
+  const [type, setType] = useState<QuestionType>(
+    initialData?.type || "multiple_choice",
+  );
+  const [images, setImages] = useState<ImageInput[]>(initialData?.images || []);
 
   // Taxonomy states (hierarchy: specialty -> theme -> focus -> subfocus)
   const [selectedSpecialty, setSelectedSpecialty] = useState("");
@@ -114,6 +133,51 @@ export function EditFormClient({
     setAlternatives(updated);
   };
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    setError("");
+
+    try {
+      const { uploadUrl, fileUrl, isLocalSimulation } =
+        await getUploadPresignedUrlAction(file.name, file.type);
+
+      if (isLocalSimulation) {
+        const res = await fetch(uploadUrl, {
+          method: "PUT",
+          body: file,
+        });
+        if (!res.ok) throw new Error("Erro na simulação do upload local.");
+      } else {
+        const res = await fetch(uploadUrl, {
+          method: "PUT",
+          body: file,
+          headers: {
+            "Content-Type": file.type,
+          },
+        });
+        if (!res.ok) throw new Error("Erro ao enviar imagem para o S3.");
+      }
+
+      setImages((prev) => [...prev, { url: fileUrl, position: prev.length }]);
+    } catch (err) {
+      console.error(err);
+      setError("Falha ao carregar imagem. Tente novamente.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setImages((prev) =>
+      prev
+        .filter((_, i) => i !== index)
+        .map((img, idx) => ({ ...img, position: idx })),
+    );
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -128,17 +192,22 @@ export function EditFormClient({
     const finalTaxonomyNodeId =
       selectedSubfocus || selectedFocus || selectedTheme || selectedSpecialty;
 
-    // Validate alternatives: must have exactly 1 correct option and no empty fields
-    const filledAlts = alternatives.filter((a) => a.text.trim() !== "");
-    if (filledAlts.length < 2) {
-      setError("Por favor, insira pelo menos 2 alternativas preenchidas.");
-      return;
-    }
+    // Validate alternatives only if multiple choice
+    const finalAlternatives =
+      type === "open_ended"
+        ? []
+        : alternatives.filter((a) => a.text.trim() !== "");
+    if (type === "multiple_choice") {
+      if (finalAlternatives.length < 2) {
+        setError("Por favor, insira pelo menos 2 alternativas preenchidas.");
+        return;
+      }
 
-    const correctAlt = filledAlts.find((a) => a.isCorrect);
-    if (!correctAlt) {
-      setError("Por favor, selecione uma alternativa correta.");
-      return;
+      const correctAlt = finalAlternatives.find((a) => a.isCorrect);
+      if (!correctAlt) {
+        setError("Por favor, selecione uma alternativa correta.");
+        return;
+      }
     }
 
     startTransition(async () => {
@@ -148,7 +217,9 @@ export function EditFormClient({
           statement,
           explanation,
           taxonomyNodeId: finalTaxonomyNodeId,
-          alternatives: filledAlts,
+          type,
+          alternatives: finalAlternatives,
+          images,
         });
 
         if (res.success) {
@@ -178,6 +249,41 @@ export function EditFormClient({
             {error}
           </div>
         )}
+
+        <div className="flex flex-col gap-1.5">
+          <label
+            htmlFor="type"
+            className="text-xs font-bold tracking-wider text-slate-500 uppercase"
+          >
+            Tipo de Questão
+          </label>
+          <div className="mt-1 flex gap-6">
+            <label className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-[#102A43]">
+              <input
+                type="radio"
+                name="question-type"
+                value="multiple_choice"
+                checked={type === "multiple_choice"}
+                onChange={() => setType("multiple_choice")}
+                disabled={pending}
+                className="h-4 w-4 border-slate-300 text-indigo-600 focus:ring-indigo-500"
+              />
+              Múltipla Escolha
+            </label>
+            <label className="flex cursor-pointer items-center gap-2 text-sm font-semibold text-[#102A43]">
+              <input
+                type="radio"
+                name="question-type"
+                value="open_ended"
+                checked={type === "open_ended"}
+                onChange={() => setType("open_ended")}
+                disabled={pending}
+                className="h-4 w-4 border-slate-300 text-indigo-600 focus:ring-indigo-500"
+              />
+              Discursiva (Aberta)
+            </label>
+          </div>
+        </div>
 
         <div className="flex flex-col gap-1.5">
           <label
@@ -222,7 +328,9 @@ export function EditFormClient({
             htmlFor="explanation"
             className="text-xs font-bold tracking-wider text-slate-500 uppercase"
           >
-            Explicação e Resolução Comentada (Feedback)
+            {type === "open_ended"
+              ? "Espelho de Correção (Feedback)"
+              : "Explicação e Resolução Comentada (Feedback)"}
           </label>
           <textarea
             id="explanation"
@@ -231,7 +339,11 @@ export function EditFormClient({
             disabled={pending}
             value={explanation}
             onChange={(e) => setExplanation(e.target.value)}
-            placeholder="Forneça a fundamentação teórica que explica por que a alternativa correta é a certa..."
+            placeholder={
+              type === "open_ended"
+                ? "Forneça o critério oficial de correção que o aluno usará para se auto-avaliar..."
+                : "Forneça a fundamentação teórica que explica por que a alternativa correta é a certa..."
+            }
             className="resize-y rounded-xl border border-slate-300 px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none disabled:bg-slate-100"
           />
         </div>
@@ -349,41 +461,116 @@ export function EditFormClient({
         </div>
       </div>
 
+      {type === "multiple_choice" && (
+        <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="text-xl font-bold text-[#102A43]">Alternativas</h2>
+          <p className="text-xs text-slate-400">
+            Marque a bolinha correspondente à alternativa correta.
+          </p>
+
+          <div className="space-y-4">
+            {alternatives.map((alt, index) => (
+              <div key={alt.optionLetter} className="flex items-start gap-4">
+                <div className="pt-2">
+                  <input
+                    type="radio"
+                    name="correct-alt"
+                    disabled={pending}
+                    checked={alt.isCorrect}
+                    onChange={() => handleCorrectToggle(index)}
+                    className="h-4 w-4 cursor-pointer border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                  />
+                </div>
+
+                <div className="flex flex-1 flex-col gap-1.5">
+                  <label className="text-xs font-bold text-slate-500">
+                    Alternativa {alt.optionLetter}
+                  </label>
+                  <input
+                    type="text"
+                    disabled={pending}
+                    value={alt.text}
+                    onChange={(e) => handleAltTextChange(index, e.target.value)}
+                    placeholder={`Insira o texto da opção ${alt.optionLetter}...`}
+                    className="rounded-xl border border-slate-300 px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none disabled:bg-slate-100"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-xl font-bold text-[#102A43]">Alternativas</h2>
+        <h2 className="text-xl font-bold text-[#102A43]">
+          Imagens Relacionadas
+        </h2>
         <p className="text-xs text-slate-400">
-          Marque a bolinha correspondente à alternativa correta.
+          Adicione imagens ilustrativas ou radiografias que acompanham a
+          questão.
         </p>
 
-        <div className="space-y-4">
-          {alternatives.map((alt, index) => (
-            <div key={alt.optionLetter} className="flex items-start gap-4">
-              <div className="pt-2">
-                <input
-                  type="radio"
-                  name="correct-alt"
-                  disabled={pending}
-                  checked={alt.isCorrect}
-                  onChange={() => handleCorrectToggle(index)}
-                  className="h-4 w-4 cursor-pointer border-slate-300 text-indigo-600 focus:ring-indigo-500"
+        {images.length > 0 && (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {images.map((img, index) => (
+              <div
+                key={img.url}
+                className="group relative flex aspect-video items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-slate-50"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={img.url}
+                  alt={`Imagem ${index + 1}`}
+                  className="max-h-full max-w-full object-contain"
                 />
+                <button
+                  type="button"
+                  onClick={() => removeImage(index)}
+                  disabled={pending}
+                  className="absolute top-1.5 right-1.5 cursor-pointer rounded-full bg-rose-600 p-1 text-xs text-white opacity-0 shadow-md transition-opacity group-hover:opacity-100 hover:bg-rose-700"
+                  title="Remover imagem"
+                >
+                  ✕
+                </button>
+                <span className="absolute bottom-1 left-2 rounded bg-slate-900/60 px-1.5 py-0.5 font-mono text-[10px] text-white">
+                  #{index + 1}
+                </span>
               </div>
+            ))}
+          </div>
+        )}
 
-              <div className="flex flex-1 flex-col gap-1.5">
-                <label className="text-xs font-bold text-slate-500">
-                  Alternativa {alt.optionLetter}
-                </label>
-                <input
-                  type="text"
-                  disabled={pending}
-                  value={alt.text}
-                  onChange={(e) => handleAltTextChange(index, e.target.value)}
-                  placeholder={`Insira o texto da opção ${alt.optionLetter}...`}
-                  className="rounded-xl border border-slate-300 px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none disabled:bg-slate-100"
+        <div className="flex w-full items-center justify-center">
+          <label className="flex h-32 w-full cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 transition-colors hover:bg-slate-100/50">
+            <div className="flex flex-col items-center justify-center pt-5 pb-6">
+              <svg
+                className="mb-2.5 h-8 w-8 text-slate-400"
+                aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 20 16"
+              >
+                <path
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
                 />
-              </div>
+              </svg>
+              <p className="mb-1 text-sm font-semibold text-slate-500">
+                {uploading ? "Enviando..." : "Clique para fazer upload"}
+              </p>
+              <p className="text-xs text-slate-400">PNG, JPG ou GIF</p>
             </div>
-          ))}
+            <input
+              type="file"
+              accept="image/*"
+              disabled={uploading || pending}
+              onChange={handleImageUpload}
+              className="hidden"
+            />
+          </label>
         </div>
       </div>
 
@@ -398,7 +585,7 @@ export function EditFormClient({
         </button>
         <button
           type="submit"
-          disabled={pending}
+          disabled={pending || uploading}
           className="cursor-pointer rounded-xl bg-teal-600 px-5 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-teal-500 disabled:opacity-50"
         >
           {pending ? "Salvando..." : "Salvar Rascunho"}

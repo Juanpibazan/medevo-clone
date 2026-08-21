@@ -1,6 +1,4 @@
-import type {
-  TaxonomyNode,
-} from "@/modules/content";
+import type { TaxonomyNode } from "@/modules/content";
 
 export interface UserMetrics {
   answeredToday: number;

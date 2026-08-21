@@ -187,6 +187,11 @@ export const questionStatusEnum = pgEnum("question_status", [
   "annulled",
 ]);
 
+export const questionTypeEnum = pgEnum("question_type", [
+  "multiple_choice",
+  "open_ended",
+]);
+
 export const sessionStatusEnum = pgEnum("session_status", [
   "in_progress",
   "completed",
@@ -238,6 +243,7 @@ export const questionVersions = pgTable("question_versions", {
   taxonomyNodeId: text("taxonomy_node_id")
     .notNull()
     .references(() => taxonomyNodes.id, { onDelete: "restrict" }),
+  type: questionTypeEnum("type").notNull().default("multiple_choice"),
   createdBy: text("created_by")
     .notNull()
     .references(() => users.id, { onDelete: "restrict" }),
@@ -295,6 +301,7 @@ export const responses = pgTable("responses", {
     () => questionAlternatives.id,
     { onDelete: "set null" },
   ),
+  responseText: text("response_text"),
   isCorrect: boolean("is_correct"),
   timeTakenSeconds: integer("time_taken_seconds").notNull().default(0),
   metacognitiveMark: metacognitiveMarkEnum("metacognitive_mark"),
@@ -378,6 +385,18 @@ export const analyticsEvents = pgTable("analytics_events", {
     .$type<Record<string, unknown>>()
     .notNull()
     .default({}),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export const questionImages = pgTable("question_images", {
+  id: text("id").primaryKey(),
+  questionVersionId: text("question_version_id")
+    .notNull()
+    .references(() => questionVersions.id, { onDelete: "cascade" }),
+  url: text("url").notNull(),
+  position: integer("position").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

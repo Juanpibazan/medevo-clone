@@ -256,4 +256,132 @@ describe("Practice, Correction and Spaced Repetition Integration", () => {
       await db.delete(users).where(eq(users.id, userId));
     }
   });
+
+  it("should support open-ended question practice, saving responseText, self-evaluation, and scheduling review", async () => {
+    const userId = randomUUID();
+    const taxonomyId = "test-tax-node-discursive";
+    const questionId = "test-qd-01";
+    const versionId = "test-qvd-01";
+
+    try {
+      // 1. Setup mock data
+      await db.insert(users).values({
+        id: userId,
+        name: "Test Student 2",
+        email: `${userId}@example.test`,
+      });
+
+      await db.insert(taxonomyNodes).values({
+        id: taxonomyId,
+        name: "Test Specialty Discursive",
+        level: "specialty",
+      });
+
+      await db.insert(questions).values({ id: questionId });
+      await db.insert(questionVersions).values({
+        id: versionId,
+        questionId: questionId,
+        versionNumber: 1,
+        status: "published",
+        type: "open_ended",
+        title: "Test Discursive Q1",
+        statement: "Explain why the sky is blue.",
+        explanation: "Rayleigh scattering",
+        taxonomyNodeId: taxonomyId,
+        createdBy: userId,
+      });
+
+      await db
+        .update(questions)
+        .set({ publishedVersionId: versionId })
+        .where(eq(questions.id, questionId));
+
+      // 2. Create study session
+      const session = await practiceService.createSession(userId, [versionId]);
+      expect(session.status).toBe("in_progress");
+
+      const sessionDetails = await practiceService.getSession(
+        session.id,
+        userId,
+      );
+      expect(sessionDetails!.items).toHaveLength(1);
+
+      const [item] = sessionDetails!.items;
+
+      // 3. Save draft answer (responseText)
+      await practiceService.saveDraftResponse(
+        session.id,
+        item.id,
+        userId,
+        null,
+        30,
+        "It's blue because of Rayleigh scattering.",
+      );
+
+      const sessionAfterDraft = await practiceService.getSession(
+        session.id,
+        userId,
+      );
+      expect(sessionAfterDraft!.items[0].response?.responseText).toBe(
+        "It's blue because of Rayleigh scattering.",
+      );
+
+      // 4. Verify/Evaluate response with self-evaluated correct=true
+      const verifyResult = await practiceService.verifyResponse(
+        session.id,
+        item.id,
+        userId,
+        null,
+        45,
+        true, // selfCorrect = true
+      );
+      expect(verifyResult.response.isCorrect).toBe(true);
+
+      // 5. Finish session
+      const results = await practiceService.finishSession(session.id, userId);
+      expect(results.session.status).toBe("completed");
+      expect(results.metrics.correctCount).toBe(1);
+
+      // 6. Check FSRS review queue
+      const card = await learningService.getReviewQueueItem(userId, questionId);
+      expect(card).not.toBeNull();
+      expect(card!.repetition).toBe(1);
+    } finally {
+      // Clean up
+      await db.delete(reviewQueue).where(eq(reviewQueue.userId, userId));
+      await db
+        .delete(responses)
+        .where(
+          inArray(
+            responses.sessionItemId,
+            db
+              .select({ id: studySessionItems.id })
+              .from(studySessionItems)
+              .innerJoin(
+                studySessions,
+                eq(studySessionItems.sessionId, studySessions.id),
+              )
+              .where(eq(studySessions.userId, userId)),
+          ),
+        );
+      await db
+        .delete(studySessionItems)
+        .where(
+          inArray(
+            studySessionItems.sessionId,
+            db
+              .select({ id: studySessions.id })
+              .from(studySessions)
+              .where(eq(studySessions.userId, userId)),
+          ),
+        );
+      await db.delete(studySessions).where(eq(studySessions.userId, userId));
+      await db
+        .delete(questionVersions)
+        .where(eq(questionVersions.id, versionId));
+      await db.delete(questions).where(eq(questions.id, questionId));
+      await db.delete(taxonomyNodes).where(eq(taxonomyNodes.id, taxonomyId));
+      await db.delete(users).where(eq(users.id, userId));
+    }
+  });
 });

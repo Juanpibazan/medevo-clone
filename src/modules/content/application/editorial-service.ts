@@ -3,21 +3,27 @@ import {
   questions,
   questionVersions,
   questionAlternatives,
+  questionImages,
   editorialReviews,
 } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { validateQuestionAlternatives } from "../domain/content";
-import type { AlternativeLetter } from "../domain/content";
+import type { AlternativeLetter, QuestionType } from "../domain/content";
 
 export interface QuestionDraftInput {
   title: string;
   statement: string;
   explanation: string;
   taxonomyNodeId: string;
+  type?: QuestionType;
   alternatives: Array<{
     optionLetter: AlternativeLetter;
     text: string;
     isCorrect: boolean;
+  }>;
+  images?: Array<{
+    url: string;
+    position: number;
   }>;
 }
 
@@ -26,7 +32,8 @@ export class EditorialService {
     editorId: string,
     input: QuestionDraftInput,
   ): Promise<{ questionId: string; versionId: string }> {
-    const validation = validateQuestionAlternatives(input.alternatives);
+    const qType = input.type ?? "multiple_choice";
+    const validation = validateQuestionAlternatives(input.alternatives, qType);
     if (!validation.success) {
       throw new Error(`Invalid alternatives configuration: ${validation.code}`);
     }
@@ -44,12 +51,23 @@ export class EditorialService {
         questionId,
         versionNumber: 1,
         status: "draft",
+        type: qType,
         title: input.title,
         statement: input.statement,
         explanation: input.explanation,
         taxonomyNodeId: input.taxonomyNodeId,
         createdBy: editorId,
       });
+
+      if (input.images && input.images.length > 0) {
+        const imagesToInsert = input.images.map((img) => ({
+          id: crypto.randomUUID(),
+          questionVersionId: versionId,
+          url: img.url,
+          position: img.position,
+        }));
+        await tx.insert(questionImages).values(imagesToInsert);
+      }
 
       const alternativesToInsert = input.alternatives.map((alt) => ({
         id: crypto.randomUUID(),
@@ -59,7 +77,9 @@ export class EditorialService {
         isCorrect: alt.isCorrect,
       }));
 
-      await tx.insert(questionAlternatives).values(alternativesToInsert);
+      if (alternativesToInsert.length > 0) {
+        await tx.insert(questionAlternatives).values(alternativesToInsert);
+      }
     });
 
     return { questionId, versionId };
@@ -112,6 +132,11 @@ export class EditorialService {
         .from(questionAlternatives)
         .where(eq(questionAlternatives.questionVersionId, publishedVersion.id));
 
+      const publishedImages = await tx
+        .select()
+        .from(questionImages)
+        .where(eq(questionImages.questionVersionId, publishedVersion.id));
+
       const newVersionId = crypto.randomUUID();
       const newVersionNumber = publishedVersion.versionNumber + 1;
 
@@ -120,6 +145,7 @@ export class EditorialService {
         questionId,
         versionNumber: newVersionNumber,
         status: "draft",
+        type: publishedVersion.type,
         title: publishedVersion.title,
         statement: publishedVersion.statement,
         explanation: publishedVersion.explanation,
@@ -135,7 +161,19 @@ export class EditorialService {
         isCorrect: alt.isCorrect,
       }));
 
-      await tx.insert(questionAlternatives).values(newAlternatives);
+      if (newAlternatives.length > 0) {
+        await tx.insert(questionAlternatives).values(newAlternatives);
+      }
+
+      if (publishedImages.length > 0) {
+        const newImages = publishedImages.map((img) => ({
+          id: crypto.randomUUID(),
+          questionVersionId: newVersionId,
+          url: img.url,
+          position: img.position,
+        }));
+        await tx.insert(questionImages).values(newImages);
+      }
 
       return { versionId: newVersionId };
     });
@@ -146,7 +184,8 @@ export class EditorialService {
     versionId: string,
     input: QuestionDraftInput,
   ): Promise<void> {
-    const validation = validateQuestionAlternatives(input.alternatives);
+    const qType = input.type ?? "multiple_choice";
+    const validation = validateQuestionAlternatives(input.alternatives, qType);
     if (!validation.success) {
       throw new Error(`Invalid alternatives configuration: ${validation.code}`);
     }
@@ -174,6 +213,7 @@ export class EditorialService {
           statement: input.statement,
           explanation: input.explanation,
           taxonomyNodeId: input.taxonomyNodeId,
+          type: qType,
           createdBy: editorId, // update last editor
         })
         .where(eq(questionVersions.id, versionId));
@@ -183,7 +223,7 @@ export class EditorialService {
         .delete(questionAlternatives)
         .where(eq(questionAlternatives.questionVersionId, versionId));
 
-      // Insert new alternatives
+      // Insert new alternatives if it's multiple choice
       const alternativesToInsert = input.alternatives.map((alt) => ({
         id: crypto.randomUUID(),
         questionVersionId: versionId,
@@ -192,7 +232,24 @@ export class EditorialService {
         isCorrect: alt.isCorrect,
       }));
 
-      await tx.insert(questionAlternatives).values(alternativesToInsert);
+      if (alternativesToInsert.length > 0) {
+        await tx.insert(questionAlternatives).values(alternativesToInsert);
+      }
+
+      // Update images
+      await tx
+        .delete(questionImages)
+        .where(eq(questionImages.questionVersionId, versionId));
+
+      if (input.images && input.images.length > 0) {
+        const imagesToInsert = input.images.map((img) => ({
+          id: crypto.randomUUID(),
+          questionVersionId: versionId,
+          url: img.url,
+          position: img.position,
+        }));
+        await tx.insert(questionImages).values(imagesToInsert);
+      }
 
       // Update question updatedAt
       await tx

@@ -38,11 +38,13 @@ El bootstrap técnico, el tramo de identidad/onboarding y el **vertical slice co
 - Módulo de Billing y límites Freemium completamente funcional (con cuota de 4 preguntas diarias para cuentas gratuitas, simulación de pagos, bloqueo visual y pruebas correspondientes).
 - Verificación obligatoria de correo electrónico tras el registro, integrada con Resend (llamadas directas de fetch) y Better Auth (requireEmailVerification: true), con pantalla de espera de confirmación y reenvío en `/cadastro/confirmar`, control de error en el inicio de sesión (`/entrar`) y suites de prueba unitaria/integración correspondientes.
 - Backoffice Editorial Visual completamente funcional (con panel unificado en `/app/backoffice`, editor de borradores con taxonomía jerárquica y alternativas, flujo de aprobación/comentado para revisores, e inmutabilidad de versiones publicadas mediante auto-incremento de rascunhos novos; además de un selector de roles integrado en la cabecera visible en desarrollo y para usuarios administradores/editores en producción) y pruebas automatizadas correspondientes.
+- Analítica de Producto y Observabilidad en tiempo real completamente funcional, con el módulo modular `src/modules/analytics`, la tabla `analytics_events` persistiendo los eventos de práctica asíncronamente en segundo plano, visualización interactiva de progreso diario, precisión global, tiempo medio y rendimiento por especialidad raíz en el Dashboard, así como pruebas de integración robustas en Vitest.
+- Diferenciación de tipos de preguntas (opciones múltiples vs discursivas/abiertas) e integración de almacenamiento de imágenes en AWS S3 (con simulación local para desarrollo y pruebas), totalmente funcionales. Implementado en el Backoffice Editorial Visual (creación, edición, carga y reordenamiento de imágenes) y en el reproductor de práctica del estudiante (soporte de respuestas textuales, auto-guardado en segundo plano, revelado seguro de criterios de corrección, autoevaluación guiada y FSRS), con pruebas integrales en Vitest.
 - ADR aceptados para monolito modular, PostgreSQL/`pg`/Drizzle, Better Auth y soporte de despliegue.
 
 El siguiente tramo prioritario del vertical slice es:
 
-> analítica de producto y observabilidad
+> piloto cerrado (Puesta en marcha con un volumen inicial de usuarios reales)
 
 No existen todavía implementaciones de analítica externa o IA (el módulo de IA se mantiene planeado como opcional y desacoplado).
 
@@ -793,6 +795,7 @@ El bootstrap inicial y el tramo principal de práctica se consideran completos a
 - CI con format/lint/typecheck/tests/build;
 - observabilidad inicial operativa;
 - identidad, onboarding y el vertical slice completo de práctica (sesión de preguntas, corrección, resultados, cuaderno de errores y FSRS) totalmente funcionales y localizados en `pt-BR` y `es`;
+- diferenciación de tipos de preguntas (opciones múltiples y discursivas/abiertas) e integración de almacenamiento de imágenes en AWS S3 (con simulación local para desarrollo y pruebas) totalmente funcionales y probadas;
 - ninguna dependencia crítica de contenido o infraestructura escondida.
 
 La observabilidad actual es deliberadamente mínima: health checks de vida y preparación sin exponer configuración ni errores internos. Antes de producción siguen pendientes proveedor de hosting, monitoreo operativo, backups/restauración, correo transaccional (verificación real de cuenta), rate limiting y revisión específica de privacidad/seguridad.

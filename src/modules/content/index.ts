@@ -20,10 +20,14 @@ export type {
   TaxonomyLevel,
   AlternativeLetter,
   QuestionStatus,
+  QuestionType,
+  QuestionImage,
 } from "./domain/content";
 export {
   taxonomyLevelSchema,
   questionStatusSchema,
   alternativeLetterSchema,
+  questionTypeSchema,
+  questionImageSchema,
   validateQuestionAlternatives,
 } from "./domain/content";

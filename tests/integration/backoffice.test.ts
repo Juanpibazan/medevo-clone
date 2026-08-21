@@ -10,6 +10,7 @@ import {
   questionAlternatives,
   taxonomyNodes,
   editorialReviews,
+  questionImages,
 } from "@/db/schema";
 import { editorialService } from "@/modules/content";
 
@@ -243,6 +244,102 @@ describe("Visual Backoffice Editorial Integration Tests", () => {
 
       await db.delete(taxonomyNodes).where(eq(taxonomyNodes.id, taxonomyId));
       await db.delete(users).where(inArray(users.id, [editorId, reviewerId]));
+    }
+  });
+
+  it("should support open-ended questions with images in backoffice", async () => {
+    const editorId = randomUUID();
+    const taxonomyId = "backoffice-test-tax-" + randomUUID();
+
+    await db.insert(users).values({
+      id: editorId,
+      name: "Dr. Editor Discursive",
+      email: `${editorId}@editor.test`,
+    });
+
+    await db.insert(taxonomyNodes).values({
+      id: taxonomyId,
+      name: "Backoffice Test Specialty Discursive",
+      level: "specialty",
+    });
+
+    try {
+      const draftResult = await editorialService.createQuestionDraft(editorId, {
+        title: "Discursive Question v1",
+        statement: "Describe the symptoms of appendicitis.",
+        explanation: "Right lower quadrant pain, fever, nausea.",
+        taxonomyNodeId: taxonomyId,
+        type: "open_ended",
+        alternatives: [],
+        images: [
+          { url: "https://example.com/image1.png", position: 0 },
+          { url: "https://example.com/image2.png", position: 1 },
+        ],
+      });
+
+      const qId = draftResult.questionId;
+      const vId = draftResult.versionId;
+
+      expect(qId).toBeDefined();
+      expect(vId).toBeDefined();
+
+      const [versionRow] = await db
+        .select()
+        .from(questionVersions)
+        .where(eq(questionVersions.id, vId));
+
+      expect(versionRow).toBeDefined();
+      expect(versionRow.type).toBe("open_ended");
+
+      const questionImagesRows = await db
+        .select()
+        .from(questionImages)
+        .where(eq(questionImages.questionVersionId, vId))
+        .orderBy(questionImages.position);
+
+      expect(questionImagesRows.length).toBe(2);
+      expect(questionImagesRows[0].url).toBe("https://example.com/image1.png");
+      expect(questionImagesRows[1].url).toBe("https://example.com/image2.png");
+
+      // Verify validation: open_ended question cannot have alternatives
+      await expect(
+        editorialService.createQuestionDraft(editorId, {
+          title: "Discursive Question invalid",
+          statement: "X",
+          explanation: "Y",
+          taxonomyNodeId: taxonomyId,
+          type: "open_ended",
+          alternatives: [{ optionLetter: "A", text: "Text", isCorrect: true }],
+        }),
+      ).rejects.toThrow();
+    } finally {
+      // Cleanup
+      const createdVersions = await db
+        .select({
+          id: questionVersions.id,
+          questionId: questionVersions.questionId,
+        })
+        .from(questionVersions)
+        .where(eq(questionVersions.createdBy, editorId));
+
+      const versionIds = createdVersions.map((v) => v.id);
+      const questionIds = Array.from(
+        new Set(createdVersions.map((v) => v.questionId)),
+      );
+
+      if (versionIds.length > 0) {
+        await db
+          .delete(questionImages)
+          .where(inArray(questionImages.questionVersionId, versionIds));
+        await db
+          .delete(questionVersions)
+          .where(inArray(questionVersions.id, versionIds));
+      }
+      if (questionIds.length > 0) {
+        await db.delete(questions).where(inArray(questions.id, questionIds));
+      }
+      await db.delete(taxonomyNodes).where(eq(taxonomyNodes.id, taxonomyId));
+      await db.delete(users).where(eq(users.id, editorId));
     }
   });
 });

@@ -51,7 +51,6 @@ export default async function PracticeSessionPage({
     favorite: t("favorite"),
   };
 
-  // Map dates and remove circular/non-serializable things from items for client usage
   const serializableItems = data.items.map((item) => ({
     id: item.id,
     sessionId: item.sessionId,
@@ -60,12 +59,15 @@ export default async function PracticeSessionPage({
     createdAt: item.createdAt,
     title: item.title,
     statement: item.statement,
+    type: item.type,
     explanation: item.explanation,
     alternatives: item.alternatives,
+    images: item.images,
     response: item.response
       ? {
           id: item.response.id,
           selectedAlternativeId: item.response.selectedAlternativeId,
+          responseText: item.response.responseText,
           isCorrect: item.response.isCorrect,
           timeTakenSeconds: item.response.timeTakenSeconds,
           metacognitiveMark: item.response.metacognitiveMark,

@@ -3,6 +3,8 @@ import {
   type Question,
   type QuestionVersion,
   type TaxonomyNode,
+  type QuestionImage,
+  type QuestionType,
   validateQuestionAlternatives,
 } from "../domain/content";
 
@@ -12,17 +14,20 @@ export interface ContentRepository {
       question: Question;
       activeVersion: QuestionVersion;
       alternatives: Alternative[];
+      images: QuestionImage[];
     }>
   >;
   getQuestionVersion(versionId: string): Promise<{
     question: Question;
     version: QuestionVersion;
     alternatives: Alternative[];
+    images: QuestionImage[];
   } | null>;
   getQuestionWithActiveVersion(questionId: string): Promise<{
     question: Question;
     activeVersion: QuestionVersion;
     alternatives: Alternative[];
+    images: QuestionImage[];
   } | null>;
   createQuestionWithVersion(
     questionId: string,
@@ -34,10 +39,12 @@ export interface ContentRepository {
     alternativesInput: Array<
       Omit<Alternative, "id" | "questionVersionId" | "createdAt">
     >,
+    imagesInput?: Array<{ url: string; position: number }>,
   ): Promise<{
     question: Question;
     version: QuestionVersion;
     alternatives: Alternative[];
+    images: QuestionImage[];
   }>;
   listQuestions(): Promise<
     Array<{ question: Question; activeVersion: QuestionVersion | null }>
@@ -74,14 +81,17 @@ export class ContentService {
       statement: string;
       explanation: string;
       taxonomyNodeId: string;
+      type?: QuestionType;
       alternatives: Array<{
         optionLetter: "A" | "B" | "C" | "D" | "E";
         text: string;
         isCorrect: boolean;
       }>;
+      images?: Array<{ url: string; position: number }>;
     },
   ) {
-    const val = validateQuestionAlternatives(input.alternatives);
+    const qType = input.type ?? "multiple_choice";
+    const val = validateQuestionAlternatives(input.alternatives, qType);
     if (!val.success) {
       throw new Error(`Invalid alternatives configuration: ${val.code}`);
     }
@@ -97,9 +107,11 @@ export class ContentService {
         statement: input.statement,
         explanation: input.explanation,
         taxonomyNodeId: input.taxonomyNodeId,
+        type: qType,
         createdBy: createdByUserId,
       },
       input.alternatives,
+      input.images,
     );
   }
 

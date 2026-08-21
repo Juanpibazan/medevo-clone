@@ -19,6 +19,18 @@ export type QuestionStatus = z.infer<typeof questionStatusSchema>;
 export const alternativeLetterSchema = z.enum(["A", "B", "C", "D", "E"]);
 export type AlternativeLetter = z.infer<typeof alternativeLetterSchema>;
 
+export const questionTypeSchema = z.enum(["multiple_choice", "open_ended"]);
+export type QuestionType = z.infer<typeof questionTypeSchema>;
+
+export const questionImageSchema = z.object({
+  id: z.string(),
+  questionVersionId: z.string(),
+  url: z.string(),
+  position: z.number().int().nonnegative(),
+  createdAt: z.date(),
+});
+export type QuestionImage = z.infer<typeof questionImageSchema>;
+
 export const taxonomyNodeSchema = z.object({
   id: z.string(),
   parentId: z.string().nullable(),
@@ -43,6 +55,7 @@ export const questionVersionSchema = z.object({
   questionId: z.string(),
   versionNumber: z.number().int().positive(),
   status: questionStatusSchema,
+  type: questionTypeSchema,
   title: z.string().min(1, "Title must not be empty"),
   statement: z.string().min(1, "Statement must not be empty"),
   explanation: z.string(),
@@ -65,7 +78,15 @@ export function validateQuestionAlternatives(
   alternatives: Array<
     Omit<Alternative, "id" | "questionVersionId" | "createdAt">
   >,
+  type: QuestionType = "multiple_choice",
 ) {
+  if (type === "open_ended") {
+    if (alternatives && alternatives.length > 0) {
+      return { success: false, code: "open_ended_cannot_have_alternatives" };
+    }
+    return { success: true };
+  }
+
   if (alternatives.length < 2 || alternatives.length > 5) {
     return { success: false, code: "invalid_alternative_count" };
   }

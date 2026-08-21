@@ -33,6 +33,7 @@ export const responseSchema = z.object({
   id: z.string(),
   sessionItemId: z.string(),
   selectedAlternativeId: z.string().nullable(),
+  responseText: z.string().nullable(),
   isCorrect: z.boolean().nullable(),
   timeTakenSeconds: z.number().int().nonnegative().default(0),
   metacognitiveMark: metacognitiveMarkSchema.nullable(),

@@ -7,6 +7,7 @@ import { practiceService } from "@/modules/practice";
 import { learningService } from "@/modules/learning";
 import { billingService } from "@/modules/billing";
 import { analyticsService } from "@/modules/analytics";
+import { contentService } from "@/modules/content";
 
 async function requireAuth() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -74,8 +75,9 @@ export async function startReviewSessionAction(locale: string) {
 export async function saveDraftAction(
   sessionId: string,
   itemId: string,
-  alternativeId: string,
+  alternativeId: string | null,
   elapsedSeconds: number,
+  responseText?: string,
 ) {
   const session = await requireAuth();
   await practiceService.saveDraftResponse(
@@ -84,14 +86,16 @@ export async function saveDraftAction(
     session.user.id,
     alternativeId,
     elapsedSeconds,
+    responseText,
   );
 }
 
 export async function verifyResponseAction(
   sessionId: string,
   itemId: string,
-  alternativeId: string,
+  alternativeId: string | null,
   elapsedSeconds: number,
+  isCorrectOverride?: boolean,
 ) {
   const session = await requireAuth();
   const quota = await billingService.checkDailyQuota(session.user.id);
@@ -104,6 +108,7 @@ export async function verifyResponseAction(
     session.user.id,
     alternativeId,
     elapsedSeconds,
+    isCorrectOverride,
   );
   analyticsService.trackEvent(session.user.id, "question_answered", {
     sessionId,
@@ -187,4 +192,28 @@ export async function startSingleQuestionSessionAction(
     },
   );
   redirect(`/${locale}/app/practice/${studySession.id}`);
+}
+
+export async function revealCorrectionCriteriaAction(
+  sessionId: string,
+  itemId: string,
+) {
+  const session = await requireAuth();
+  const data = await practiceService.getSession(sessionId, session.user.id);
+  if (!data) throw new Error("Session not found");
+
+  const item = data.items.find((i) => i.id === itemId);
+  if (!item) throw new Error("Session item not found");
+
+  if (!item.response?.responseText) {
+    throw new Error("Must provide response text before revealing criteria");
+  }
+
+  // Get full question data including explanation (criteria)
+  const questionData = await contentService.getQuestionVersion(
+    item.questionVersionId,
+  );
+  if (!questionData) throw new Error("Question not found");
+
+  return { explanation: questionData.version.explanation };
 }

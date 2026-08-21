@@ -3,7 +3,7 @@
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { auth, profileService } from "@/modules/identity";
-import { editorialService } from "@/modules/content";
+import { editorialService, type QuestionType } from "@/modules/content";
 import { db } from "@/db/client";
 import { userRoles } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -32,10 +32,15 @@ export async function saveDraftAction(
     statement: string;
     explanation: string;
     taxonomyNodeId: string;
+    type?: QuestionType;
     alternatives: Array<{
       optionLetter: "A" | "B" | "C" | "D" | "E";
       text: string;
       isCorrect: boolean;
+    }>;
+    images?: Array<{
+      url: string;
+      position: number;
     }>;
   },
 ) {
@@ -131,4 +136,13 @@ export async function switchRoleAction(roleCode: string) {
 
   revalidatePath("/");
   return { success: true };
+}
+
+export async function getUploadPresignedUrlAction(
+  filename: string,
+  fileType: string,
+) {
+  await requireRole(["medical_editor", "admin"]);
+  const { getUploadPresignedUrl } = await import("@/lib/s3");
+  return getUploadPresignedUrl(filename, fileType);
 }

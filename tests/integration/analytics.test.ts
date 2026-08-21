@@ -32,8 +32,12 @@ describe("Product Analytics and Observability Integration Tests", () => {
 
     try {
       // 0. Initial cleanup of potential leftovers
-      await db.delete(taxonomyNodes).where(inArray(taxonomyNodes.id, [specialtyId, themeId]));
-      await db.delete(questions).where(inArray(questions.id, [questionId1, questionId2]));
+      await db
+        .delete(taxonomyNodes)
+        .where(inArray(taxonomyNodes.id, [specialtyId, themeId]));
+      await db
+        .delete(questions)
+        .where(inArray(questions.id, [questionId1, questionId2]));
       await db.delete(users).where(eq(users.id, userId));
 
       // 1. Seed mock data

@@ -113,6 +113,7 @@ export class DrizzlePracticeRepository implements PracticeRepository {
               id: resp.id,
               sessionItemId: resp.sessionItemId,
               selectedAlternativeId: resp.selectedAlternativeId,
+              responseText: resp.responseText,
               isCorrect: resp.isCorrect,
               timeTakenSeconds: resp.timeTakenSeconds,
               metacognitiveMark:
@@ -160,6 +161,9 @@ export class DrizzlePracticeRepository implements PracticeRepository {
         if (patch.selectedAlternativeId !== undefined) {
           valuesToSet.selectedAlternativeId = patch.selectedAlternativeId;
         }
+        if (patch.responseText !== undefined) {
+          valuesToSet.responseText = patch.responseText;
+        }
         if (patch.isCorrect !== undefined) {
           valuesToSet.isCorrect = patch.isCorrect;
         }
@@ -186,6 +190,7 @@ export class DrizzlePracticeRepository implements PracticeRepository {
           id: responseId,
           sessionItemId,
           selectedAlternativeId: patch.selectedAlternativeId || null,
+          responseText: patch.responseText || null,
           isCorrect: patch.isCorrect !== undefined ? patch.isCorrect : null,
           timeTakenSeconds: patch.timeTakenSeconds || 0,
           metacognitiveMark: patch.metacognitiveMark || null,
@@ -206,6 +211,7 @@ export class DrizzlePracticeRepository implements PracticeRepository {
         id: row.id,
         sessionItemId: row.sessionItemId,
         selectedAlternativeId: row.selectedAlternativeId,
+        responseText: row.responseText,
         isCorrect: row.isCorrect,
         timeTakenSeconds: row.timeTakenSeconds,
         metacognitiveMark: row.metacognitiveMark as MetacognitiveMark | null,

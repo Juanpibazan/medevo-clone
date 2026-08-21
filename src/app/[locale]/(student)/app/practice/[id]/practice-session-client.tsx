@@ -8,6 +8,7 @@ import {
   saveMetacognitiveMarkAction,
   toggleFavoriteAction,
   finishSessionAction,
+  revealCorrectionCriteriaAction,
 } from "../../practice-actions";
 import type { MetacognitiveMark } from "@/modules/practice";
 
@@ -18,6 +19,12 @@ interface Alternative {
   isCorrect?: boolean;
 }
 
+interface QuestionImage {
+  id: string;
+  url: string;
+  position: number;
+}
+
 interface Item {
   id: string;
   sessionId: string;
@@ -26,11 +33,14 @@ interface Item {
   createdAt: Date;
   title: string;
   statement: string;
+  type: "multiple_choice" | "open_ended";
   explanation: string | null;
   alternatives: Alternative[];
+  images: QuestionImage[];
   response: {
     id: string;
     selectedAlternativeId: string | null;
+    responseText: string | null;
     isCorrect: boolean | null;
     timeTakenSeconds: number;
     metacognitiveMark: MetacognitiveMark | null;
@@ -69,10 +79,37 @@ export function PracticeSessionClient({
     },
   );
 
+  const [textResponses, setTextResponses] = useState<Record<string, string>>(
+    () => {
+      const initial: Record<string, string> = {};
+      for (const item of initialItems) {
+        initial[item.id] = item.response?.responseText ?? "";
+      }
+      return initial;
+    },
+  );
+
   const [times, setTimes] = useState<Record<string, number>>(() => {
     const initial: Record<string, number> = {};
     for (const item of initialItems) {
       initial[item.id] = item.response?.timeTakenSeconds ?? 0;
+    }
+    return initial;
+  });
+
+  const [showOpenEndedEvaluation, setShowOpenEndedEvaluation] = useState<
+    Record<string, boolean>
+  >(() => {
+    const initial: Record<string, boolean> = {};
+    for (const item of initialItems) {
+      // If response text is set but not yet verified, we can restore evaluation view
+      if (
+        item.type === "open_ended" &&
+        item.response?.responseText &&
+        !item.response?.verifiedAt
+      ) {
+        initial[item.id] = true;
+      }
     }
     return initial;
   });
@@ -85,6 +122,7 @@ export function PracticeSessionClient({
   const activeItemId = activeItem?.id;
 
   const selectedAlt = selections[activeItemId];
+  const responseText = textResponses[activeItemId] ?? "";
   const seconds = times[activeItemId] ?? 0;
 
   const isVerified = !!activeItem?.response?.verifiedAt;
@@ -95,8 +133,9 @@ export function PracticeSessionClient({
   const saveDraftSilent = async (
     sessId: string,
     itemId: string,
-    altId: string,
+    altId: string | null,
     elapsed: number,
+    respText?: string,
   ) => {
     try {
       await fetch("/api/practice/draft", {
@@ -109,6 +148,7 @@ export function PracticeSessionClient({
           itemId,
           alternativeId: altId,
           elapsedSeconds: elapsed,
+          responseText: respText,
         }),
       });
     } catch (err) {
@@ -125,14 +165,21 @@ export function PracticeSessionClient({
         const currentSeconds = prev[activeItemId] ?? 0;
         const nextSeconds = currentSeconds + 1;
 
-        // Auto-save draft every 10 seconds if an alternative is selected
+        // Auto-save draft every 10 seconds if any selection or text exists
         const currentSelection = selections[activeItemId];
-        if (nextSeconds % 10 === 0 && currentSelection) {
+        const currentText = textResponses[activeItemId] ?? "";
+        const hasSelection =
+          activeItem.type === "multiple_choice"
+            ? !!currentSelection
+            : currentText.trim().length > 0;
+
+        if (nextSeconds % 10 === 0 && hasSelection) {
           saveDraftSilent(
             sessionId,
             activeItemId,
-            currentSelection,
+            activeItem.type === "multiple_choice" ? currentSelection : null,
             nextSeconds,
+            activeItem.type === "multiple_choice" ? undefined : currentText,
           );
         }
 
@@ -144,7 +191,14 @@ export function PracticeSessionClient({
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [activeItemId, isVerified, selections, sessionId]);
+  }, [
+    activeItemId,
+    isVerified,
+    selections,
+    textResponses,
+    sessionId,
+    activeItem,
+  ]);
 
   const handleSelectAlternative = (alternativeId: string) => {
     if (isVerified) return;
@@ -167,6 +221,7 @@ export function PracticeSessionClient({
                     metacognitiveMark: null,
                     isFavorite: false,
                     verifiedAt: null,
+                    responseText: null,
                   }),
                   selectedAlternativeId: alternativeId,
                   timeTakenSeconds: seconds,
@@ -177,11 +232,48 @@ export function PracticeSessionClient({
       );
 
       try {
-        await saveDraftSilent(sessionId, activeItemId, alternativeId, seconds);
+        await saveDraftSilent(
+          sessionId,
+          activeItemId,
+          alternativeId,
+          seconds,
+          undefined,
+        );
       } catch (err) {
         console.error("Failed to save draft:", err);
       }
     });
+  };
+
+  const handleTextResponseChange = (text: string) => {
+    if (isVerified) return;
+
+    setTextResponses((prev) => ({
+      ...prev,
+      [activeItemId]: text,
+    }));
+
+    setItems((prev) =>
+      prev.map((it) =>
+        it.id === activeItemId
+          ? {
+              ...it,
+              response: {
+                ...(it.response ?? {
+                  id: crypto.randomUUID(),
+                  selectedAlternativeId: null,
+                  isCorrect: null,
+                  metacognitiveMark: null,
+                  isFavorite: false,
+                  verifiedAt: null,
+                }),
+                responseText: text,
+                timeTakenSeconds: seconds,
+              },
+            }
+          : it,
+      ),
+    );
   };
 
   const handleToggleDiscard = (alternativeId: string) => {
@@ -193,7 +285,49 @@ export function PracticeSessionClient({
   };
 
   const handleVerify = () => {
-    if (isVerified || !selectedAlt) return;
+    if (isVerified) return;
+
+    if (activeItem.type === "open_ended") {
+      if (!responseText.trim()) return;
+
+      startTransition(async () => {
+        try {
+          // Save draft first
+          await saveDraftSilent(
+            sessionId,
+            activeItemId,
+            null,
+            seconds,
+            responseText,
+          );
+
+          // Fetch explanation (espelho de correção) securely from server
+          const result = await revealCorrectionCriteriaAction(
+            sessionId,
+            activeItemId,
+          );
+
+          setItems((prev) =>
+            prev.map((it) =>
+              it.id === activeItemId
+                ? { ...it, explanation: result.explanation }
+                : it,
+            ),
+          );
+
+          setShowOpenEndedEvaluation((prev) => ({
+            ...prev,
+            [activeItemId]: true,
+          }));
+        } catch (err) {
+          console.error("Failed to reveal correction criteria:", err);
+        }
+      });
+      return;
+    }
+
+    // Multiple choice verification
+    if (!selectedAlt) return;
 
     startTransition(async () => {
       try {
@@ -241,6 +375,56 @@ export function PracticeSessionClient({
     });
   };
 
+  const handleDiscursiveSelfEvaluate = (selfCorrect: boolean) => {
+    if (isVerified) return;
+
+    startTransition(async () => {
+      try {
+        const result = await verifyResponseAction(
+          sessionId,
+          activeItemId,
+          null,
+          seconds,
+          selfCorrect,
+        );
+
+        if (result && "response" in result) {
+          const { response } = result;
+
+          setItems((prev) =>
+            prev.map((it) =>
+              it.id === activeItemId
+                ? {
+                    ...it,
+                    response: {
+                      ...it.response!,
+                      isCorrect: response.isCorrect,
+                      verifiedAt: response.verifiedAt,
+                      timeTakenSeconds: seconds,
+                    },
+                  }
+                : it,
+            ),
+          );
+
+          // Clear temporary evaluation trigger state
+          setShowOpenEndedEvaluation((prev) => ({
+            ...prev,
+            [activeItemId]: false,
+          }));
+        } else if (
+          result &&
+          "error" in result &&
+          result.error === "quota_exceeded"
+        ) {
+          setShowQuotaModal(true);
+        }
+      } catch (err) {
+        console.error("Self-evaluation failed:", err);
+      }
+    });
+  };
+
   const handleMetacognitiveMark = (mark: MetacognitiveMark) => {
     startTransition(async () => {
       try {
@@ -282,6 +466,7 @@ export function PracticeSessionClient({
                     ...(it.response ?? {
                       id: crypto.randomUUID(),
                       selectedAlternativeId: null,
+                      responseText: null,
                       isCorrect: null,
                       timeTakenSeconds: 0,
                       metacognitiveMark: null,
@@ -302,8 +487,24 @@ export function PracticeSessionClient({
   const handleFinishSession = () => {
     startTransition(async () => {
       try {
-        if (!isVerified && selectedAlt) {
-          await saveDraftSilent(sessionId, activeItemId, selectedAlt, seconds);
+        if (!isVerified) {
+          if (activeItem.type === "multiple_choice" && selectedAlt) {
+            await saveDraftSilent(
+              sessionId,
+              activeItemId,
+              selectedAlt,
+              seconds,
+              undefined,
+            );
+          } else if (activeItem.type === "open_ended" && responseText.trim()) {
+            await saveDraftSilent(
+              sessionId,
+              activeItemId,
+              null,
+              seconds,
+              responseText,
+            );
+          }
         }
         await finishSessionAction(sessionId, locale);
       } catch (err) {
@@ -317,6 +518,20 @@ export function PracticeSessionClient({
     const secs = totalSeconds % 60;
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
+
+  // Helper strings based on active locale
+  const promptEval =
+    locale === "es"
+      ? "¿Tu respuesta fue correcta según el criterio oficial?"
+      : "Sua resposta foi correta segundo o critério oficial?";
+  const btnCorrect = locale === "es" ? "Acerté" : "Acertei";
+  const btnIncorrect = locale === "es" ? "Me equivoqué" : "Errei";
+  const criteriaTitle =
+    locale === "es" ? "Espelho de Corrección" : "Espelho de Correção";
+  const textPlaceholder =
+    locale === "es"
+      ? "Escribe tu respuesta discursiva aquí detalladamente..."
+      : "Escreva sua resposta discursiva aqui detalhadamente...";
 
   return (
     <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 px-4 py-8 lg:grid-cols-4">
@@ -335,7 +550,10 @@ export function PracticeSessionClient({
             {items.map((item, idx) => {
               const itemVerified = !!item.response?.verifiedAt;
               const itemCorrect = item.response?.isCorrect;
-              const itemHasDraft = selections[item.id] !== null;
+              const itemHasDraft =
+                item.type === "multiple_choice"
+                  ? selections[item.id] !== null
+                  : (textResponses[item.id] || "").trim().length > 0;
 
               let btnBg =
                 "bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100";
@@ -343,9 +561,10 @@ export function PracticeSessionClient({
                 btnBg =
                   "bg-white border-[#102A43] text-[#102A43] ring-2 ring-[#102A43]/10 font-bold";
               } else if (itemVerified) {
-                btnBg = itemCorrect
-                  ? "bg-emerald-50 border-emerald-300 text-emerald-700 font-semibold"
-                  : "bg-red-50 border-red-300 text-red-700 font-semibold";
+                btnBg =
+                  itemCorrect === true
+                    ? "bg-emerald-50 border-emerald-300 text-emerald-700 font-semibold"
+                    : "bg-red-50 border-red-300 text-red-700 font-semibold";
               } else if (itemHasDraft) {
                 btnBg =
                   "bg-teal-50 border-teal-300 text-[#13A89E] font-semibold";
@@ -380,9 +599,20 @@ export function PracticeSessionClient({
             <span className="text-xs font-semibold tracking-wider text-slate-400 uppercase">
               {t.question} {currentIndex + 1} {t.of} {items.length}
             </span>
-            <h1 className="mt-1 text-lg font-bold text-[#102A43] md:text-xl">
-              {activeItem.title}
-            </h1>
+            <div className="mt-1 flex items-center gap-2">
+              <h1 className="text-lg font-bold text-[#102A43] md:text-xl">
+                {activeItem.title}
+              </h1>
+              <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-semibold text-slate-600">
+                {activeItem.type === "open_ended"
+                  ? locale === "es"
+                    ? "Discursiva"
+                    : "Discursiva"
+                  : locale === "es"
+                    ? "Múltiple Opción"
+                    : "Múltipla Escolha"}
+              </span>
+            </div>
           </div>
           <button
             onClick={handleToggleFavorite}
@@ -397,102 +627,184 @@ export function PracticeSessionClient({
           </button>
         </div>
 
+        {/* Question Images */}
+        {activeItem.images && activeItem.images.length > 0 && (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {activeItem.images.map((img) => (
+              <div
+                key={img.id}
+                className="flex items-center justify-center overflow-hidden rounded-xl border border-slate-100 bg-slate-50 p-2"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={img.url}
+                  alt="Imagem da questão"
+                  className="max-h-64 rounded-lg object-contain"
+                />
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Statement */}
         <p className="rounded-xl border border-slate-100/50 bg-slate-50/50 p-4 text-sm leading-relaxed whitespace-pre-line text-slate-700 md:text-base">
           {activeItem.statement}
         </p>
 
-        {/* Alternatives */}
-        <div className="space-y-3">
-          {activeItem.alternatives.map((alt) => {
-            const isSelected = selectedAlt === alt.id;
-            const isDiscarded = discardedAlts[alt.id];
+        {/* Alternatives (if multiple choice) */}
+        {activeItem.type === "multiple_choice" && (
+          <div className="space-y-3">
+            {activeItem.alternatives.map((alt) => {
+              const isSelected = selectedAlt === alt.id;
+              const isDiscarded = discardedAlts[alt.id];
 
-            let altStyle =
-              "border-slate-200 bg-white text-slate-700 hover:bg-slate-50";
-            let letterStyle = "bg-slate-100 text-slate-500 border-slate-200";
+              let altStyle =
+                "border-slate-200 bg-white text-slate-700 hover:bg-slate-50";
+              let letterStyle = "bg-slate-100 text-slate-500 border-slate-200";
 
-            if (isSelected) {
-              altStyle =
-                "border-[#13A89E] bg-teal-50/20 text-[#102A43] shadow-sm";
-              letterStyle = "bg-[#13A89E] text-white border-[#13A89E]";
-            }
-
-            if (isVerified) {
-              if (alt.isCorrect) {
+              if (isSelected) {
                 altStyle =
-                  "border-emerald-500 bg-emerald-50/20 text-emerald-800 font-medium";
-                letterStyle = "bg-emerald-500 text-white border-emerald-500";
-              } else if (isSelected) {
-                altStyle = "border-red-500 bg-red-50/20 text-red-800";
-                letterStyle = "bg-red-500 text-white border-red-500";
-              } else {
-                altStyle =
-                  "border-slate-100 bg-slate-50/30 text-slate-400 opacity-60";
-                letterStyle = "bg-slate-100 text-slate-400 border-slate-100";
+                  "border-[#13A89E] bg-teal-50/20 text-[#102A43] shadow-sm";
+                letterStyle = "bg-[#13A89E] text-white border-[#13A89E]";
               }
-            } else if (isDiscarded) {
-              altStyle =
-                "border-slate-100 bg-slate-50/50 text-slate-300 line-through opacity-50";
-              letterStyle = "bg-slate-100 text-slate-300 border-slate-100";
-            }
 
-            return (
-              <div key={alt.id} className="group flex items-center gap-2">
-                <button
-                  type="button"
-                  disabled={isVerified}
-                  onClick={() => handleSelectAlternative(alt.id)}
-                  className={`flex flex-1 items-center gap-3 rounded-xl border p-3.5 text-left text-sm transition-all md:text-base ${altStyle} ${
-                    !isVerified && "cursor-pointer"
-                  }`}
-                >
-                  <span
-                    className={`flex h-8 w-8 items-center justify-center rounded-lg border text-sm font-bold ${letterStyle}`}
-                  >
-                    {alt.optionLetter}
-                  </span>
-                  <span>{alt.text}</span>
-                </button>
+              if (isVerified) {
+                if (alt.isCorrect) {
+                  altStyle =
+                    "border-emerald-500 bg-emerald-50/20 text-emerald-800 font-medium";
+                  letterStyle = "bg-emerald-500 text-white border-emerald-500";
+                } else if (isSelected) {
+                  altStyle = "border-red-500 bg-red-50/20 text-red-800";
+                  letterStyle = "bg-red-500 text-white border-red-500";
+                } else {
+                  altStyle =
+                    "border-slate-100 bg-slate-50/30 text-slate-400 opacity-60";
+                  letterStyle = "bg-slate-100 text-slate-400 border-slate-100";
+                }
+              } else if (isDiscarded) {
+                altStyle =
+                  "border-slate-100 bg-slate-50/50 text-slate-300 line-through opacity-50";
+                letterStyle = "bg-slate-100 text-slate-300 border-slate-100";
+              }
 
-                {!isVerified && (
+              return (
+                <div key={alt.id} className="group flex items-center gap-2">
                   <button
                     type="button"
-                    onClick={() => handleToggleDiscard(alt.id)}
-                    className="cursor-pointer rounded-lg border border-slate-100 p-2 text-xs font-semibold text-slate-400 opacity-0 transition-all group-hover:opacity-100 hover:bg-slate-50 hover:text-red-500"
-                    title="Descartar alternativa"
+                    disabled={isVerified}
+                    onClick={() => handleSelectAlternative(alt.id)}
+                    className={`flex flex-1 items-center gap-3 rounded-xl border p-3.5 text-left text-sm transition-all md:text-base ${altStyle} ${
+                      !isVerified && "cursor-pointer"
+                    }`}
                   >
-                    Ø
+                    <span
+                      className={`flex h-8 w-8 items-center justify-center rounded-lg border text-sm font-bold ${letterStyle}`}
+                    >
+                      {alt.optionLetter}
+                    </span>
+                    <span>{alt.text}</span>
                   </button>
-                )}
-              </div>
-            );
-          })}
-        </div>
 
-        {/* Bottom Actions */}
-        {!isVerified ? (
+                  {!isVerified && (
+                    <button
+                      type="button"
+                      onClick={() => handleToggleDiscard(alt.id)}
+                      className="cursor-pointer rounded-lg border border-slate-100 p-2 text-xs font-semibold text-slate-400 opacity-0 transition-all group-hover:opacity-100 hover:bg-slate-50 hover:text-red-500"
+                      title="Descartar alternativa"
+                    >
+                      Ø
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Text response input (if open ended) */}
+        {activeItem.type === "open_ended" && (
+          <div className="flex flex-col gap-2">
+            <textarea
+              disabled={isVerified || showOpenEndedEvaluation[activeItemId]}
+              value={responseText}
+              onChange={(e) => handleTextResponseChange(e.target.value)}
+              placeholder={textPlaceholder}
+              rows={6}
+              className="w-full resize-y rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-teal-500 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500 md:text-base"
+            />
+          </div>
+        )}
+
+        {/* Bottom Verify Action */}
+        {!isVerified && !showOpenEndedEvaluation[activeItemId] && (
           <button
             onClick={handleVerify}
-            disabled={!selectedAlt}
+            disabled={
+              activeItem.type === "multiple_choice"
+                ? !selectedAlt
+                : !responseText.trim()
+            }
             className="block w-full cursor-pointer rounded-xl bg-[#13A89E] py-3 text-center text-base font-medium text-white transition-colors hover:bg-[#0f8e85] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400"
           >
             {t.verify}
           </button>
-        ) : (
+        )}
+
+        {/* Step 2: Discursive self evaluation flow */}
+        {activeItem.type === "open_ended" &&
+          !isVerified &&
+          showOpenEndedEvaluation[activeItemId] && (
+            <div className="animate-fadeIn space-y-6 border-t border-slate-100 pt-4">
+              {/* Correction Criteria (Espelho) */}
+              {activeItem.explanation && (
+                <div className="space-y-2 rounded-xl border border-teal-100 bg-teal-50/20 p-5">
+                  <h4 className="text-base font-bold text-teal-800">
+                    {criteriaTitle}
+                  </h4>
+                  <p className="text-sm leading-relaxed whitespace-pre-line text-slate-700 md:text-base">
+                    {activeItem.explanation}
+                  </p>
+                </div>
+              )}
+
+              {/* Self assessment banner */}
+              <div className="space-y-4 rounded-xl border border-slate-200 bg-white p-5 text-center shadow-sm">
+                <p className="text-sm font-semibold text-[#102A43] md:text-base">
+                  {promptEval}
+                </p>
+                <div className="mx-auto flex max-w-sm gap-4">
+                  <button
+                    onClick={() => handleDiscursiveSelfEvaluate(true)}
+                    className="flex-1 cursor-pointer rounded-xl bg-emerald-600 py-2.5 text-sm font-bold text-white shadow transition-colors hover:bg-emerald-500"
+                  >
+                    ✓ {btnCorrect}
+                  </button>
+                  <button
+                    onClick={() => handleDiscursiveSelfEvaluate(false)}
+                    className="flex-1 cursor-pointer rounded-xl bg-rose-600 py-2.5 text-sm font-bold text-white shadow transition-colors hover:bg-rose-500"
+                  >
+                    ✗ {btnIncorrect}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+        {/* Answer Result banner & metacognitive marks after verification */}
+        {isVerified && (
           <div className="animate-fadeIn space-y-6 border-t border-slate-100 pt-4">
             {/* Answer Result banner */}
             <div
               className={`flex items-center gap-3 rounded-xl border p-4 ${
-                isCorrect
+                isCorrect === true
                   ? "border-emerald-200 bg-emerald-50 text-emerald-800"
                   : "border-red-200 bg-red-50 text-red-800"
               }`}
             >
-              <span className="text-2xl">{isCorrect ? "✓" : "✗"}</span>
+              <span className="text-2xl">{isCorrect === true ? "✓" : "✗"}</span>
               <div>
                 <h4 className="text-base font-bold">
-                  {isCorrect ? t.correct : t.incorrect}
+                  {isCorrect === true ? t.correct : t.incorrect}
                 </h4>
               </div>
             </div>
@@ -545,11 +857,13 @@ export function PracticeSessionClient({
               </div>
             </div>
 
-            {/* Explanation */}
+            {/* Criteria / Explanation */}
             {activeItem.explanation && (
               <div className="space-y-2 rounded-xl border border-slate-100 p-5">
                 <h4 className="text-base font-bold text-[#102A43]">
-                  {t.explanation}
+                  {activeItem.type === "open_ended"
+                    ? criteriaTitle
+                    : t.explanation}
                 </h4>
                 <p className="text-sm leading-relaxed whitespace-pre-line text-slate-600 md:text-base">
                   {activeItem.explanation}
@@ -576,6 +890,8 @@ export function PracticeSessionClient({
           </div>
         )}
       </div>
+
+      {/* Quota Modal */}
       {showQuotaModal && (
         <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm">
           <div className="animate-in zoom-in-95 w-full max-w-md rounded-2xl border border-slate-100 bg-white p-6 shadow-2xl duration-200">

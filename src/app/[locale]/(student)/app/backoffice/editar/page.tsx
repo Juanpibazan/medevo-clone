@@ -50,10 +50,15 @@ export default async function EditarQuestaoPage({
       statement: versionData.version.statement,
       explanation: versionData.version.explanation,
       taxonomyNodeId: versionData.version.taxonomyNodeId,
+      type: versionData.version.type,
       alternatives: versionData.alternatives.map((alt) => ({
         optionLetter: alt.optionLetter,
         text: alt.text,
         isCorrect: alt.isCorrect,
+      })),
+      images: versionData.images.map((img) => ({
+        url: img.url,
+        position: img.position,
       })),
     };
   }

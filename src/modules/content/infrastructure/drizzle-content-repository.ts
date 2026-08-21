@@ -4,6 +4,7 @@ import {
   questions,
   questionVersions,
   questionAlternatives,
+  questionImages,
   taxonomyNodes,
 } from "@/db/schema";
 import type { ContentRepository } from "../application/content-service";
@@ -15,6 +16,8 @@ import type {
   QuestionStatus,
   AlternativeLetter,
   TaxonomyLevel,
+  QuestionImage,
+  QuestionType,
 } from "../domain/content";
 
 export class DrizzleContentRepository implements ContentRepository {
@@ -23,6 +26,7 @@ export class DrizzleContentRepository implements ContentRepository {
       question: Question;
       activeVersion: QuestionVersion;
       alternatives: Alternative[];
+      images: QuestionImage[];
     }>
   > {
     const activeQuestions = await db
@@ -57,6 +61,12 @@ export class DrizzleContentRepository implements ContentRepository {
       .from(questionAlternatives)
       .where(inArray(questionAlternatives.questionVersionId, versionIds));
 
+    const images = await db
+      .select()
+      .from(questionImages)
+      .where(inArray(questionImages.questionVersionId, versionIds))
+      .orderBy(questionImages.position);
+
     const results = [];
     for (const q of filtered) {
       const version = versions.find((v) => v.id === q.publishedVersionId);
@@ -64,6 +74,7 @@ export class DrizzleContentRepository implements ContentRepository {
       const alts = alternatives.filter(
         (a) => a.questionVersionId === version.id,
       );
+      const imgs = images.filter((i) => i.questionVersionId === version.id);
       results.push({
         question: {
           id: q.id,
@@ -76,6 +87,7 @@ export class DrizzleContentRepository implements ContentRepository {
           questionId: version.questionId,
           versionNumber: version.versionNumber,
           status: version.status as QuestionStatus,
+          type: version.type as QuestionType,
           title: version.title,
           statement: version.statement,
           explanation: version.explanation,
@@ -91,6 +103,13 @@ export class DrizzleContentRepository implements ContentRepository {
           isCorrect: a.isCorrect,
           createdAt: a.createdAt,
         })),
+        images: imgs.map((i) => ({
+          id: i.id,
+          questionVersionId: i.questionVersionId,
+          url: i.url,
+          position: i.position,
+          createdAt: i.createdAt,
+        })),
       });
     }
     return results;
@@ -100,6 +119,7 @@ export class DrizzleContentRepository implements ContentRepository {
     question: Question;
     version: QuestionVersion;
     alternatives: Alternative[];
+    images: QuestionImage[];
   } | null> {
     const [version] = await db
       .select()
@@ -122,6 +142,12 @@ export class DrizzleContentRepository implements ContentRepository {
       .from(questionAlternatives)
       .where(eq(questionAlternatives.questionVersionId, versionId));
 
+    const images = await db
+      .select()
+      .from(questionImages)
+      .where(eq(questionImages.questionVersionId, versionId))
+      .orderBy(questionImages.position);
+
     return {
       question: {
         id: q.id,
@@ -134,6 +160,7 @@ export class DrizzleContentRepository implements ContentRepository {
         questionId: version.questionId,
         versionNumber: version.versionNumber,
         status: version.status as QuestionStatus,
+        type: version.type as QuestionType,
         title: version.title,
         statement: version.statement,
         explanation: version.explanation,
@@ -149,6 +176,13 @@ export class DrizzleContentRepository implements ContentRepository {
         isCorrect: a.isCorrect,
         createdAt: a.createdAt,
       })),
+      images: images.map((i) => ({
+        id: i.id,
+        questionVersionId: i.questionVersionId,
+        url: i.url,
+        position: i.position,
+        createdAt: i.createdAt,
+      })),
     };
   }
 
@@ -156,6 +190,7 @@ export class DrizzleContentRepository implements ContentRepository {
     question: Question;
     activeVersion: QuestionVersion;
     alternatives: Alternative[];
+    images: QuestionImage[];
   } | null> {
     const [q] = await db
       .select()
@@ -172,6 +207,7 @@ export class DrizzleContentRepository implements ContentRepository {
       question: data.question,
       activeVersion: data.version,
       alternatives: data.alternatives,
+      images: data.images,
     };
   }
 
@@ -185,10 +221,12 @@ export class DrizzleContentRepository implements ContentRepository {
     alternativesInput: Array<
       Omit<Alternative, "id" | "questionVersionId" | "createdAt">
     >,
+    imagesInput?: Array<{ url: string; position: number }>,
   ): Promise<{
     question: Question;
     version: QuestionVersion;
     alternatives: Alternative[];
+    images: QuestionImage[];
   }> {
     return db.transaction(async (tx) => {
       await tx.insert(questions).values({
@@ -200,6 +238,7 @@ export class DrizzleContentRepository implements ContentRepository {
         questionId,
         versionNumber: 1,
         status: "published",
+        type: versionInput.type ?? "multiple_choice",
         title: versionInput.title,
         statement: versionInput.statement,
         explanation: versionInput.explanation,
@@ -220,7 +259,19 @@ export class DrizzleContentRepository implements ContentRepository {
         isCorrect: a.isCorrect,
       }));
 
-      await tx.insert(questionAlternatives).values(altsToInsert);
+      if (altsToInsert.length > 0) {
+        await tx.insert(questionAlternatives).values(altsToInsert);
+      }
+
+      if (imagesInput && imagesInput.length > 0) {
+        const imagesToInsert = imagesInput.map((img) => ({
+          id: crypto.randomUUID(),
+          questionVersionId: versionId,
+          url: img.url,
+          position: img.position,
+        }));
+        await tx.insert(questionImages).values(imagesToInsert);
+      }
 
       const [insertedQ] = await tx
         .select()
@@ -234,6 +285,11 @@ export class DrizzleContentRepository implements ContentRepository {
         .select()
         .from(questionAlternatives)
         .where(eq(questionAlternatives.questionVersionId, versionId));
+      const insertedImages = await tx
+        .select()
+        .from(questionImages)
+        .where(eq(questionImages.questionVersionId, versionId))
+        .orderBy(questionImages.position);
 
       return {
         question: insertedQ as Question,
@@ -242,6 +298,7 @@ export class DrizzleContentRepository implements ContentRepository {
           questionId: insertedV.questionId,
           versionNumber: insertedV.versionNumber,
           status: insertedV.status as QuestionStatus,
+          type: insertedV.type as QuestionType,
           title: insertedV.title,
           statement: insertedV.statement,
           explanation: insertedV.explanation,
@@ -256,6 +313,13 @@ export class DrizzleContentRepository implements ContentRepository {
           text: a.text,
           isCorrect: a.isCorrect,
           createdAt: a.createdAt,
+        })),
+        images: insertedImages.map((i) => ({
+          id: i.id,
+          questionVersionId: i.questionVersionId,
+          url: i.url,
+          position: i.position,
+          createdAt: i.createdAt,
         })),
       };
     });
@@ -289,6 +353,7 @@ export class DrizzleContentRepository implements ContentRepository {
             questionId: activeVersionRow.questionId,
             versionNumber: activeVersionRow.versionNumber,
             status: activeVersionRow.status as QuestionStatus,
+            type: activeVersionRow.type as QuestionType,
             title: activeVersionRow.title,
             statement: activeVersionRow.statement,
             explanation: activeVersionRow.explanation,
@@ -328,6 +393,7 @@ export class DrizzleContentRepository implements ContentRepository {
           questionId: v.questionId,
           versionNumber: v.versionNumber,
           status: v.status as QuestionStatus,
+          type: v.type as QuestionType,
           title: v.title,
           statement: v.statement,
           explanation: v.explanation,

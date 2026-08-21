@@ -10,14 +10,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { sessionId, itemId, alternativeId, elapsedSeconds } =
+    const { sessionId, itemId, alternativeId, elapsedSeconds, responseText } =
       await req.json();
 
     if (
       !sessionId ||
       !itemId ||
-      !alternativeId ||
-      elapsedSeconds === undefined
+      elapsedSeconds === undefined ||
+      (alternativeId === undefined && responseText === undefined)
     ) {
       return NextResponse.json(
         { error: "Missing parameters" },
@@ -29,8 +29,9 @@ export async function POST(req: Request) {
       sessionId,
       itemId,
       session.user.id,
-      alternativeId,
+      alternativeId || null,
       elapsedSeconds,
+      responseText,
     );
 
     return NextResponse.json({ success: true });

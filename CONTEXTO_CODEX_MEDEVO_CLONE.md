@@ -41,6 +41,8 @@ El bootstrap técnico, el tramo de identidad/onboarding y el **vertical slice co
 - Analítica de Producto y Observabilidad en tiempo real completamente funcional, con el módulo modular `src/modules/analytics`, la tabla `analytics_events` persistiendo los eventos de práctica asíncronamente en segundo plano, visualización interactiva de progreso diario, precisión global, tiempo medio y rendimiento por especialidad raíz en el Dashboard, así como pruebas de integración robustas en Vitest.
 - Diferenciación de tipos de preguntas (opciones múltiples vs discursivas/abiertas) e integración de almacenamiento de imágenes en AWS S3 (con simulación local para desarrollo y pruebas), totalmente funcionales. Implementado en el Backoffice Editorial Visual (creación, edición, carga y reordenamiento de imágenes) y en el reproductor de práctica del estudiante (soporte de respuestas textuales, auto-guardado en segundo plano, revelado seguro de criterios de corrección, autoevaluación guiada y FSRS), con pruebas integrales en Vitest.
 - ADR aceptados para monolito modular, PostgreSQL/`pg`/Drizzle, Better Auth y soporte de despliegue.
+- Pipeline de ingesta y conversión automatizada de exámenes: Herramienta `./markitdown` adaptada para parsear archivos PDF de exámenes y gabaritos/patrones a Markdown, y un script CLI en TypeScript (`ingest.ts`) que inserta las preguntas en PostgreSQL local/Neon utilizando la API de DeepSeek (`deepseek-chat`) para la clasificación de taxonomías.
+
 
 El siguiente tramo prioritario del vertical slice es:
 
@@ -698,6 +700,9 @@ Criterio de salida: calidad clínica y costo por usuario dentro de umbrales defi
 14. ~~**Vertical Slice — Selección de preguntas por taxonomía (Filtros)**: Permitir que el estudiante elija qué especialidades, temas, focos o subfocos quiere practicar en cascada antes de iniciar una sesión de 10 preguntas. UI: Selectores en cascada en el Dashboard. Backend: Actualizar `createSession` en `PracticeService` para admitir y resolver de forma recursiva los descendientes del nodo de taxonomía filtrado. Pruebas: Selección de preguntas filtradas y creación de sesión correspondiente.~~ **Completado.**
 15. ~~**Vertical Slice — Analítica de Producto y Observabilidad**: UI: instrumentar eventos de práctica y visualización de progreso. Backend: cola de eventos y reportes agregados. BD: tablas para eventos de analítica. Pruebas: agregación e ingesta.~~ **Completado.** (Implementado el almacenamiento asíncrono no bloqueante de eventos de práctica, cálculo de precisión, tiempo promedio y desempeño por especialidad en tiempo real, widgets visuales en el Dashboard, linter a cero y pruebas aprobadas).
 16. **Vertical Slice — Piloto cerrado**: Puesta en marcha con un volumen inicial de usuarios reales para validar la estabilidad de la plataforma y el hábito antes de gamificar o agregar IA.
+17. ~~**Pipeline de Ingestación y Conversión de Exámenes (MarkItDown + Ingest ORM)**: Parseador de exámenes en Python con soporte de gabarito y patrón de respuestas discursivas en Markdown, acoplado con ingesta automatizada en Drizzle ORM y clasificación inteligente por DeepSeek API.~~ **Completado.**
+18. **Ampliación de Taxonomía Médica**: Expandir la tabla `taxonomy_nodes` con más especialidades, temas, focos y subfocos para robustecer la clasificación automática y manual. **Siguiente prioridad.**
+
 
 ## 17. Estrategia de pruebas
 

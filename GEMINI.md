@@ -701,7 +701,8 @@ Criterio de salida: calidad clínica y costo por usuario dentro de umbrales defi
 15. ~~**Vertical Slice — Analítica de Producto y Observabilidad**: UI: instrumentar eventos de práctica y visualización de progreso. Backend: cola de eventos y reportes agregados. BD: tablas para eventos de analítica. Pruebas: agregación e ingesta.~~ **Completado.** (Implementado el almacenamiento asíncrono no bloqueante de eventos de práctica, cálculo de precisión, tiempo promedio y desempeño por especialidad en tiempo real, widgets visuales en el Dashboard, linter a cero y pruebas aprobadas).
 16. ~~**Pipeline de Ingestación y Conversión de Exámenes (MarkItDown + Ingest ORM)**: Parseador de exámenes en Python con soporte de gabarito y patrón de respuestas discursivas en Markdown, acoplado con ingesta automatizada en Drizzle ORM y clasificación inteligente por DeepSeek API.~~ **Completado.**
 17. **Ampliación de Taxonomía Médica**: Expandir la tabla `taxonomy_nodes` con más especialidades, temas, focos y subfocos para robustecer la clasificación automática y manual. **Siguiente prioridad.**
-18. **Vertical Slice — Piloto cerrado**: Puesta en marcha con un volumen inicial de usuarios reales para validar la estabilidad de la plataforma y el hábito antes de gamificar o agregar IA.
+18. **Vertical Slice — Selección por Niveles (Tiered Selection)**: Implementar la priorización de preguntas al generar sesiones de práctica de 10 preguntas. El orden de prioridad debe ser: Tier 1 (preguntas no respondidas por el usuario), Tier 2 (preguntas respondidas incorrectamente en su último intento / cuaderno de errores) y Tier 3 (preguntas respondidas correctamente / dominadas). Pruebas: Creación de sesión priorizada y validación del orden de selección.
+19. **Vertical Slice — Piloto cerrado**: Puesta en marcha con un volumen inicial de usuarios reales para validar la estabilidad de la plataforma y el hábito antes de gamificar o agregar IA.
 
 ## 17. Estrategia de pruebas
 

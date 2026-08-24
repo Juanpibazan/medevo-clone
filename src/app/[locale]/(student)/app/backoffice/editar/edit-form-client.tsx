@@ -334,7 +334,7 @@ export function EditFormClient({
           </label>
           <textarea
             id="explanation"
-            required
+            required={type === "open_ended"}
             rows={4}
             disabled={pending}
             value={explanation}

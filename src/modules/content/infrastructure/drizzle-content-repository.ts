@@ -373,7 +373,7 @@ export class DrizzleContentRepository implements ContentRepository {
   async listAllQuestionsWithVersions(): Promise<
     Array<{
       question: Question;
-      versions: QuestionVersion[];
+      versions: Array<QuestionVersion & { images: QuestionImage[] }>;
     }>
   > {
     const list = await db.select().from(questions);
@@ -384,23 +384,42 @@ export class DrizzleContentRepository implements ContentRepository {
       .from(questionVersions)
       .orderBy(desc(questionVersions.versionNumber));
 
+    const versionIds = versions.map((v) => v.id);
+    const images = versionIds.length > 0
+      ? await db
+          .select()
+          .from(questionImages)
+          .where(inArray(questionImages.questionVersionId, versionIds))
+          .orderBy(questionImages.position)
+      : [];
+
     return list.map((q) => {
       const qVersions = versions.filter((v) => v.questionId === q.id);
       return {
         question: q as Question,
-        versions: qVersions.map((v) => ({
-          id: v.id,
-          questionId: v.questionId,
-          versionNumber: v.versionNumber,
-          status: v.status as QuestionStatus,
-          type: v.type as QuestionType,
-          title: v.title,
-          statement: v.statement,
-          explanation: v.explanation,
-          taxonomyNodeId: v.taxonomyNodeId,
-          createdBy: v.createdBy,
-          createdAt: v.createdAt,
-        })),
+        versions: qVersions.map((v) => {
+          const vImages = images.filter((img) => img.questionVersionId === v.id);
+          return {
+            id: v.id,
+            questionId: v.questionId,
+            versionNumber: v.versionNumber,
+            status: v.status as QuestionStatus,
+            type: v.type as QuestionType,
+            title: v.title,
+            statement: v.statement,
+            explanation: v.explanation,
+            taxonomyNodeId: v.taxonomyNodeId,
+            createdBy: v.createdBy,
+            createdAt: v.createdAt,
+            images: vImages.map((img) => ({
+              id: img.id,
+              questionVersionId: img.questionVersionId,
+              url: img.url,
+              position: img.position,
+              createdAt: img.createdAt,
+            })),
+          };
+        }),
       };
     });
   }

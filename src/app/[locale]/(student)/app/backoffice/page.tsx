@@ -98,26 +98,43 @@ export default async function BackofficePage({
                   className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition-shadow hover:shadow-md"
                 >
                   <div className="flex flex-col gap-4 border-b border-slate-100 pb-4 md:flex-row md:items-start md:justify-between">
-                    <div className="space-y-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="rounded bg-slate-100 px-2 py-0.5 font-mono text-xs font-bold text-slate-600">
-                          ID: {question.id}
-                        </span>
-                        {activeVersion && (
-                          <span className="rounded border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">
-                            Publicada: v{activeVersion.versionNumber}
+                    <div className="flex items-start gap-4">
+                      {latestVersion?.images && latestVersion.images.length > 0 && (
+                        <div className="relative h-16 w-20 flex-shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-50 flex items-center justify-center">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={latestVersion.images[0].url}
+                            alt="Miniatura da questão"
+                            className="max-h-full max-w-full object-contain"
+                          />
+                          {latestVersion.images.length > 1 && (
+                            <span className="absolute bottom-0.5 right-0.5 rounded bg-slate-900/60 px-1 py-0.2 text-[8px] font-bold text-white">
+                              +{latestVersion.images.length - 1}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                      <div className="space-y-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="rounded bg-slate-100 px-2 py-0.5 font-mono text-xs font-bold text-slate-600">
+                            ID: {question.id}
                           </span>
+                          {activeVersion && (
+                            <span className="rounded border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">
+                              Publicada: v{activeVersion.versionNumber}
+                            </span>
+                          )}
+                        </div>
+                        <h3 className="text-lg font-bold text-[#102A43]">
+                          {latestVersion?.title || "Sem título"}
+                        </h3>
+                        {latestVersion && (
+                          <p className="text-xs text-slate-400">
+                            Taxonomia:{" "}
+                            {getTaxonomyPath(latestVersion.taxonomyNodeId)}
+                          </p>
                         )}
                       </div>
-                      <h3 className="text-lg font-bold text-[#102A43]">
-                        {latestVersion?.title || "Sem título"}
-                      </h3>
-                      {latestVersion && (
-                        <p className="text-xs text-slate-400">
-                          Taxonomia:{" "}
-                          {getTaxonomyPath(latestVersion.taxonomyNodeId)}
-                        </p>
-                      )}
                     </div>
 
                     <div className="flex flex-wrap gap-2">

@@ -107,6 +107,30 @@ export default async function RevisarQuestaoPage({
             </p>
           </div>
 
+          {/* Question Images */}
+          {versionData.images && versionData.images.length > 0 && (
+            <div className="border-t border-slate-100 pt-4">
+              <h3 className="mb-3 text-xs font-bold tracking-wider text-slate-500 uppercase">
+                Imagens Relacionadas
+              </h3>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {versionData.images.map((img) => (
+                  <div
+                    key={img.id}
+                    className="flex items-center justify-center overflow-hidden rounded-xl border border-slate-100 bg-slate-50 p-2"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={img.url}
+                      alt="Imagem da questão"
+                      className="max-h-64 rounded-lg object-contain"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="border-t border-slate-100 pt-4">
             <h3 className="mb-3 text-xs font-bold tracking-wider text-slate-500 uppercase">
               Alternativas Cadastradas

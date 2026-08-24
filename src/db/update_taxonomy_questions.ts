@@ -7,7 +7,7 @@ dotenv.config({ path: resolve(process.cwd(), ".env.local") });
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import * as schema from "./schema";
-import { eq, like } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 
 const pool = new Pool({
   connectionString: process.env.MIGRATION_DATABASE_URL || process.env.DATABASE_URL,
@@ -133,7 +133,7 @@ async function updateTaxonomy() {
   let count = 0;
   for (const [questionId, taxonomyNodeId] of Object.entries(mapping)) {
     // We update the questionVersions table where questionId matches
-    const result = await db
+    await db
       .update(schema.questionVersions)
       .set({ taxonomyNodeId })
       .where(eq(schema.questionVersions.questionId, questionId));

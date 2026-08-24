@@ -37,30 +37,27 @@ export async function getUploadPresignedUrl(
   const uniqueId = crypto.randomUUID();
   const safeFilename = `${uniqueId}-${filename.replace(/[^a-zA-Z0-9.-]/g, "_")}`;
 
-  if (isS3Configured && s3Client && awsBucketName) {
-    const key = `uploads/${safeFilename}`;
-    const command = new PutObjectCommand({
-      Bucket: awsBucketName,
-      Key: key,
-      ContentType: fileType,
-    });
-
-    // Signed URL valid for 15 minutes
-    const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn: 900 });
-    const fileUrl = `https://${awsBucketName}.s3.${awsRegion}.amazonaws.com/${key}`;
-
-    return {
-      uploadUrl,
-      fileUrl,
-      isLocalSimulation: false,
-    };
+  if (!isS3Configured || !s3Client || !awsBucketName) {
+    throw new Error(
+      "Configuração do AWS S3 ausente ou incompleta. Verifique se as variáveis " +
+      "AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION e AWS_S3_BUCKET_NAME estão configuradas no .env.local"
+    );
   }
 
-  // Fallback to local development simulation
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const key = `uploads/${safeFilename}`;
+  const command = new PutObjectCommand({
+    Bucket: awsBucketName,
+    Key: key,
+    ContentType: fileType,
+  });
+
+  // Signed URL valid for 15 minutes
+  const uploadUrl = await getSignedUrl(s3Client, command, { expiresIn: 900 });
+  const fileUrl = `https://${awsBucketName}.s3.${awsRegion}.amazonaws.com/${key}`;
+
   return {
-    uploadUrl: `${appUrl}/api/upload/simulate?filename=${encodeURIComponent(safeFilename)}`,
-    fileUrl: `/uploads/${safeFilename}`,
-    isLocalSimulation: true,
+    uploadUrl,
+    fileUrl,
+    isLocalSimulation: false,
   };
 }

@@ -52,7 +52,7 @@ export interface ContentRepository {
   listAllQuestionsWithVersions(): Promise<
     Array<{
       question: Question;
-      versions: QuestionVersion[];
+      versions: Array<QuestionVersion & { images: QuestionImage[] }>;
     }>
   >;
   listTaxonomyNodes(): Promise<TaxonomyNode[]>;

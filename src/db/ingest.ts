@@ -204,8 +204,9 @@ async function run() {
     }
 
     try {
-      const questionId = `q-revalida-${q.metadata.year || "2011"}-${q.number}`;
-      const versionId = `v-revalida-${q.metadata.year || "2011"}-${q.number}-01`;
+      const typeSuffix = q.type === "open_ended" ? "dis" : "obj";
+      const questionId = `q-revalida-${q.metadata.year || "2011"}-${q.number}-${typeSuffix}`;
+      const versionId = `v-revalida-${q.metadata.year || "2011"}-${q.number}-${typeSuffix}-01`;
 
       console.log(`💾 Ingesting database records (ID: ${questionId})...`);
 
@@ -264,7 +265,7 @@ async function run() {
             .where(eq(schema.questionAlternatives.questionVersionId, versionId));
 
           for (const alt of q.alternatives) {
-            const altId = `alt-revalida-${q.metadata.year || "2011"}-${q.number}-${alt.optionLetter.toLowerCase()}`;
+            const altId = `alt-revalida-${q.metadata.year || "2011"}-${q.number}-${typeSuffix}-${alt.optionLetter.toLowerCase()}`;
             await tx.insert(schema.questionAlternatives).values({
               id: altId,
               questionVersionId: versionId,

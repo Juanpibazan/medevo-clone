@@ -244,6 +244,7 @@ export const questionVersions = pgTable("question_versions", {
     .notNull()
     .references(() => taxonomyNodes.id, { onDelete: "restrict" }),
   type: questionTypeEnum("type").notNull().default("multiple_choice"),
+  subquestions: jsonb("subquestions").$type<{ letter: string; statement: string; explanation: string }[]>(),
   createdBy: text("created_by")
     .notNull()
     .references(() => users.id, { onDelete: "restrict" }),

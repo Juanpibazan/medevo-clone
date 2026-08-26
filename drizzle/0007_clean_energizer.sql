@@ -1,0 +1,1 @@
+ALTER TABLE "question_versions" ADD COLUMN "subquestions" jsonb;

@@ -11,6 +11,12 @@ interface AlternativeInput {
   isCorrect: boolean;
 }
 
+interface SubquestionInput {
+  letter: string;
+  statement: string;
+  explanation: string;
+}
+
 interface QuestionInput {
   number: string;
   title: string;
@@ -19,6 +25,7 @@ interface QuestionInput {
   explanation: string;
   alternatives: AlternativeInput[];
   metadata: Record<string, unknown>;
+  subquestions?: SubquestionInput[];
 }
 
 interface TaxonomyNodeOption {
@@ -226,8 +233,20 @@ async function run() {
             taxonomyNodeId,
             type: q.type === "open_ended" ? "open_ended" : "multiple_choice",
             createdBy: editorId,
+            subquestions: q.type === "open_ended" ? (q.subquestions || []) : null,
           })
-          .onConflictDoNothing();
+          .onConflictDoUpdate({
+            target: schema.questionVersions.id,
+            set: {
+              status: publish ? "published" : "draft",
+              title: q.title,
+              statement: q.statement,
+              explanation: q.explanation || "",
+              taxonomyNodeId,
+              type: q.type === "open_ended" ? "open_ended" : "multiple_choice",
+              subquestions: q.type === "open_ended" ? (q.subquestions || []) : null,
+            },
+          });
 
         // Link parent question to its published version
         if (publish) {

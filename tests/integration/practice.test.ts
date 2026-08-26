@@ -287,6 +287,13 @@ describe("Practice, Correction and Spaced Repetition Integration", () => {
         title: "Test Discursive Q1",
         statement: "Explain why the sky is blue.",
         explanation: "Rayleigh scattering",
+        subquestions: [
+          {
+            letter: "a",
+            statement: "Explain why the sky is blue.",
+            explanation: "Rayleigh scattering",
+          },
+        ],
         taxonomyNodeId: taxonomyId,
         createdBy: userId,
       });

@@ -59,6 +59,16 @@ export const questionVersionSchema = z.object({
   title: z.string().min(1, "Title must not be empty"),
   statement: z.string().min(1, "Statement must not be empty"),
   explanation: z.string(),
+  subquestions: z
+    .array(
+      z.object({
+        letter: z.string(),
+        statement: z.string(),
+        explanation: z.string(),
+      }),
+    )
+    .nullable()
+    .optional(),
   taxonomyNodeId: z.string(),
   createdBy: z.string(),
   createdAt: z.date(),

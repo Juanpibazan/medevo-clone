@@ -114,3 +114,28 @@ export function validateQuestionAlternatives(
   }
   return { success: true };
 }
+
+export function validateQuestionSubquestions(
+  subquestions: Array<{ letter: string; statement: string; explanation: string }> | null | undefined,
+  type: QuestionType = "multiple_choice",
+) {
+  if (type === "multiple_choice") {
+    if (subquestions && subquestions.length > 0) {
+      return {
+        success: false,
+        code: "multiple_choice_cannot_have_subquestions",
+      };
+    }
+    return { success: true };
+  }
+
+  if (subquestions && subquestions.length > 0) {
+    for (const sub of subquestions) {
+      if (!sub.statement || !sub.statement.trim() || !sub.explanation || !sub.explanation.trim()) {
+        return { success: false, code: "subquestion_fields_cannot_be_empty" };
+      }
+    }
+  }
+
+  return { success: true };
+}

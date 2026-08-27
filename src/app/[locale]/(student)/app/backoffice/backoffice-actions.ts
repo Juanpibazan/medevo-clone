@@ -42,6 +42,11 @@ export async function saveDraftAction(
       url: string;
       position: number;
     }>;
+    subquestions?: Array<{
+      letter: string;
+      statement: string;
+      explanation: string;
+    }> | null;
   },
 ) {
   const session = await requireRole(["medical_editor", "admin"]);

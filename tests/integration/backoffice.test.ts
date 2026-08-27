@@ -342,4 +342,134 @@ describe("Visual Backoffice Editorial Integration Tests", () => {
       await db.delete(users).where(eq(users.id, editorId));
     }
   });
+
+  it("should support open-ended questions with subquestions in backoffice", async () => {
+    const editorId = randomUUID();
+    const taxonomyId = "backoffice-test-tax-" + randomUUID();
+
+    await db.insert(users).values({
+      id: editorId,
+      name: "Dr. Editor Subquestions",
+      email: `${editorId}@editor.test`,
+    });
+
+    await db.insert(taxonomyNodes).values({
+      id: taxonomyId,
+      name: "Backoffice Test Specialty Subquestions",
+      level: "specialty",
+    });
+
+    try {
+      // 1. Create draft with subquestions
+      const draftResult = await editorialService.createQuestionDraft(editorId, {
+        title: "Discursive with subquestions v1",
+        statement: "Enunciado general.",
+        explanation: "Criterio general.",
+        taxonomyNodeId: taxonomyId,
+        type: "open_ended",
+        alternatives: [],
+        subquestions: [
+          { letter: "A", statement: "Subgunta A", explanation: "Gabarito A" },
+          { letter: "B", statement: "Subgunta B", explanation: "Gabarito B" },
+        ],
+      });
+
+      const qId = draftResult.questionId;
+      const vId = draftResult.versionId;
+
+      expect(qId).toBeDefined();
+      expect(vId).toBeDefined();
+
+      const [versionRow] = await db
+        .select()
+        .from(questionVersions)
+        .where(eq(questionVersions.id, vId));
+
+      expect(versionRow).toBeDefined();
+      expect(versionRow.type).toBe("open_ended");
+      expect(versionRow.subquestions).toBeDefined();
+      expect(versionRow.subquestions?.length).toBe(2);
+      expect(versionRow.subquestions?.[0].letter).toBe("A");
+      expect(versionRow.subquestions?.[1].statement).toBe("Subgunta B");
+
+      // 2. Update draft with modified subquestions
+      await editorialService.updateQuestionDraft(editorId, vId, {
+        title: "Discursive with subquestions v1 updated",
+        statement: "Enunciado general.",
+        explanation: "Criterio general.",
+        taxonomyNodeId: taxonomyId,
+        type: "open_ended",
+        alternatives: [],
+        subquestions: [
+          { letter: "A", statement: "Subgunta A modificada", explanation: "Gabarito A" },
+        ],
+      });
+
+      const [updatedRow] = await db
+        .select()
+        .from(questionVersions)
+        .where(eq(questionVersions.id, vId));
+
+      expect(updatedRow.subquestions?.length).toBe(1);
+      expect(updatedRow.subquestions?.[0].statement).toBe("Subgunta A modificada");
+
+      // 3. Validation: Reject empty subquestion fields
+      await expect(
+        editorialService.createQuestionDraft(editorId, {
+          title: "Invalid empty subquestion",
+          statement: "X",
+          explanation: "Y",
+          taxonomyNodeId: taxonomyId,
+          type: "open_ended",
+          alternatives: [],
+          subquestions: [
+            { letter: "A", statement: "", explanation: "Gabarito" },
+          ],
+        }),
+      ).rejects.toThrow();
+
+      // 4. Validation: Reject subquestions on multiple-choice questions
+      await expect(
+        editorialService.createQuestionDraft(editorId, {
+          title: "Invalid MC with subquestions",
+          statement: "X",
+          explanation: "Y",
+          taxonomyNodeId: taxonomyId,
+          type: "multiple_choice",
+          alternatives: [
+            { optionLetter: "A", text: "Alt A", isCorrect: true },
+            { optionLetter: "B", text: "Alt B", isCorrect: false },
+          ],
+          subquestions: [
+            { letter: "A", statement: "Sub A", explanation: "Gabarito" },
+          ],
+        }),
+      ).rejects.toThrow();
+    } finally {
+      // Cleanup
+      const createdVersions = await db
+        .select({
+          id: questionVersions.id,
+          questionId: questionVersions.questionId,
+        })
+        .from(questionVersions)
+        .where(eq(questionVersions.createdBy, editorId));
+
+      const versionIds = createdVersions.map((v) => v.id);
+      const questionIds = Array.from(
+        new Set(createdVersions.map((v) => v.questionId)),
+      );
+
+      if (versionIds.length > 0) {
+        await db
+          .delete(questionVersions)
+          .where(inArray(questionVersions.id, versionIds));
+      }
+      if (questionIds.length > 0) {
+        await db.delete(questions).where(inArray(questions.id, questionIds));
+      }
+      await db.delete(taxonomyNodes).where(eq(taxonomyNodes.id, taxonomyId));
+      await db.delete(users).where(eq(users.id, editorId));
+    }
+  });
 });

@@ -23,6 +23,12 @@ interface ImageInput {
   position: number;
 }
 
+interface SubquestionInput {
+  letter: string;
+  statement: string;
+  explanation: string;
+}
+
 interface EditFormClientProps {
   locale: string;
   taxonomyNodes: TaxonomyNode[];
@@ -35,6 +41,7 @@ interface EditFormClientProps {
     type?: QuestionType;
     alternatives: AlternativeInput[];
     images?: ImageInput[];
+    subquestions?: SubquestionInput[];
   } | null;
 }
 
@@ -76,6 +83,47 @@ export function EditFormClient({
       { optionLetter: "E", text: "", isCorrect: false },
     ],
   );
+
+  // Subquestions state (dynamic repeater)
+  const [subquestions, setSubquestions] = useState<SubquestionInput[]>(
+    initialData?.subquestions || [],
+  );
+
+  const getLetter = (index: number) => String.fromCharCode(65 + index);
+
+  const handleAddSubquestion = () => {
+    const nextIndex = subquestions.length;
+    setSubquestions((prev) => [
+      ...prev,
+      {
+        letter: getLetter(nextIndex),
+        statement: "",
+        explanation: "",
+      },
+    ]);
+  };
+
+  const handleRemoveSubquestion = (indexToRemove: number) => {
+    setSubquestions((prev) => {
+      const filtered = prev.filter((_, i) => i !== indexToRemove);
+      return filtered.map((sub, idx) => ({
+        ...sub,
+        letter: getLetter(idx),
+      }));
+    });
+  };
+
+  const handleSubquestionTextChange = (
+    index: number,
+    field: "statement" | "explanation",
+    val: string,
+  ) => {
+    setSubquestions((prev) =>
+      prev.map((sub, i) =>
+        i === index ? { ...sub, [field]: val } : sub,
+      ),
+    );
+  };
 
   // Initialize taxonomy dropdowns if editing existing question
   useEffect(() => {
@@ -210,6 +258,16 @@ export function EditFormClient({
       }
     }
 
+    const finalSubquestions = type === "open_ended" ? subquestions : [];
+    if (type === "open_ended" && finalSubquestions.length > 0) {
+      for (const sub of finalSubquestions) {
+        if (!sub.statement.trim() || !sub.explanation.trim()) {
+          setError("Por favor, preencha o enunciado e o gabarito de todas as subperguntas.");
+          return;
+        }
+      }
+    }
+
     startTransition(async () => {
       try {
         const res = await saveDraftAction(locale, versionId, {
@@ -220,6 +278,7 @@ export function EditFormClient({
           type,
           alternatives: finalAlternatives,
           images,
+          subquestions: finalSubquestions,
         });
 
         if (res.success) {
@@ -498,6 +557,84 @@ export function EditFormClient({
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {type === "open_ended" && (
+        <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div>
+              <h2 className="text-xl font-bold text-[#102A43]">Subperguntas</h2>
+              <p className="text-xs text-slate-400">
+                Adicione subperguntas opcionais (itemizadas) para guiar a resposta.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleAddSubquestion}
+              disabled={pending}
+              className="cursor-pointer rounded-xl bg-teal-600 px-4 py-2 text-xs font-bold text-white hover:bg-teal-500 disabled:opacity-50"
+            >
+              + Adicionar Subpergunta
+            </button>
+          </div>
+
+          {subquestions.length === 0 ? (
+            <p className="py-4 text-center text-sm italic text-slate-400">
+              Nenhuma subpergunta adicionada. O aluno responderá apenas ao caso geral.
+            </p>
+          ) : (
+            <div className="space-y-6">
+              {subquestions.map((sub, index) => (
+                <div
+                  key={index}
+                  className="relative flex flex-col gap-4 rounded-xl border border-slate-200 bg-slate-50/50 p-5"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-teal-200 bg-teal-50 text-sm font-bold text-teal-700">
+                      {sub.letter}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveSubquestion(index)}
+                      disabled={pending}
+                      className="cursor-pointer rounded-lg bg-rose-50 border border-rose-100 px-2.5 py-1 text-xs font-bold text-rose-600 hover:bg-rose-100 disabled:opacity-50"
+                    >
+                      Remover
+                    </button>
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-slate-500 uppercase">
+                      Enunciado da Subpergunta {sub.letter}
+                    </label>
+                    <textarea
+                      rows={2}
+                      disabled={pending}
+                      value={sub.statement}
+                      onChange={(e) => handleSubquestionTextChange(index, "statement", e.target.value)}
+                      placeholder={`Escreva a pergunta correspondente ao item ${sub.letter}...`}
+                      className="rounded-xl border border-slate-300 px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none disabled:bg-slate-100 bg-white"
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-bold text-slate-500 uppercase">
+                      Gabarito / Critério de Correção {sub.letter}
+                    </label>
+                    <textarea
+                      rows={2}
+                      disabled={pending}
+                      value={sub.explanation}
+                      onChange={(e) => handleSubquestionTextChange(index, "explanation", e.target.value)}
+                      placeholder={`Descreva a resposta ideal e critérios de pontuação para o item ${sub.letter}...`}
+                      className="rounded-xl border border-slate-300 px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none disabled:bg-slate-100 bg-white"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

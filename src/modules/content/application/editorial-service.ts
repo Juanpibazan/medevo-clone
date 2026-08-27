@@ -7,7 +7,10 @@ import {
   editorialReviews,
 } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
-import { validateQuestionAlternatives } from "../domain/content";
+import {
+  validateQuestionAlternatives,
+  validateQuestionSubquestions,
+} from "../domain/content";
 import type { AlternativeLetter, QuestionType } from "../domain/content";
 
 export interface QuestionDraftInput {
@@ -25,6 +28,11 @@ export interface QuestionDraftInput {
     url: string;
     position: number;
   }>;
+  subquestions?: Array<{
+    letter: string;
+    statement: string;
+    explanation: string;
+  }> | null;
 }
 
 export class EditorialService {
@@ -36,6 +44,11 @@ export class EditorialService {
     const validation = validateQuestionAlternatives(input.alternatives, qType);
     if (!validation.success) {
       throw new Error(`Invalid alternatives configuration: ${validation.code}`);
+    }
+
+    const subValidation = validateQuestionSubquestions(input.subquestions, qType);
+    if (!subValidation.success) {
+      throw new Error(`Invalid subquestions configuration: ${subValidation.code}`);
     }
 
     const questionId = crypto.randomUUID();
@@ -55,6 +68,7 @@ export class EditorialService {
         title: input.title,
         statement: input.statement,
         explanation: input.explanation,
+        subquestions: input.subquestions || null,
         taxonomyNodeId: input.taxonomyNodeId,
         createdBy: editorId,
       });
@@ -149,6 +163,7 @@ export class EditorialService {
         title: publishedVersion.title,
         statement: publishedVersion.statement,
         explanation: publishedVersion.explanation,
+        subquestions: publishedVersion.subquestions,
         taxonomyNodeId: publishedVersion.taxonomyNodeId,
         createdBy: editorId,
       });
@@ -190,6 +205,11 @@ export class EditorialService {
       throw new Error(`Invalid alternatives configuration: ${validation.code}`);
     }
 
+    const subValidation = validateQuestionSubquestions(input.subquestions, qType);
+    if (!subValidation.success) {
+      throw new Error(`Invalid subquestions configuration: ${subValidation.code}`);
+    }
+
     await db.transaction(async (tx) => {
       const [version] = await tx
         .select()
@@ -212,6 +232,7 @@ export class EditorialService {
           title: input.title,
           statement: input.statement,
           explanation: input.explanation,
+          subquestions: input.subquestions || null,
           taxonomyNodeId: input.taxonomyNodeId,
           type: qType,
           createdBy: editorId, // update last editor

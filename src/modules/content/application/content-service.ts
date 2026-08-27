@@ -6,6 +6,7 @@ import {
   type QuestionImage,
   type QuestionType,
   validateQuestionAlternatives,
+  validateQuestionSubquestions,
 } from "../domain/content";
 
 export interface ContentRepository {
@@ -88,12 +89,18 @@ export class ContentService {
         isCorrect: boolean;
       }>;
       images?: Array<{ url: string; position: number }>;
+      subquestions?: Array<{ letter: string; statement: string; explanation: string }> | null;
     },
   ) {
     const qType = input.type ?? "multiple_choice";
     const val = validateQuestionAlternatives(input.alternatives, qType);
     if (!val.success) {
       throw new Error(`Invalid alternatives configuration: ${val.code}`);
+    }
+
+    const subVal = validateQuestionSubquestions(input.subquestions, qType);
+    if (!subVal.success) {
+      throw new Error(`Invalid subquestions configuration: ${subVal.code}`);
     }
 
     const questionId = crypto.randomUUID();
@@ -106,6 +113,7 @@ export class ContentService {
         title: input.title,
         statement: input.statement,
         explanation: input.explanation,
+        subquestions: input.subquestions || null,
         taxonomyNodeId: input.taxonomyNodeId,
         type: qType,
         createdBy: createdByUserId,

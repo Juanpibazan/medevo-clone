@@ -30,4 +30,5 @@ export {
   questionTypeSchema,
   questionImageSchema,
   validateQuestionAlternatives,
+  validateQuestionSubquestions,
 } from "./domain/content";

@@ -119,6 +119,16 @@ export default async function BackofficePage({
                           <span className="rounded bg-slate-100 px-2 py-0.5 font-mono text-xs font-bold text-slate-600">
                             ID: {question.id}
                           </span>
+                          {latestVersion && (
+                            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600 uppercase tracking-wider">
+                              {latestVersion.type === "open_ended" ? "Discursiva" : "Múltipla Escolha"}
+                            </span>
+                          )}
+                          {latestVersion?.type === "open_ended" && latestVersion.subquestions && latestVersion.subquestions.length > 0 && (
+                            <span className="rounded-full border border-teal-200 bg-teal-50 px-2 py-0.5 text-[10px] font-semibold text-teal-700 uppercase tracking-wider">
+                              {latestVersion.subquestions.length} {latestVersion.subquestions.length === 1 ? "subpergunta" : "subperguntas"}
+                            </span>
+                          )}
                           {activeVersion && (
                             <span className="rounded border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">
                               Publicada: v{activeVersion.versionNumber}

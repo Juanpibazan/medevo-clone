@@ -131,31 +131,76 @@ export default async function RevisarQuestaoPage({
             </div>
           )}
 
-          <div className="border-t border-slate-100 pt-4">
-            <h3 className="mb-3 text-xs font-bold tracking-wider text-slate-500 uppercase">
-              Alternativas Cadastradas
-            </h3>
-            <div className="space-y-3">
-              {versionData.alternatives.map((alt) => (
-                <div
-                  key={alt.id}
-                  className={`flex gap-4 rounded-xl border p-4 ${
-                    alt.isCorrect
-                      ? "border-emerald-200 bg-emerald-50 text-emerald-900"
-                      : "border-slate-200 bg-slate-50 text-slate-700"
-                  }`}
-                >
-                  <span className="font-bold">{alt.optionLetter}.</span>
-                  <span className="text-sm">{alt.text}</span>
-                  {alt.isCorrect && (
-                    <span className="ml-auto rounded bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800 uppercase">
-                      Correta
-                    </span>
-                  )}
-                </div>
-              ))}
+          {versionData.version.type === "multiple_choice" ? (
+            <div className="border-t border-slate-100 pt-4">
+              <h3 className="mb-3 text-xs font-bold tracking-wider text-slate-500 uppercase">
+                Alternativas Cadastradas
+              </h3>
+              <div className="space-y-3">
+                {versionData.alternatives.map((alt) => (
+                  <div
+                    key={alt.id}
+                    className={`flex gap-4 rounded-xl border p-4 ${
+                      alt.isCorrect
+                        ? "border-emerald-200 bg-emerald-50 text-emerald-900"
+                        : "border-slate-200 bg-slate-50 text-slate-700"
+                    }`}
+                  >
+                    <span className="font-bold">{alt.optionLetter}.</span>
+                    <span className="text-sm">{alt.text}</span>
+                    {alt.isCorrect && (
+                      <span className="ml-auto rounded bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800 uppercase">
+                        Correta
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="border-t border-slate-100 pt-4">
+              <h3 className="mb-3 text-xs font-bold tracking-wider text-slate-500 uppercase">
+                Subperguntas Cadastradas
+              </h3>
+              {versionData.version.subquestions && versionData.version.subquestions.length > 0 ? (
+                <div className="space-y-4">
+                  {versionData.version.subquestions.map((sub, idx) => (
+                    <div
+                      key={idx}
+                      className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50/50 p-5"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-teal-200 bg-teal-50 text-sm font-bold text-teal-700">
+                          {sub.letter}
+                        </span>
+                        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                          Subpergunta
+                        </span>
+                      </div>
+                      
+                      <div className="space-y-1">
+                        <span className="text-xs font-bold text-slate-400 uppercase">Enunciado:</span>
+                        <p className="text-sm leading-relaxed whitespace-pre-line text-slate-700">
+                          {sub.statement}
+                        </p>
+                      </div>
+                      
+                      <div className="space-y-1 border-t border-slate-200/60 pt-2">
+                        <span className="text-xs font-bold text-slate-400 uppercase">Gabarito Oficial:</span>
+                        <p className="text-sm leading-relaxed whitespace-pre-line text-slate-600">
+                          {sub.explanation}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm italic text-slate-400">
+                  Esta questão discursiva não possui subperguntas adicionadas.
+                </p>
+              )}
+            </div>
+          )}
 
           <div className="border-t border-slate-100 pt-4">
             <h3 className="mb-2 text-xs font-bold tracking-wider text-slate-500 uppercase">

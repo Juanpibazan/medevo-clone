@@ -119,9 +119,7 @@ export function EditFormClient({
     val: string,
   ) => {
     setSubquestions((prev) =>
-      prev.map((sub, i) =>
-        i === index ? { ...sub, [field]: val } : sub,
-      ),
+      prev.map((sub, i) => (i === index ? { ...sub, [field]: val } : sub)),
     );
   };
 
@@ -262,7 +260,9 @@ export function EditFormClient({
     if (type === "open_ended" && finalSubquestions.length > 0) {
       for (const sub of finalSubquestions) {
         if (!sub.statement.trim() || !sub.explanation.trim()) {
-          setError("Por favor, preencha o enunciado e o gabarito de todas as subperguntas.");
+          setError(
+            "Por favor, preencha o enunciado e o gabarito de todas as subperguntas.",
+          );
           return;
         }
       }
@@ -566,7 +566,8 @@ export function EditFormClient({
             <div>
               <h2 className="text-xl font-bold text-[#102A43]">Subperguntas</h2>
               <p className="text-xs text-slate-400">
-                Adicione subperguntas opcionais (itemizadas) para guiar a resposta.
+                Adicione subperguntas opcionais (itemizadas) para guiar a
+                resposta.
               </p>
             </div>
             <button
@@ -580,8 +581,9 @@ export function EditFormClient({
           </div>
 
           {subquestions.length === 0 ? (
-            <p className="py-4 text-center text-sm italic text-slate-400">
-              Nenhuma subpergunta adicionada. O aluno responderá apenas ao caso geral.
+            <p className="py-4 text-center text-sm text-slate-400 italic">
+              Nenhuma subpergunta adicionada. O aluno responderá apenas ao caso
+              geral.
             </p>
           ) : (
             <div className="space-y-6">
@@ -598,7 +600,7 @@ export function EditFormClient({
                       type="button"
                       onClick={() => handleRemoveSubquestion(index)}
                       disabled={pending}
-                      className="cursor-pointer rounded-lg bg-rose-50 border border-rose-100 px-2.5 py-1 text-xs font-bold text-rose-600 hover:bg-rose-100 disabled:opacity-50"
+                      className="cursor-pointer rounded-lg border border-rose-100 bg-rose-50 px-2.5 py-1 text-xs font-bold text-rose-600 hover:bg-rose-100 disabled:opacity-50"
                     >
                       Remover
                     </button>
@@ -612,9 +614,15 @@ export function EditFormClient({
                       rows={2}
                       disabled={pending}
                       value={sub.statement}
-                      onChange={(e) => handleSubquestionTextChange(index, "statement", e.target.value)}
+                      onChange={(e) =>
+                        handleSubquestionTextChange(
+                          index,
+                          "statement",
+                          e.target.value,
+                        )
+                      }
                       placeholder={`Escreva a pergunta correspondente ao item ${sub.letter}...`}
-                      className="rounded-xl border border-slate-300 px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none disabled:bg-slate-100 bg-white"
+                      className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none disabled:bg-slate-100"
                     />
                   </div>
 
@@ -626,9 +634,15 @@ export function EditFormClient({
                       rows={2}
                       disabled={pending}
                       value={sub.explanation}
-                      onChange={(e) => handleSubquestionTextChange(index, "explanation", e.target.value)}
+                      onChange={(e) =>
+                        handleSubquestionTextChange(
+                          index,
+                          "explanation",
+                          e.target.value,
+                        )
+                      }
                       placeholder={`Descreva a resposta ideal e critérios de pontuação para o item ${sub.letter}...`}
-                      className="rounded-xl border border-slate-300 px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none disabled:bg-slate-100 bg-white"
+                      className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm focus:border-indigo-500 focus:outline-none disabled:bg-slate-100"
                     />
                   </div>
                 </div>

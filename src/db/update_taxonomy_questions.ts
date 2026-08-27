@@ -10,7 +10,8 @@ import * as schema from "./schema";
 import { eq } from "drizzle-orm";
 
 const pool = new Pool({
-  connectionString: process.env.MIGRATION_DATABASE_URL || process.env.DATABASE_URL,
+  connectionString:
+    process.env.MIGRATION_DATABASE_URL || process.env.DATABASE_URL,
 });
 const db = drizzle(pool, { schema });
 
@@ -129,7 +130,7 @@ const mapping: Record<string, string> = {
 
 async function updateTaxonomy() {
   console.log("Updating taxonomyNodeId for question_versions...");
-  
+
   let count = 0;
   for (const [questionId, taxonomyNodeId] of Object.entries(mapping)) {
     // We update the questionVersions table where questionId matches
@@ -137,15 +138,15 @@ async function updateTaxonomy() {
       .update(schema.questionVersions)
       .set({ taxonomyNodeId })
       .where(eq(schema.questionVersions.questionId, questionId));
-      
+
     count++;
   }
-  
+
   console.log(`Successfully updated ${count} question versions.`);
   process.exit(0);
 }
 
-updateTaxonomy().catch(err => {
+updateTaxonomy().catch((err) => {
   console.error("Update failed:", err);
   process.exit(1);
 });

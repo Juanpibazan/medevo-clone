@@ -401,7 +401,11 @@ describe("Visual Backoffice Editorial Integration Tests", () => {
         type: "open_ended",
         alternatives: [],
         subquestions: [
-          { letter: "A", statement: "Subgunta A modificada", explanation: "Gabarito A" },
+          {
+            letter: "A",
+            statement: "Subgunta A modificada",
+            explanation: "Gabarito A",
+          },
         ],
       });
 
@@ -411,7 +415,9 @@ describe("Visual Backoffice Editorial Integration Tests", () => {
         .where(eq(questionVersions.id, vId));
 
       expect(updatedRow.subquestions?.length).toBe(1);
-      expect(updatedRow.subquestions?.[0].statement).toBe("Subgunta A modificada");
+      expect(updatedRow.subquestions?.[0].statement).toBe(
+        "Subgunta A modificada",
+      );
 
       // 3. Validation: Reject empty subquestion fields
       await expect(

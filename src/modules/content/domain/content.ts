@@ -116,7 +116,10 @@ export function validateQuestionAlternatives(
 }
 
 export function validateQuestionSubquestions(
-  subquestions: Array<{ letter: string; statement: string; explanation: string }> | null | undefined,
+  subquestions:
+    | Array<{ letter: string; statement: string; explanation: string }>
+    | null
+    | undefined,
   type: QuestionType = "multiple_choice",
 ) {
   if (type === "multiple_choice") {
@@ -131,7 +134,12 @@ export function validateQuestionSubquestions(
 
   if (subquestions && subquestions.length > 0) {
     for (const sub of subquestions) {
-      if (!sub.statement || !sub.statement.trim() || !sub.explanation || !sub.explanation.trim()) {
+      if (
+        !sub.statement ||
+        !sub.statement.trim() ||
+        !sub.explanation ||
+        !sub.explanation.trim()
+      ) {
         return { success: false, code: "subquestion_fields_cannot_be_empty" };
       }
     }

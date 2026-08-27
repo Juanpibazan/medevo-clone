@@ -89,7 +89,11 @@ export class ContentService {
         isCorrect: boolean;
       }>;
       images?: Array<{ url: string; position: number }>;
-      subquestions?: Array<{ letter: string; statement: string; explanation: string }> | null;
+      subquestions?: Array<{
+        letter: string;
+        statement: string;
+        explanation: string;
+      }> | null;
     },
   ) {
     const qType = input.type ?? "multiple_choice";

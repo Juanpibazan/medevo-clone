@@ -162,7 +162,8 @@ export default async function RevisarQuestaoPage({
               <h3 className="mb-3 text-xs font-bold tracking-wider text-slate-500 uppercase">
                 Subperguntas Cadastradas
               </h3>
-              {versionData.version.subquestions && versionData.version.subquestions.length > 0 ? (
+              {versionData.version.subquestions &&
+              versionData.version.subquestions.length > 0 ? (
                 <div className="space-y-4">
                   {versionData.version.subquestions.map((sub, idx) => (
                     <div
@@ -173,20 +174,24 @@ export default async function RevisarQuestaoPage({
                         <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-teal-200 bg-teal-50 text-sm font-bold text-teal-700">
                           {sub.letter}
                         </span>
-                        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                        <span className="text-xs font-bold tracking-wider text-slate-500 uppercase">
                           Subpergunta
                         </span>
                       </div>
-                      
+
                       <div className="space-y-1">
-                        <span className="text-xs font-bold text-slate-400 uppercase">Enunciado:</span>
+                        <span className="text-xs font-bold text-slate-400 uppercase">
+                          Enunciado:
+                        </span>
                         <p className="text-sm leading-relaxed whitespace-pre-line text-slate-700">
                           {sub.statement}
                         </p>
                       </div>
-                      
+
                       <div className="space-y-1 border-t border-slate-200/60 pt-2">
-                        <span className="text-xs font-bold text-slate-400 uppercase">Gabarito Oficial:</span>
+                        <span className="text-xs font-bold text-slate-400 uppercase">
+                          Gabarito Oficial:
+                        </span>
                         <p className="text-sm leading-relaxed whitespace-pre-line text-slate-600">
                           {sub.explanation}
                         </p>
@@ -195,7 +200,7 @@ export default async function RevisarQuestaoPage({
                   ))}
                 </div>
               ) : (
-                <p className="text-sm italic text-slate-400">
+                <p className="text-sm text-slate-400 italic">
                   Esta questão discursiva não possui subperguntas adicionadas.
                 </p>
               )}

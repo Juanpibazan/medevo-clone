@@ -40,7 +40,7 @@ export async function getUploadPresignedUrl(
   if (!isS3Configured || !s3Client || !awsBucketName) {
     throw new Error(
       "Configuração do AWS S3 ausente ou incompleta. Verifique se as variáveis " +
-      "AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION e AWS_S3_BUCKET_NAME estão configuradas no .env.local"
+        "AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION e AWS_S3_BUCKET_NAME estão configuradas no .env.local",
     );
   }
 

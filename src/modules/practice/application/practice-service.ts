@@ -41,6 +41,10 @@ export interface PracticeRepository {
   finishSession(sessionId: string): Promise<StudySession>;
 
   getActiveSession(userId: string): Promise<StudySession | null>;
+
+  getUserQuestionStatuses(
+    userId: string,
+  ): Promise<Array<{ questionId: string; isCorrect: boolean }>>;
 }
 
 // Injectable function type to avoid direct circular dependencies if needed
@@ -116,9 +120,36 @@ export class PracticeService {
         }
       }
 
-      // Shuffle and pick up to 10
-      const shuffled = [...published].sort(() => 0.5 - Math.random());
-      const selected = shuffled.slice(0, 10);
+      // Get user's latest response status for all answered questions
+      const userStatuses =
+        await this.repository.getUserQuestionStatuses(userId);
+      const statusMap = new Map<string, boolean>();
+      for (const status of userStatuses) {
+        statusMap.set(status.questionId, status.isCorrect);
+      }
+
+      // Partition published questions into Tiers
+      const tier1: typeof published = []; // Unanswered
+      const tier2: typeof published = []; // Answered incorrectly on last attempt
+      const tier3: typeof published = []; // Answered correctly on last attempt (mastered)
+
+      for (const q of published) {
+        if (!statusMap.has(q.question.id)) {
+          tier1.push(q);
+        } else if (statusMap.get(q.question.id) === false) {
+          tier2.push(q);
+        } else {
+          tier3.push(q);
+        }
+      }
+
+      // Shuffle within each tier to guarantee randomness
+      const t1 = [...tier1].sort(() => 0.5 - Math.random());
+      const t2 = [...tier2].sort(() => 0.5 - Math.random());
+      const t3 = [...tier3].sort(() => 0.5 - Math.random());
+
+      // Select up to 10 preserving tier priority (Tier 1 > Tier 2 > Tier 3)
+      const selected = [...t1, ...t2, ...t3].slice(0, 10);
       versionIds = selected.map((q) => q.activeVersion.id);
     }
 

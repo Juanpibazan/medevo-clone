@@ -46,9 +46,14 @@ export class EditorialService {
       throw new Error(`Invalid alternatives configuration: ${validation.code}`);
     }
 
-    const subValidation = validateQuestionSubquestions(input.subquestions, qType);
+    const subValidation = validateQuestionSubquestions(
+      input.subquestions,
+      qType,
+    );
     if (!subValidation.success) {
-      throw new Error(`Invalid subquestions configuration: ${subValidation.code}`);
+      throw new Error(
+        `Invalid subquestions configuration: ${subValidation.code}`,
+      );
     }
 
     const questionId = crypto.randomUUID();
@@ -205,9 +210,14 @@ export class EditorialService {
       throw new Error(`Invalid alternatives configuration: ${validation.code}`);
     }
 
-    const subValidation = validateQuestionSubquestions(input.subquestions, qType);
+    const subValidation = validateQuestionSubquestions(
+      input.subquestions,
+      qType,
+    );
     if (!subValidation.success) {
-      throw new Error(`Invalid subquestions configuration: ${subValidation.code}`);
+      throw new Error(
+        `Invalid subquestions configuration: ${subValidation.code}`,
+      );
     }
 
     await db.transaction(async (tx) => {

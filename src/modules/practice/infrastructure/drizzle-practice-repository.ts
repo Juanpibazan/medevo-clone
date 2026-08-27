@@ -1,6 +1,11 @@
-import { eq, and, asc, inArray } from "drizzle-orm";
+import { eq, and, asc, inArray, sql } from "drizzle-orm";
 import { db } from "@/db/client";
-import { studySessions, studySessionItems, responses } from "@/db/schema";
+import {
+  studySessions,
+  studySessionItems,
+  responses,
+  questionVersions,
+} from "@/db/schema";
 import type { PracticeRepository } from "../application/practice-service";
 import type {
   Response,
@@ -268,5 +273,25 @@ export class DrizzlePracticeRepository implements PracticeRepository {
       createdAt: sess.createdAt,
       completedAt: sess.completedAt,
     };
+  }
+
+  async getUserQuestionStatuses(
+    userId: string,
+  ): Promise<Array<{ questionId: string; isCorrect: boolean }>> {
+    const query = sql`
+      SELECT DISTINCT ON (qv.question_id) qv.question_id, r.is_correct
+      FROM ${responses} r
+      JOIN ${studySessionItems} ssi ON r.session_item_id = ssi.id
+      JOIN ${questionVersions} qv ON ssi.question_version_id = qv.id
+      JOIN ${studySessions} ss ON ssi.session_id = ss.id
+      WHERE ss.user_id = ${userId} AND r.verified_at IS NOT NULL
+      ORDER BY qv.question_id, r.verified_at DESC
+    `;
+
+    const result = await db.execute(query);
+    return result.rows.map((row: Record<string, unknown>) => ({
+      questionId: row.question_id as string,
+      isCorrect: row.is_correct as boolean,
+    }));
   }
 }

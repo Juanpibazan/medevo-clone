@@ -55,239 +55,819 @@ async function seed() {
   console.log("Seeding taxonomy...");
   const taxNodes = [
     // --- SPECIALTIES ---
-    { id: "ped", name: "Pediatria", level: "specialty" as const, parentId: null },
-    { id: "gyn", name: "Ginecologia e Obstetrícia", level: "specialty" as const, parentId: null },
-    { id: "clin", name: "Clínica Médica", level: "specialty" as const, parentId: null },
-    { id: "surg", name: "Cirurgia Geral", level: "specialty" as const, parentId: null },
-    { id: "prev", name: "Medicina de Família e Comunidade / Preventiva", level: "specialty" as const, parentId: null },
+    {
+      id: "ped",
+      name: "Pediatria",
+      level: "specialty" as const,
+      parentId: null,
+    },
+    {
+      id: "gyn",
+      name: "Ginecologia e Obstetrícia",
+      level: "specialty" as const,
+      parentId: null,
+    },
+    {
+      id: "clin",
+      name: "Clínica Médica",
+      level: "specialty" as const,
+      parentId: null,
+    },
+    {
+      id: "surg",
+      name: "Cirurgia Geral",
+      level: "specialty" as const,
+      parentId: null,
+    },
+    {
+      id: "prev",
+      name: "Medicina de Família e Comunidade / Preventiva",
+      level: "specialty" as const,
+      parentId: null,
+    },
 
     // --- THEMES ---
     // Pediatria
-    { id: "ped-neo", name: "Neonatologia", level: "theme" as const, parentId: "ped" },
-    { id: "ped-pneumo", name: "Pneumologia Pediátrica", level: "theme" as const, parentId: "ped" },
-    { id: "ped-gastro", name: "Gastroenterologia Pediátrica", level: "theme" as const, parentId: "ped" },
-    { id: "ped-endocrino", name: "Endocrinologia Pediátrica", level: "theme" as const, parentId: "ped" },
-    { id: "ped-reuma", name: "Reumatologia Pediátrica", level: "theme" as const, parentId: "ped" },
-    { id: "ped-nefro", name: "Nefrologia Pediátrica", level: "theme" as const, parentId: "ped" },
-    { id: "ped-emerg", name: "Emergências Pediátricas", level: "theme" as const, parentId: "ped" },
+    {
+      id: "ped-neo",
+      name: "Neonatologia",
+      level: "theme" as const,
+      parentId: "ped",
+    },
+    {
+      id: "ped-pneumo",
+      name: "Pneumologia Pediátrica",
+      level: "theme" as const,
+      parentId: "ped",
+    },
+    {
+      id: "ped-gastro",
+      name: "Gastroenterologia Pediátrica",
+      level: "theme" as const,
+      parentId: "ped",
+    },
+    {
+      id: "ped-endocrino",
+      name: "Endocrinologia Pediátrica",
+      level: "theme" as const,
+      parentId: "ped",
+    },
+    {
+      id: "ped-reuma",
+      name: "Reumatologia Pediátrica",
+      level: "theme" as const,
+      parentId: "ped",
+    },
+    {
+      id: "ped-nefro",
+      name: "Nefrologia Pediátrica",
+      level: "theme" as const,
+      parentId: "ped",
+    },
+    {
+      id: "ped-emerg",
+      name: "Emergências Pediátricas",
+      level: "theme" as const,
+      parentId: "ped",
+    },
 
     // Clínica Médica
-    { id: "clin-cardio", name: "Cardiologia", level: "theme" as const, parentId: "clin" },
-    { id: "clin-infectologia", name: "Infectologia", level: "theme" as const, parentId: "clin" },
-    { id: "clin-gastro", name: "Gastroenterologia e Hepatologia", level: "theme" as const, parentId: "clin" },
-    { id: "clin-reumatologia", name: "Reumatologia", level: "theme" as const, parentId: "clin" },
-    { id: "clin-nefro", name: "Nefrologia", level: "theme" as const, parentId: "clin" },
+    {
+      id: "clin-cardio",
+      name: "Cardiologia",
+      level: "theme" as const,
+      parentId: "clin",
+    },
+    {
+      id: "clin-infectologia",
+      name: "Infectologia",
+      level: "theme" as const,
+      parentId: "clin",
+    },
+    {
+      id: "clin-gastro",
+      name: "Gastroenterologia e Hepatologia",
+      level: "theme" as const,
+      parentId: "clin",
+    },
+    {
+      id: "clin-reumatologia",
+      name: "Reumatologia",
+      level: "theme" as const,
+      parentId: "clin",
+    },
+    {
+      id: "clin-nefro",
+      name: "Nefrologia",
+      level: "theme" as const,
+      parentId: "clin",
+    },
 
     // Cirurgia Geral
-    { id: "surg-abd", name: "Cirurgia Abdominal e Gastrointestinal", level: "theme" as const, parentId: "surg" },
-    { id: "surg-cp", name: "Cirurgia de Cabeça e Pescoço", level: "theme" as const, parentId: "surg" },
-    { id: "surg-orto", name: "Traumatologia e Ortopedia", level: "theme" as const, parentId: "surg" },
-    { id: "surg-trauma", name: "Cirurgia do Trauma", level: "theme" as const, parentId: "surg" },
+    {
+      id: "surg-abd",
+      name: "Cirurgia Abdominal e Gastrointestinal",
+      level: "theme" as const,
+      parentId: "surg",
+    },
+    {
+      id: "surg-cp",
+      name: "Cirurgia de Cabeça e Pescoço",
+      level: "theme" as const,
+      parentId: "surg",
+    },
+    {
+      id: "surg-orto",
+      name: "Traumatologia e Ortopedia",
+      level: "theme" as const,
+      parentId: "surg",
+    },
+    {
+      id: "surg-trauma",
+      name: "Cirurgia do Trauma",
+      level: "theme" as const,
+      parentId: "surg",
+    },
 
     // Ginecologia e Obstetrícia
-    { id: "gyn-obstetricia", name: "Obstetrícia", level: "theme" as const, parentId: "gyn" },
-    { id: "gyn-gineco", name: "Ginecologia Geral", level: "theme" as const, parentId: "gyn" },
-    { id: "gyn-masto", name: "Mastologia", level: "theme" as const, parentId: "gyn" },
+    {
+      id: "gyn-obstetricia",
+      name: "Obstetrícia",
+      level: "theme" as const,
+      parentId: "gyn",
+    },
+    {
+      id: "gyn-gineco",
+      name: "Ginecologia Geral",
+      level: "theme" as const,
+      parentId: "gyn",
+    },
+    {
+      id: "gyn-masto",
+      name: "Mastologia",
+      level: "theme" as const,
+      parentId: "gyn",
+    },
 
     // Preventiva
-    { id: "prev-epidemio", name: "Epidemiologia e Bioestatística", level: "theme" as const, parentId: "prev" },
-    { id: "prev-gestao", name: "Planejamento e Gestão em Saúde", level: "theme" as const, parentId: "prev" },
+    {
+      id: "prev-epidemio",
+      name: "Epidemiologia e Bioestatística",
+      level: "theme" as const,
+      parentId: "prev",
+    },
+    {
+      id: "prev-gestao",
+      name: "Planejamento e Gestão em Saúde",
+      level: "theme" as const,
+      parentId: "prev",
+    },
 
     // --- FOCUSES ---
     // Pediatria -> Neonatologia
-    { id: "ped-neo-reanim", name: "Reanimação Neonatal", level: "focus" as const, parentId: "ped-neo" },
-    { id: "ped-neo-ictericia", name: "Icterícia Neonatal", level: "focus" as const, parentId: "ped-neo" },
+    {
+      id: "ped-neo-reanim",
+      name: "Reanimação Neonatal",
+      level: "focus" as const,
+      parentId: "ped-neo",
+    },
+    {
+      id: "ped-neo-ictericia",
+      name: "Icterícia Neonatal",
+      level: "focus" as const,
+      parentId: "ped-neo",
+    },
 
     // Pediatria -> Pneumo
-    { id: "ped-pneumo-tb", name: "Tuberculose Infantil", level: "focus" as const, parentId: "ped-pneumo" },
-    { id: "ped-pneumo-pneumonia", name: "Pneumonia Adquirida na Comunidade", level: "focus" as const, parentId: "ped-pneumo" },
-    { id: "ped-pneumo-asma", name: "Asma na Infância", level: "focus" as const, parentId: "ped-pneumo" },
+    {
+      id: "ped-pneumo-tb",
+      name: "Tuberculose Infantil",
+      level: "focus" as const,
+      parentId: "ped-pneumo",
+    },
+    {
+      id: "ped-pneumo-pneumonia",
+      name: "Pneumonia Adquirida na Comunidade",
+      level: "focus" as const,
+      parentId: "ped-pneumo",
+    },
+    {
+      id: "ped-pneumo-asma",
+      name: "Asma na Infância",
+      level: "focus" as const,
+      parentId: "ped-pneumo",
+    },
 
     // Pediatria -> Gastro
-    { id: "ped-gastro-obstrucao", name: "Obstrução Intestinal Pediátrica", level: "focus" as const, parentId: "ped-gastro" },
-    { id: "ped-gastro-diarreia", name: "Diarreia na Infância", level: "focus" as const, parentId: "ped-gastro" },
+    {
+      id: "ped-gastro-obstrucao",
+      name: "Obstrução Intestinal Pediátrica",
+      level: "focus" as const,
+      parentId: "ped-gastro",
+    },
+    {
+      id: "ped-gastro-diarreia",
+      name: "Diarreia na Infância",
+      level: "focus" as const,
+      parentId: "ped-gastro",
+    },
 
     // Pediatria -> Endocrino
-    { id: "ped-endocrino-crescimento", name: "Distúrbios de Crescimento", level: "focus" as const, parentId: "ped-endocrino" },
+    {
+      id: "ped-endocrino-crescimento",
+      name: "Distúrbios de Crescimento",
+      level: "focus" as const,
+      parentId: "ped-endocrino",
+    },
 
     // Pediatria -> Reuma
-    { id: "ped-reuma-fr", name: "Febre Reumática", level: "focus" as const, parentId: "ped-reuma" },
+    {
+      id: "ped-reuma-fr",
+      name: "Febre Reumática",
+      level: "focus" as const,
+      parentId: "ped-reuma",
+    },
 
     // Pediatria -> Nefro
-    { id: "ped-nefro-glomerulo", name: "Glomerulopatias", level: "focus" as const, parentId: "ped-nefro" },
+    {
+      id: "ped-nefro-glomerulo",
+      name: "Glomerulopatias",
+      level: "focus" as const,
+      parentId: "ped-nefro",
+    },
 
     // Pediatria -> Emergencias
-    { id: "ped-emerg-choque", name: "Choque em Pediatria", level: "focus" as const, parentId: "ped-emerg" },
-    { id: "ped-emerg-cad", name: "Cetoacidose Diabética", level: "focus" as const, parentId: "ped-emerg" },
+    {
+      id: "ped-emerg-choque",
+      name: "Choque em Pediatria",
+      level: "focus" as const,
+      parentId: "ped-emerg",
+    },
+    {
+      id: "ped-emerg-cad",
+      name: "Cetoacidose Diabética",
+      level: "focus" as const,
+      parentId: "ped-emerg",
+    },
 
     // Clínica Médica -> Cardio
-    { id: "clin-cardio-iam", name: "Infarto Agudo do Miocárdio", level: "focus" as const, parentId: "clin-cardio" },
-    { id: "clin-cardio-arritmias", name: "Arritmias Cardíacas", level: "focus" as const, parentId: "clin-cardio" },
+    {
+      id: "clin-cardio-iam",
+      name: "Infarto Agudo do Miocárdio",
+      level: "focus" as const,
+      parentId: "clin-cardio",
+    },
+    {
+      id: "clin-cardio-arritmias",
+      name: "Arritmias Cardíacas",
+      level: "focus" as const,
+      parentId: "clin-cardio",
+    },
 
     // Clínica Médica -> Infectologia
-    { id: "clin-infectologia-peconhentos", name: "Acidentes por Animais Peçonhentos", level: "focus" as const, parentId: "clin-infectologia" },
-    { id: "clin-infectologia-ist", name: "Infecções Sexualmente Transmissíveis", level: "focus" as const, parentId: "clin-infectologia" },
-    { id: "clin-infectologia-hepatites", name: "Hepatites Virais", level: "focus" as const, parentId: "clin-infectologia" },
+    {
+      id: "clin-infectologia-peconhentos",
+      name: "Acidentes por Animais Peçonhentos",
+      level: "focus" as const,
+      parentId: "clin-infectologia",
+    },
+    {
+      id: "clin-infectologia-ist",
+      name: "Infecções Sexualmente Transmissíveis",
+      level: "focus" as const,
+      parentId: "clin-infectologia",
+    },
+    {
+      id: "clin-infectologia-hepatites",
+      name: "Hepatites Virais",
+      level: "focus" as const,
+      parentId: "clin-infectologia",
+    },
 
     // Clínica Médica -> Gastro
-    { id: "clin-gastro-cirrose", name: "Cirrose Hepática e Complicações", level: "focus" as const, parentId: "clin-gastro" },
-    { id: "clin-gastro-peptica", name: "Doença Ulcerosa Péptica", level: "focus" as const, parentId: "clin-gastro" },
+    {
+      id: "clin-gastro-cirrose",
+      name: "Cirrose Hepática e Complicações",
+      level: "focus" as const,
+      parentId: "clin-gastro",
+    },
+    {
+      id: "clin-gastro-peptica",
+      name: "Doença Ulcerosa Péptica",
+      level: "focus" as const,
+      parentId: "clin-gastro",
+    },
 
     // Clínica Médica -> Reumatologia
-    { id: "clin-reumatologia-osteoporose", name: "Osteoporose", level: "focus" as const, parentId: "clin-reumatologia" },
-    { id: "clin-reumatologia-les", name: "Lúpus Eritematoso Sistêmico", level: "focus" as const, parentId: "clin-reumatologia" },
+    {
+      id: "clin-reumatologia-osteoporose",
+      name: "Osteoporose",
+      level: "focus" as const,
+      parentId: "clin-reumatologia",
+    },
+    {
+      id: "clin-reumatologia-les",
+      name: "Lúpus Eritematoso Sistêmico",
+      level: "focus" as const,
+      parentId: "clin-reumatologia",
+    },
 
     // Clínica Médica -> Nefrologia
-    { id: "clin-nefro-ira", name: "Insuficiência Renal Aguda", level: "focus" as const, parentId: "clin-nefro" },
+    {
+      id: "clin-nefro-ira",
+      name: "Insuficiência Renal Aguda",
+      level: "focus" as const,
+      parentId: "clin-nefro",
+    },
 
     // Cirurgia Geral -> Abdominal
-    { id: "surg-abd-inflam", name: "Abdome Agudo Inflamatório", level: "focus" as const, parentId: "surg-abd" },
-    { id: "surg-abd-obstrucao", name: "Obstrução Intestinal", level: "focus" as const, parentId: "surg-abd" },
-    { id: "surg-abd-hernias", name: "Hérnias Abdominais", level: "focus" as const, parentId: "surg-abd" },
+    {
+      id: "surg-abd-inflam",
+      name: "Abdome Agudo Inflamatório",
+      level: "focus" as const,
+      parentId: "surg-abd",
+    },
+    {
+      id: "surg-abd-obstrucao",
+      name: "Obstrução Intestinal",
+      level: "focus" as const,
+      parentId: "surg-abd",
+    },
+    {
+      id: "surg-abd-hernias",
+      name: "Hérnias Abdominais",
+      level: "focus" as const,
+      parentId: "surg-abd",
+    },
 
     // Cirurgia Geral -> Cabeça e Pescoço
-    { id: "surg-cp-tireoide", name: "Tireoidectomia e Câncer", level: "focus" as const, parentId: "surg-cp" },
+    {
+      id: "surg-cp-tireoide",
+      name: "Tireoidectomia e Câncer",
+      level: "focus" as const,
+      parentId: "surg-cp",
+    },
 
     // Cirurgia Geral -> Ortopedia
-    { id: "surg-orto-trauma", name: "Trauma de Extremidades", level: "focus" as const, parentId: "surg-orto" },
+    {
+      id: "surg-orto-trauma",
+      name: "Trauma de Extremidades",
+      level: "focus" as const,
+      parentId: "surg-orto",
+    },
 
     // Cirurgia Geral -> Trauma
-    { id: "surg-trauma-toracico", name: "Trauma Torácico", level: "focus" as const, parentId: "surg-trauma" },
-    { id: "surg-trauma-queimadura", name: "Queimaduras", level: "focus" as const, parentId: "surg-trauma" },
+    {
+      id: "surg-trauma-toracico",
+      name: "Trauma Torácico",
+      level: "focus" as const,
+      parentId: "surg-trauma",
+    },
+    {
+      id: "surg-trauma-queimadura",
+      name: "Queimaduras",
+      level: "focus" as const,
+      parentId: "surg-trauma",
+    },
 
     // Ginecologia -> Obstetrícia
-    { id: "gyn-obst-emergencias", name: "Emergências Obstétricas", level: "focus" as const, parentId: "gyn-obstetricia" },
-    { id: "gyn-obst-prenatal", name: "Assistência ao Pré-Natal", level: "focus" as const, parentId: "gyn-obstetricia" },
-    { id: "gyn-obst-parto", name: "Trabalho de Parto", level: "focus" as const, parentId: "gyn-obstetricia" },
-    { id: "gyn-obst-intercorrencias", name: "Intercorrências Clínicas na Gestação", level: "focus" as const, parentId: "gyn-obstetricia" },
+    {
+      id: "gyn-obst-emergencias",
+      name: "Emergências Obstétricas",
+      level: "focus" as const,
+      parentId: "gyn-obstetricia",
+    },
+    {
+      id: "gyn-obst-prenatal",
+      name: "Assistência ao Pré-Natal",
+      level: "focus" as const,
+      parentId: "gyn-obstetricia",
+    },
+    {
+      id: "gyn-obst-parto",
+      name: "Trabalho de Parto",
+      level: "focus" as const,
+      parentId: "gyn-obstetricia",
+    },
+    {
+      id: "gyn-obst-intercorrencias",
+      name: "Intercorrências Clínicas na Gestação",
+      level: "focus" as const,
+      parentId: "gyn-obstetricia",
+    },
 
     // Ginecologia -> Gineco Geral
-    { id: "gyn-gineco-endocrino", name: "Ginecologia Endócrina", level: "focus" as const, parentId: "gyn-gineco" },
-    { id: "gyn-gineco-onco", name: "Prevenção Oncológica", level: "focus" as const, parentId: "gyn-gineco" },
-    { id: "gyn-gineco-violencia", name: "Violência Sexual e de Gênero", level: "focus" as const, parentId: "gyn-gineco" },
-    { id: "gyn-gineco-infeccoes", name: "Infecções Ginecológicas", level: "focus" as const, parentId: "gyn-gineco" },
+    {
+      id: "gyn-gineco-endocrino",
+      name: "Ginecologia Endócrina",
+      level: "focus" as const,
+      parentId: "gyn-gineco",
+    },
+    {
+      id: "gyn-gineco-onco",
+      name: "Prevenção Oncológica",
+      level: "focus" as const,
+      parentId: "gyn-gineco",
+    },
+    {
+      id: "gyn-gineco-violencia",
+      name: "Violência Sexual e de Gênero",
+      level: "focus" as const,
+      parentId: "gyn-gineco",
+    },
+    {
+      id: "gyn-gineco-infeccoes",
+      name: "Infecções Ginecológicas",
+      level: "focus" as const,
+      parentId: "gyn-gineco",
+    },
 
     // Ginecologia -> Mastologia
-    { id: "gyn-masto-cancer", name: "Câncer de Mama", level: "focus" as const, parentId: "gyn-masto" },
+    {
+      id: "gyn-masto-cancer",
+      name: "Câncer de Mama",
+      level: "focus" as const,
+      parentId: "gyn-masto",
+    },
 
     // Preventiva -> Epidemiologia
-    { id: "prev-epidemio-estudos", name: "Delineamento de Estudos", level: "focus" as const, parentId: "prev-epidemio" },
-    { id: "prev-epidemio-indicadores", name: "Indicadores de Saúde", level: "focus" as const, parentId: "prev-epidemio" },
-    { id: "prev-epidemio-testes", name: "Testes Diagnósticos", level: "focus" as const, parentId: "prev-epidemio" },
+    {
+      id: "prev-epidemio-estudos",
+      name: "Delineamento de Estudos",
+      level: "focus" as const,
+      parentId: "prev-epidemio",
+    },
+    {
+      id: "prev-epidemio-indicadores",
+      name: "Indicadores de Saúde",
+      level: "focus" as const,
+      parentId: "prev-epidemio",
+    },
+    {
+      id: "prev-epidemio-testes",
+      name: "Testes Diagnósticos",
+      level: "focus" as const,
+      parentId: "prev-epidemio",
+    },
 
     // Preventiva -> Gestão
-    { id: "prev-gestao-esf", name: "Estratégia Saúde da Família", level: "focus" as const, parentId: "prev-gestao" },
+    {
+      id: "prev-gestao-esf",
+      name: "Estratégia Saúde da Família",
+      level: "focus" as const,
+      parentId: "prev-gestao",
+    },
 
     // --- SUBFOCUSES ---
     // Pediatria -> Neonatologia -> Reanimação
-    { id: "ped-neo-reanim-passos", name: "Passos Iniciais e Avaliação", level: "subfocus" as const, parentId: "ped-neo-reanim" },
+    {
+      id: "ped-neo-reanim-passos",
+      name: "Passos Iniciais e Avaliação",
+      level: "subfocus" as const,
+      parentId: "ped-neo-reanim",
+    },
     // Pediatria -> Neonatologia -> Icterícia
-    { id: "ped-neo-ictericia-diagnostico", name: "Fototerapia e Diagnóstico", level: "subfocus" as const, parentId: "ped-neo-ictericia" },
+    {
+      id: "ped-neo-ictericia-diagnostico",
+      name: "Fototerapia e Diagnóstico",
+      level: "subfocus" as const,
+      parentId: "ped-neo-ictericia",
+    },
 
     // Pediatria -> Pneumo -> TB
-    { id: "ped-pneumo-tb-conduta", name: "PPD e Conduta", level: "subfocus" as const, parentId: "ped-pneumo-tb" },
+    {
+      id: "ped-pneumo-tb-conduta",
+      name: "PPD e Conduta",
+      level: "subfocus" as const,
+      parentId: "ped-pneumo-tb",
+    },
     // Pediatria -> Pneumo -> Pneumonia
-    { id: "ped-pneumo-pneumonia-tratamento", name: "Conduta e Tratamento", level: "subfocus" as const, parentId: "ped-pneumo-pneumonia" },
+    {
+      id: "ped-pneumo-pneumonia-tratamento",
+      name: "Conduta e Tratamento",
+      level: "subfocus" as const,
+      parentId: "ped-pneumo-pneumonia",
+    },
     // Pediatria -> Pneumo -> Asma
-    { id: "ped-pneumo-asma-crise", name: "Crise Asmática", level: "subfocus" as const, parentId: "ped-pneumo-asma" },
+    {
+      id: "ped-pneumo-asma-crise",
+      name: "Crise Asmática",
+      level: "subfocus" as const,
+      parentId: "ped-pneumo-asma",
+    },
 
     // Pediatria -> Gastro -> Obstrução
-    { id: "ped-gastro-obstrucao-intussuscepcao", name: "Intussuscepção Intestinal", level: "subfocus" as const, parentId: "ped-gastro-obstrucao" },
+    {
+      id: "ped-gastro-obstrucao-intussuscepcao",
+      name: "Intussuscepção Intestinal",
+      level: "subfocus" as const,
+      parentId: "ped-gastro-obstrucao",
+    },
     // Pediatria -> Gastro -> Diarreia
-    { id: "ped-gastro-diarreia-intolerancia", name: "Intolerância Alimentar", level: "subfocus" as const, parentId: "ped-gastro-diarreia" },
+    {
+      id: "ped-gastro-diarreia-intolerancia",
+      name: "Intolerância Alimentar",
+      level: "subfocus" as const,
+      parentId: "ped-gastro-diarreia",
+    },
 
     // Pediatria -> Endocrino -> Crescimento
-    { id: "ped-endocrino-crescimento-baixa-estatura", name: "Baixa Estatura", level: "subfocus" as const, parentId: "ped-endocrino-crescimento" },
+    {
+      id: "ped-endocrino-crescimento-baixa-estatura",
+      name: "Baixa Estatura",
+      level: "subfocus" as const,
+      parentId: "ped-endocrino-crescimento",
+    },
 
     // Pediatria -> Reuma -> Febre Reumática
-    { id: "ped-reuma-fr-diagnostico", name: "Diagnóstico e Critérios", level: "subfocus" as const, parentId: "ped-reuma-fr" },
+    {
+      id: "ped-reuma-fr-diagnostico",
+      name: "Diagnóstico e Critérios",
+      level: "subfocus" as const,
+      parentId: "ped-reuma-fr",
+    },
 
     // Pediatria -> Nefro -> Glomerulopatias
-    { id: "ped-nefro-glomerulo-gnrp", name: "Glomerulonefrite Rapidamente Progressiva", level: "subfocus" as const, parentId: "ped-nefro-glomerulo" },
+    {
+      id: "ped-nefro-glomerulo-gnrp",
+      name: "Glomerulonefrite Rapidamente Progressiva",
+      level: "subfocus" as const,
+      parentId: "ped-nefro-glomerulo",
+    },
 
     // Pediatria -> Emergencias -> Choque
-    { id: "ped-emerg-choque-septico", name: "Choque Séptico Pediátrico", level: "subfocus" as const, parentId: "ped-emerg-choque" },
+    {
+      id: "ped-emerg-choque-septico",
+      name: "Choque Séptico Pediátrico",
+      level: "subfocus" as const,
+      parentId: "ped-emerg-choque",
+    },
     // Pediatria -> Emergencias -> CAD
-    { id: "ped-emerg-cad-conduta", name: "Conduta de Emergência", level: "subfocus" as const, parentId: "ped-emerg-cad" },
+    {
+      id: "ped-emerg-cad-conduta",
+      name: "Conduta de Emergência",
+      level: "subfocus" as const,
+      parentId: "ped-emerg-cad",
+    },
 
     // Clínica Médica -> Cardio -> IAM
-    { id: "clin-cardio-iam-conduta", name: "Conduta Inicial e Terapia", level: "subfocus" as const, parentId: "clin-cardio-iam" },
+    {
+      id: "clin-cardio-iam-conduta",
+      name: "Conduta Inicial e Terapia",
+      level: "subfocus" as const,
+      parentId: "clin-cardio-iam",
+    },
     // Clínica Médica -> Cardio -> Arritmias
-    { id: "clin-cardio-arritmias-fa", name: "Fibrilação Atrial", level: "subfocus" as const, parentId: "clin-cardio-arritmias" },
+    {
+      id: "clin-cardio-arritmias-fa",
+      name: "Fibrilação Atrial",
+      level: "subfocus" as const,
+      parentId: "clin-cardio-arritmias",
+    },
 
     // Clínica Médica -> Infectologia -> Peçonhentos
-    { id: "clin-infectologia-peconhentos-soro", name: "Soro Antiofídico", level: "subfocus" as const, parentId: "clin-infectologia-peconhentos" },
+    {
+      id: "clin-infectologia-peconhentos-soro",
+      name: "Soro Antiofídico",
+      level: "subfocus" as const,
+      parentId: "clin-infectologia-peconhentos",
+    },
     // Clínica Médica -> Infectologia -> IST
-    { id: "clin-infectologia-ist-sifilis", name: "Sífilis", level: "subfocus" as const, parentId: "clin-infectologia-ist" },
+    {
+      id: "clin-infectologia-ist-sifilis",
+      name: "Sífilis",
+      level: "subfocus" as const,
+      parentId: "clin-infectologia-ist",
+    },
     // Clínica Médica -> Infectologia -> Hepatites
-    { id: "clin-infectologia-hepatites-sorologia", name: "Sorologia e Diagnóstico", level: "subfocus" as const, parentId: "clin-infectologia-hepatites" },
+    {
+      id: "clin-infectologia-hepatites-sorologia",
+      name: "Sorologia e Diagnóstico",
+      level: "subfocus" as const,
+      parentId: "clin-infectologia-hepatites",
+    },
 
     // Clínica Médica -> Gastro -> Cirrose
-    { id: "clin-gastro-cirrose-encefalopatia", name: "Encefalopatia e Ascite", level: "subfocus" as const, parentId: "clin-gastro-cirrose" },
+    {
+      id: "clin-gastro-cirrose-encefalopatia",
+      name: "Encefalopatia e Ascite",
+      level: "subfocus" as const,
+      parentId: "clin-gastro-cirrose",
+    },
     // Clínica Médica -> Gastro -> Péptica
-    { id: "clin-gastro-peptica-hpylori", name: "Helicobacter pylori", level: "subfocus" as const, parentId: "clin-gastro-peptica" },
+    {
+      id: "clin-gastro-peptica-hpylori",
+      name: "Helicobacter pylori",
+      level: "subfocus" as const,
+      parentId: "clin-gastro-peptica",
+    },
 
     // Clínica Médica -> Reumatologia -> Osteoporose
-    { id: "clin-reumatologia-osteoporose-trat", name: "Tratamento e Diagnóstico", level: "subfocus" as const, parentId: "clin-reumatologia-osteoporose" },
+    {
+      id: "clin-reumatologia-osteoporose-trat",
+      name: "Tratamento e Diagnóstico",
+      level: "subfocus" as const,
+      parentId: "clin-reumatologia-osteoporose",
+    },
     // Clínica Médica -> Reumatologia -> LES
-    { id: "clin-reumatologia-les-nefrite", name: "Nefrite Lúpica", level: "subfocus" as const, parentId: "clin-reumatologia-les" },
+    {
+      id: "clin-reumatologia-les-nefrite",
+      name: "Nefrite Lúpica",
+      level: "subfocus" as const,
+      parentId: "clin-reumatologia-les",
+    },
 
     // Clínica Médica -> Nefrologia -> IRA
-    { id: "clin-nefro-ira-hipercalemia", name: "Hipercalemia", level: "subfocus" as const, parentId: "clin-nefro-ira" },
+    {
+      id: "clin-nefro-ira-hipercalemia",
+      name: "Hipercalemia",
+      level: "subfocus" as const,
+      parentId: "clin-nefro-ira",
+    },
 
     // Cirurgia Geral -> Abdominal -> Inflamatório
-    { id: "surg-abd-inflam-apendicite", name: "Apendicite Aguda", level: "subfocus" as const, parentId: "surg-abd-inflam" },
-    { id: "surg-abd-inflam-pancreatite", name: "Pancreatite Aguda", level: "subfocus" as const, parentId: "surg-abd-inflam" },
-    { id: "surg-abd-inflam-diverticulite", name: "Diverticulite Aguda", level: "subfocus" as const, parentId: "surg-abd-inflam" },
+    {
+      id: "surg-abd-inflam-apendicite",
+      name: "Apendicite Aguda",
+      level: "subfocus" as const,
+      parentId: "surg-abd-inflam",
+    },
+    {
+      id: "surg-abd-inflam-pancreatite",
+      name: "Pancreatite Aguda",
+      level: "subfocus" as const,
+      parentId: "surg-abd-inflam",
+    },
+    {
+      id: "surg-abd-inflam-diverticulite",
+      name: "Diverticulite Aguda",
+      level: "subfocus" as const,
+      parentId: "surg-abd-inflam",
+    },
     // Cirurgia Geral -> Abdominal -> Obstrução
-    { id: "surg-abd-obstrucao-conduta", name: "Diagnóstico e Conduta", level: "subfocus" as const, parentId: "surg-abd-obstrucao" },
+    {
+      id: "surg-abd-obstrucao-conduta",
+      name: "Diagnóstico e Conduta",
+      level: "subfocus" as const,
+      parentId: "surg-abd-obstrucao",
+    },
     // Cirurgia Geral -> Abdominal -> Hérnias
-    { id: "surg-abd-hernias-inguinal", name: "Hérnia Inguinal", level: "subfocus" as const, parentId: "surg-abd-hernias" },
+    {
+      id: "surg-abd-hernias-inguinal",
+      name: "Hérnia Inguinal",
+      level: "subfocus" as const,
+      parentId: "surg-abd-hernias",
+    },
 
     // Cirurgia Geral -> Cabeça e Pescoço -> Tireoide
-    { id: "surg-cp-tireoide-complicacoes", name: "Rouquidão e Lesão de Nervo", level: "subfocus" as const, parentId: "surg-cp-tireoide" },
+    {
+      id: "surg-cp-tireoide-complicacoes",
+      name: "Rouquidão e Lesão de Nervo",
+      level: "subfocus" as const,
+      parentId: "surg-cp-tireoide",
+    },
 
     // Cirurgia Geral -> Ortopedia -> Extremidades
-    { id: "surg-orto-trauma-compartimento", name: "Síndrome Compartimental", level: "subfocus" as const, parentId: "surg-orto-trauma" },
+    {
+      id: "surg-orto-trauma-compartimento",
+      name: "Síndrome Compartimental",
+      level: "subfocus" as const,
+      parentId: "surg-orto-trauma",
+    },
 
     // Cirurgia Geral -> Trauma -> Torácico
-    { id: "surg-trauma-toracico-drenagem", name: "Drenagem e Empiema", level: "subfocus" as const, parentId: "surg-trauma-toracico" },
+    {
+      id: "surg-trauma-toracico-drenagem",
+      name: "Drenagem e Empiema",
+      level: "subfocus" as const,
+      parentId: "surg-trauma-toracico",
+    },
     // Cirurgia Geral -> Trauma -> Queimaduras
-    { id: "surg-trauma-queimadura-cuidados", name: "Cuidados Iniciais", level: "subfocus" as const, parentId: "surg-trauma-queimadura" },
+    {
+      id: "surg-trauma-queimadura-cuidados",
+      name: "Cuidados Iniciais",
+      level: "subfocus" as const,
+      parentId: "surg-trauma-queimadura",
+    },
 
     // Ginecologia -> Obstetrícia -> Emergências
-    { id: "gyn-obst-emergencias-preeclampsia", name: "Pré-eclâmpsia e Eclâmpsia", level: "subfocus" as const, parentId: "gyn-obst-emergencias" },
+    {
+      id: "gyn-obst-emergencias-preeclampsia",
+      name: "Pré-eclâmpsia e Eclâmpsia",
+      level: "subfocus" as const,
+      parentId: "gyn-obst-emergencias",
+    },
     // Ginecologia -> Obstetrícia -> Pré-Natal
-    { id: "gyn-obst-prenatal-vacinas", name: "Imunização na Gestação", level: "subfocus" as const, parentId: "gyn-obst-prenatal" },
-    { id: "gyn-obst-prenatal-hiv", name: "HIV na Gestação", level: "subfocus" as const, parentId: "gyn-obst-prenatal" },
-    { id: "gyn-obst-prenatal-diabetes", name: "Diabetes Gestacional", level: "subfocus" as const, parentId: "gyn-obst-prenatal" },
-    { id: "gyn-obst-prenatal-pielonefrite", name: "Pielonefrite na Gestação", level: "subfocus" as const, parentId: "gyn-obst-prenatal" },
+    {
+      id: "gyn-obst-prenatal-vacinas",
+      name: "Imunização na Gestação",
+      level: "subfocus" as const,
+      parentId: "gyn-obst-prenatal",
+    },
+    {
+      id: "gyn-obst-prenatal-hiv",
+      name: "HIV na Gestação",
+      level: "subfocus" as const,
+      parentId: "gyn-obst-prenatal",
+    },
+    {
+      id: "gyn-obst-prenatal-diabetes",
+      name: "Diabetes Gestacional",
+      level: "subfocus" as const,
+      parentId: "gyn-obst-prenatal",
+    },
+    {
+      id: "gyn-obst-prenatal-pielonefrite",
+      name: "Pielonefrite na Gestação",
+      level: "subfocus" as const,
+      parentId: "gyn-obst-prenatal",
+    },
     // Ginecologia -> Obstetrícia -> Trabajo de Parto
-    { id: "gyn-obst-parto-conduta", name: "Analgesia e Partograma", level: "subfocus" as const, parentId: "gyn-obst-parto" },
+    {
+      id: "gyn-obst-parto-conduta",
+      name: "Analgesia e Partograma",
+      level: "subfocus" as const,
+      parentId: "gyn-obst-parto",
+    },
 
     // Ginecologia -> Gineco Geral -> Endócrina
-    { id: "gyn-gineco-endocrino-sop", name: "Síndrome dos Ovários Policísticos", level: "subfocus" as const, parentId: "gyn-gineco-endocrino" },
+    {
+      id: "gyn-gineco-endocrino-sop",
+      name: "Síndrome dos Ovários Policísticos",
+      level: "subfocus" as const,
+      parentId: "gyn-gineco-endocrino",
+    },
     // Ginecologia -> Gineco Geral -> Oncologia
-    { id: "gyn-gineco-onco-colo", name: "Rastreamento de Câncer de Colo Uterino", level: "subfocus" as const, parentId: "gyn-gineco-onco" },
+    {
+      id: "gyn-gineco-onco-colo",
+      name: "Rastreamento de Câncer de Colo Uterino",
+      level: "subfocus" as const,
+      parentId: "gyn-gineco-onco",
+    },
     // Ginecologia -> Gineco Geral -> Violência
-    { id: "gyn-gineco-violencia-conduta", name: "Atendimento Médico-Legal", level: "subfocus" as const, parentId: "gyn-gineco-violencia" },
+    {
+      id: "gyn-gineco-violencia-conduta",
+      name: "Atendimento Médico-Legal",
+      level: "subfocus" as const,
+      parentId: "gyn-gineco-violencia",
+    },
     // Ginecologia -> Gineco Geral -> Infecções
-    { id: "gyn-gineco-infeccoes-vaginose", name: "Vaginose e Candidíase", level: "subfocus" as const, parentId: "gyn-gineco-infeccoes" },
+    {
+      id: "gyn-gineco-infeccoes-vaginose",
+      name: "Vaginose e Candidíase",
+      level: "subfocus" as const,
+      parentId: "gyn-gineco-infeccoes",
+    },
 
     // Ginecologia -> Mastologia -> Câncer
-    { id: "gyn-masto-cancer-rastreamento", name: "Rastreamento e Mamografia", level: "subfocus" as const, parentId: "gyn-masto-cancer" },
+    {
+      id: "gyn-masto-cancer-rastreamento",
+      name: "Rastreamento e Mamografia",
+      level: "subfocus" as const,
+      parentId: "gyn-masto-cancer",
+    },
 
     // Preventiva -> Epidemiologia -> Estudos
-    { id: "prev-epidemio-estudos-rr", name: "Risco Relativo", level: "subfocus" as const, parentId: "prev-epidemio-estudos" },
-    { id: "prev-epidemio-estudos-ic", name: "Intervalo de Confiança", level: "subfocus" as const, parentId: "prev-epidemio-estudos" },
-    { id: "prev-epidemio-estudos-coorte", name: "Coorte e Regressão", level: "subfocus" as const, parentId: "prev-epidemio-estudos" },
+    {
+      id: "prev-epidemio-estudos-rr",
+      name: "Risco Relativo",
+      level: "subfocus" as const,
+      parentId: "prev-epidemio-estudos",
+    },
+    {
+      id: "prev-epidemio-estudos-ic",
+      name: "Intervalo de Confiança",
+      level: "subfocus" as const,
+      parentId: "prev-epidemio-estudos",
+    },
+    {
+      id: "prev-epidemio-estudos-coorte",
+      name: "Coorte e Regressão",
+      level: "subfocus" as const,
+      parentId: "prev-epidemio-estudos",
+    },
     // Preventiva -> Epidemiologia -> Indicadores
-    { id: "prev-epidemio-indicadores-letalidade", name: "Coeficiente de Letalidade", level: "subfocus" as const, parentId: "prev-epidemio-indicadores" },
+    {
+      id: "prev-epidemio-indicadores-letalidade",
+      name: "Coeficiente de Letalidade",
+      level: "subfocus" as const,
+      parentId: "prev-epidemio-indicadores",
+    },
     // Preventiva -> Epidemiologia -> Testes
-    { id: "prev-epidemio-testes-sensibilidade", name: "Sensibilidade e Especificidade", level: "subfocus" as const, parentId: "prev-epidemio-testes" },
+    {
+      id: "prev-epidemio-testes-sensibilidade",
+      name: "Sensibilidade e Especificidade",
+      level: "subfocus" as const,
+      parentId: "prev-epidemio-testes",
+    },
 
     // Preventiva -> Gestão -> ESF
-    { id: "prev-gestao-esf-territorializacao", name: "Territorialização", level: "subfocus" as const, parentId: "prev-gestao-esf" },
+    {
+      id: "prev-gestao-esf-territorializacao",
+      name: "Territorialização",
+      level: "subfocus" as const,
+      parentId: "prev-gestao-esf",
+    },
   ];
 
   for (const node of taxNodes) {

@@ -44,11 +44,9 @@ El bootstrap técnico, el tramo de identidad/onboarding y el **vertical slice co
 - Pipeline de ingesta y conversión automatizada de exámenes: Herramienta `./markitdown` adaptada para parsear archivos PDF de exámenes y gabaritos/patrones a Markdown, y un script CLI en TypeScript (`ingest.ts`) que inserta las preguntas en PostgreSQL local/Neon utilizando la API de DeepSeek (`deepseek-chat`) para la clasificación de taxonomías.
 - Ampliación de Taxonomía Médica: Expansión de la tabla `taxonomy_nodes` con especialidades, temas, focos y subfocos adicionales para clasificaciones de preguntas más granulares, totalmente funcional.
 
-
 El siguiente tramo prioritario del vertical slice es:
 
 > Selección por Niveles (Tiered Selection)
-
 
 No existen todavía implementaciones de analítica externa o IA (el módulo de IA se mantiene planeado como opcional y desacoplado).
 
@@ -705,7 +703,7 @@ Criterio de salida: calidad clínica y costo por usuario dentro de umbrales defi
 17. ~~**Ampliación de Taxonomía Médica**: Expandir la tabla `taxonomy_nodes` con más especialidades, temas, focos y subfocos para robustecer la clasificación automática y manual.~~ **Completado.**
 18. ~~**Vertical Slice — Integración de Imágenes y AWS S3**: Relacionar una o más imágenes con una pregunta (múltiple opción / abierta). En las sesiones de preguntas, mostrar la pregunta, las imágenes y las alternativas o campo para respuesta abierta. En el backoffice, permitir que el editor o admin visualice, cambie o elimine la imagen de cada pregunta, y mostrar miniaturas en la lista principal de preguntas. Forzar el uso de AWS S3 como almacenamiento real tanto en desarrollo como en producción.~~ **Completado.**
 19. ~~**Vertical Slice — Backoffice Editorial Visual (Subpreguntas Discursivas)**: Adaptar el editor visual de backoffice para mostrar y gestionar las subpreguntas y sus respuestas correctas para preguntas discursivas/abiertas en el listado, vista de creación, edición y revisión médica utilizando un formulario repetidor dinámico. Pruebas: flujos de edición de subpreguntas por rol.~~ **Completado.**
-20. **Vertical Slice — Selección por Niveles (Tiered Selection)**: Implementar la priorización de preguntas al generar sesiones de práctica de 10 preguntas. El orden de prioridad debe ser: Tier 1 (preguntas no respondidas por el usuario), Tier 2 (preguntas respondidas incorrectamente en su último intento / cuaderno de errores) y Tier 3 (preguntas respondidas correctamente / dominadas). Pruebas: Creación de sesión priorizada y validación del orden de selección.
+20. ~~**Vertical Slice — Selección por Niveles (Tiered Selection)**: Implementar la priorización de preguntas al generar sesiones de práctica de 10 preguntas. El orden de prioridad debe ser: Tier 1 (preguntas no respondidas por el usuario), Tier 2 (preguntas respondidas incorrectamente en su último intento / cuaderno de errores) y Tier 3 (preguntas respondidas correctamente / dominadas). Pruebas: Creación de sesión priorizada y validación del orden de selección.~~ **Completado.**
 21. **Vertical Slice — Piloto cerrado**: Puesta en marcha con un volumen inicial de usuarios reales para validar la estabilidad de la plataforma y el hábito antes de gamificar o agregar IA.
 
 ## 17. Estrategia de pruebas

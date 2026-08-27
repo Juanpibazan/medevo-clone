@@ -4,7 +4,6 @@ import { resolve } from "path";
 // Load environment variables from .env.local
 dotenv.config({ path: resolve(process.cwd(), ".env.local") });
 
-
 interface AlternativeInput {
   optionLetter: string;
   text: string;
@@ -37,7 +36,7 @@ interface TaxonomyNodeOption {
 async function classifyQuestionWithDeepSeek(
   statement: string,
   taxonomyNodesList: TaxonomyNodeOption[],
-  apiKey: string
+  apiKey: string,
 ): Promise<string> {
   // To avoid hitting API rate limits or wasting tokens, truncate statement if too long
   const truncatedStatement = statement.substring(0, 1000);
@@ -54,7 +53,8 @@ async function classifyQuestionWithDeepSeek(
         messages: [
           {
             role: "system",
-            content: "You are a medical taxonomy classifier. You will be given a medical question and a list of taxonomy nodes. Your job is to select the single most relevant taxonomy ID from the list. Return ONLY a JSON object containing the chosen key 'taxonomyNodeId' (e.g. {\"taxonomyNodeId\": \"clin-cardio-iam\"}). Do not include any explanation or formatting code blocks."
+            content:
+              'You are a medical taxonomy classifier. You will be given a medical question and a list of taxonomy nodes. Your job is to select the single most relevant taxonomy ID from the list. Return ONLY a JSON object containing the chosen key \'taxonomyNodeId\' (e.g. {"taxonomyNodeId": "clin-cardio-iam"}). Do not include any explanation or formatting code blocks.',
           },
           {
             role: "user",
@@ -64,32 +64,34 @@ Question: "${truncatedStatement}"
 Available Taxonomy List:
 ${JSON.stringify(taxonomyNodesList, null, 2)}
 
-Return JSON format: {"taxonomyNodeId": "chosen_id"}`
-          }
+Return JSON format: {"taxonomyNodeId": "chosen_id"}`,
+          },
         ],
-        response_format: { type: "json_object" }
-      })
+        response_format: { type: "json_object" },
+      }),
     });
 
     if (!response.ok) {
-      throw new Error(`API returned status ${response.status} (${response.statusText})`);
+      throw new Error(
+        `API returned status ${response.status} (${response.statusText})`,
+      );
     }
 
     const data = await response.json();
     const content = data.choices[0].message.content.trim();
-    
+
     // Find the JSON boundaries in case there is conversational or Markdown wrapper text
     const firstBrace = content.indexOf("{");
     const lastBrace = content.lastIndexOf("}");
     if (firstBrace === -1 || lastBrace === -1) {
       throw new Error("No JSON object found in response: " + content);
     }
-    
+
     const cleanJsonStr = content.substring(firstBrace, lastBrace + 1);
     const parsed = JSON.parse(cleanJsonStr);
     const chosenId = parsed.taxonomyNodeId;
 
-    if (taxonomyNodesList.some(n => n.id === chosenId)) {
+    if (taxonomyNodesList.some((n) => n.id === chosenId)) {
       return chosenId;
     }
     console.log(`⚠️ Classified ID '${chosenId}' not in taxonomy database.`);
@@ -113,13 +115,16 @@ async function run() {
   const publishArgIdx = args.indexOf("--publish");
 
   if (fileArgIdx === -1 || fileArgIdx + 1 >= args.length) {
-    console.error("❌ Error: Missing required parameter '--file <path_to_json_file>'");
+    console.error(
+      "❌ Error: Missing required parameter '--file <path_to_json_file>'",
+    );
     process.exit(1);
   }
 
   const filePath = args[fileArgIdx + 1];
   const limit = limitArgIdx !== -1 ? parseInt(args[limitArgIdx + 1], 10) : null;
-  const publish = publishArgIdx !== -1 ? args[publishArgIdx + 1] === "true" : true;
+  const publish =
+    publishArgIdx !== -1 ? args[publishArgIdx + 1] === "true" : true;
 
   if (!fs.existsSync(filePath)) {
     console.error(`❌ Error: File not found at path: ${filePath}`);
@@ -142,7 +147,7 @@ async function run() {
   const dbNodes = await db.select().from(schema.taxonomyNodes);
   console.log(`Found ${dbNodes.length} taxonomy nodes in database.`);
 
-  const nodeMap = new Map(dbNodes.map(n => [n.id, n]));
+  const nodeMap = new Map(dbNodes.map((n) => [n.id, n]));
   const getPath = (nodeId: string): string => {
     const parts: string[] = [];
     let curr = nodeMap.get(nodeId);
@@ -153,16 +158,20 @@ async function run() {
     return parts.join(" > ");
   };
 
-  const taxonomyNodesList: TaxonomyNodeOption[] = dbNodes.map(node => ({
+  const taxonomyNodesList: TaxonomyNodeOption[] = dbNodes.map((node) => ({
     id: node.id,
     path: getPath(node.id),
   }));
 
   const deepseekKey = process.env.DEEPSEEK_API_KEY;
   if (!deepseekKey) {
-    console.log("⚠️ DEEPSEEK_API_KEY not found in environment. Fallback to default taxonomy 'clin' (Clínica Médica) for all questions.");
+    console.log(
+      "⚠️ DEEPSEEK_API_KEY not found in environment. Fallback to default taxonomy 'clin' (Clínica Médica) for all questions.",
+    );
   } else {
-    console.log("🔑 DeepSeek API Key loaded successfully for taxonomy classification.");
+    console.log(
+      "🔑 DeepSeek API Key loaded successfully for taxonomy classification.",
+    );
   }
 
   // Ensure system editor user exists in DB
@@ -175,17 +184,23 @@ async function run() {
 
   if (!editorUser) {
     console.log("🌱 Creating system editor user...");
-    await db.insert(schema.users).values({
-      id: editorId,
-      name: "Dr. Editor MedCiclo",
-      email: "editor@medciclo.com",
-      emailVerified: true,
-    }).onConflictDoNothing();
+    await db
+      .insert(schema.users)
+      .values({
+        id: editorId,
+        name: "Dr. Editor MedCiclo",
+        email: "editor@medciclo.com",
+        emailVerified: true,
+      })
+      .onConflictDoNothing();
 
-    await db.insert(schema.userRoles).values({
-      userId: editorId,
-      roleCode: "medical_editor",
-    }).onConflictDoNothing();
+    await db
+      .insert(schema.userRoles)
+      .values({
+        userId: editorId,
+        roleCode: "medical_editor",
+      })
+      .onConflictDoNothing();
   }
 
   let successCount = 0;
@@ -197,8 +212,14 @@ async function run() {
     let taxonomyNodeId = "clin"; // default fallback
     if (deepseekKey) {
       console.log("🤖 Classifying question via DeepSeek...");
-      taxonomyNodeId = await classifyQuestionWithDeepSeek(q.statement, taxonomyNodesList, deepseekKey);
-      console.log(`📌 Classified as: ${taxonomyNodeId} (${getPath(taxonomyNodeId)})`);
+      taxonomyNodeId = await classifyQuestionWithDeepSeek(
+        q.statement,
+        taxonomyNodesList,
+        deepseekKey,
+      );
+      console.log(
+        `📌 Classified as: ${taxonomyNodeId} (${getPath(taxonomyNodeId)})`,
+      );
     } else {
       console.log("📌 Using default taxonomy node: clin");
     }
@@ -234,7 +255,7 @@ async function run() {
             taxonomyNodeId,
             type: q.type === "open_ended" ? "open_ended" : "multiple_choice",
             createdBy: editorId,
-            subquestions: q.type === "open_ended" ? (q.subquestions || []) : null,
+            subquestions: q.type === "open_ended" ? q.subquestions || [] : null,
           })
           .onConflictDoUpdate({
             target: schema.questionVersions.id,
@@ -245,7 +266,8 @@ async function run() {
               explanation: q.explanation || "",
               taxonomyNodeId,
               type: q.type === "open_ended" ? "open_ended" : "multiple_choice",
-              subquestions: q.type === "open_ended" ? (q.subquestions || []) : null,
+              subquestions:
+                q.type === "open_ended" ? q.subquestions || [] : null,
             },
           });
 
@@ -258,21 +280,30 @@ async function run() {
         }
 
         // Insert alternatives if multiple choice
-        if (q.type === "multiple_choice" && q.alternatives && q.alternatives.length > 0) {
+        if (
+          q.type === "multiple_choice" &&
+          q.alternatives &&
+          q.alternatives.length > 0
+        ) {
           // Clean options first to avoid duplicates on collision
           await tx
             .delete(schema.questionAlternatives)
-            .where(eq(schema.questionAlternatives.questionVersionId, versionId));
+            .where(
+              eq(schema.questionAlternatives.questionVersionId, versionId),
+            );
 
           for (const alt of q.alternatives) {
             const altId = `alt-revalida-${q.metadata.year || "2011"}-${q.number}-${typeSuffix}-${alt.optionLetter.toLowerCase()}`;
-            await tx.insert(schema.questionAlternatives).values({
-              id: altId,
-              questionVersionId: versionId,
-              optionLetter: alt.optionLetter,
-              text: alt.text,
-              isCorrect: alt.isCorrect,
-            }).onConflictDoNothing();
+            await tx
+              .insert(schema.questionAlternatives)
+              .values({
+                id: altId,
+                questionVersionId: versionId,
+                optionLetter: alt.optionLetter,
+                text: alt.text,
+                isCorrect: alt.isCorrect,
+              })
+              .onConflictDoNothing();
           }
         }
       });
@@ -284,7 +315,9 @@ async function run() {
     }
   }
 
-  console.log(`\n🎉 Ingestion finished. Successfully imported ${successCount}/${questionsList.length} questions.`);
+  console.log(
+    `\n🎉 Ingestion finished. Successfully imported ${successCount}/${questionsList.length} questions.`,
+  );
   process.exit(0);
 }
 

@@ -91,7 +91,11 @@ export class DrizzleContentRepository implements ContentRepository {
           title: version.title,
           statement: version.statement,
           explanation: version.explanation,
-          subquestions: version.subquestions as Array<{ letter: string; statement: string; explanation: string }> | null,
+          subquestions: version.subquestions as Array<{
+            letter: string;
+            statement: string;
+            explanation: string;
+          }> | null,
           taxonomyNodeId: version.taxonomyNodeId,
           createdBy: version.createdBy,
           createdAt: version.createdAt,
@@ -165,7 +169,11 @@ export class DrizzleContentRepository implements ContentRepository {
         title: version.title,
         statement: version.statement,
         explanation: version.explanation,
-        subquestions: version.subquestions as Array<{ letter: string; statement: string; explanation: string }> | null,
+        subquestions: version.subquestions as Array<{
+          letter: string;
+          statement: string;
+          explanation: string;
+        }> | null,
         taxonomyNodeId: version.taxonomyNodeId,
         createdBy: version.createdBy,
         createdAt: version.createdAt,
@@ -305,7 +313,11 @@ export class DrizzleContentRepository implements ContentRepository {
           title: insertedV.title,
           statement: insertedV.statement,
           explanation: insertedV.explanation,
-          subquestions: insertedV.subquestions as Array<{ letter: string; statement: string; explanation: string }> | null,
+          subquestions: insertedV.subquestions as Array<{
+            letter: string;
+            statement: string;
+            explanation: string;
+          }> | null,
           taxonomyNodeId: insertedV.taxonomyNodeId,
           createdBy: insertedV.createdBy,
           createdAt: insertedV.createdAt,
@@ -361,7 +373,11 @@ export class DrizzleContentRepository implements ContentRepository {
             title: activeVersionRow.title,
             statement: activeVersionRow.statement,
             explanation: activeVersionRow.explanation,
-            subquestions: activeVersionRow.subquestions as Array<{ letter: string; statement: string; explanation: string }> | null,
+            subquestions: activeVersionRow.subquestions as Array<{
+              letter: string;
+              statement: string;
+              explanation: string;
+            }> | null,
             taxonomyNodeId: activeVersionRow.taxonomyNodeId,
             createdBy: activeVersionRow.createdBy,
             createdAt: activeVersionRow.createdAt,
@@ -390,20 +406,23 @@ export class DrizzleContentRepository implements ContentRepository {
       .orderBy(desc(questionVersions.versionNumber));
 
     const versionIds = versions.map((v) => v.id);
-    const images = versionIds.length > 0
-      ? await db
-          .select()
-          .from(questionImages)
-          .where(inArray(questionImages.questionVersionId, versionIds))
-          .orderBy(questionImages.position)
-      : [];
+    const images =
+      versionIds.length > 0
+        ? await db
+            .select()
+            .from(questionImages)
+            .where(inArray(questionImages.questionVersionId, versionIds))
+            .orderBy(questionImages.position)
+        : [];
 
     return list.map((q) => {
       const qVersions = versions.filter((v) => v.questionId === q.id);
       return {
         question: q as Question,
         versions: qVersions.map((v) => {
-          const vImages = images.filter((img) => img.questionVersionId === v.id);
+          const vImages = images.filter(
+            (img) => img.questionVersionId === v.id,
+          );
           return {
             id: v.id,
             questionId: v.questionId,
@@ -413,7 +432,11 @@ export class DrizzleContentRepository implements ContentRepository {
             title: v.title,
             statement: v.statement,
             explanation: v.explanation,
-            subquestions: v.subquestions as Array<{ letter: string; statement: string; explanation: string }> | null,
+            subquestions: v.subquestions as Array<{
+              letter: string;
+              statement: string;
+              explanation: string;
+            }> | null,
             taxonomyNodeId: v.taxonomyNodeId,
             createdBy: v.createdBy,
             createdAt: v.createdAt,

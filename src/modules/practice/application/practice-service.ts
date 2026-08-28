@@ -200,6 +200,14 @@ export class PracticeService {
           };
         });
 
+        const safeSubquestions = version.subquestions
+          ? version.subquestions.map((sub) => ({
+              letter: sub.letter,
+              statement: sub.statement,
+              explanation: isVerified ? sub.explanation : null,
+            }))
+          : null;
+
         return {
           id: item.id,
           sessionId: item.sessionId,
@@ -210,6 +218,7 @@ export class PracticeService {
           statement: version.statement,
           type: version.type,
           explanation: isVerified ? version.explanation : null,
+          subquestions: safeSubquestions,
           alternatives: safeAlternatives,
           images: images.map((img) => ({
             id: img.id,
@@ -320,6 +329,7 @@ export class PracticeService {
           ? null
           : (questionData.alternatives.find((a) => a.isCorrect)?.id ?? null),
       explanation: questionData.version.explanation,
+      subquestions: questionData.version.subquestions ?? null,
     };
   }
 

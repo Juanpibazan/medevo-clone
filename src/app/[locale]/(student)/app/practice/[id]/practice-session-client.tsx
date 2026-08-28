@@ -25,6 +25,12 @@ interface QuestionImage {
   position: number;
 }
 
+interface Subquestion {
+  letter: string;
+  statement: string;
+  explanation: string | null;
+}
+
 interface Item {
   id: string;
   sessionId: string;
@@ -35,6 +41,7 @@ interface Item {
   statement: string;
   type: "multiple_choice" | "open_ended";
   explanation: string | null;
+  subquestions?: Subquestion[] | null;
   alternatives: Alternative[];
   images: QuestionImage[];
   response: {
@@ -54,6 +61,39 @@ interface PracticeSessionClientProps {
   sessionId: string;
   initialItems: Item[];
   t: Record<string, string>;
+}
+
+function parseSubquestionAnswers(
+  rawText: string | null | undefined,
+  subquestions?: Subquestion[] | null,
+): Record<string, string> {
+  if (!rawText) return {};
+  try {
+    const parsed = JSON.parse(rawText);
+    if (
+      typeof parsed === "object" &&
+      parsed !== null &&
+      !Array.isArray(parsed)
+    ) {
+      return parsed as Record<string, string>;
+    }
+  } catch {
+    // fallback if raw text
+  }
+  if (subquestions && subquestions.length > 0) {
+    return { [subquestions[0].letter]: rawText };
+  }
+  return { "": rawText };
+}
+
+function serializeSubquestionAnswers(
+  answersMap: Record<string, string>,
+  subquestions?: Subquestion[] | null,
+): string {
+  if (subquestions && subquestions.length > 0) {
+    return JSON.stringify(answersMap);
+  }
+  return answersMap[""] ?? Object.values(answersMap)[0] ?? "";
 }
 
 export function PracticeSessionClient({
@@ -79,15 +119,18 @@ export function PracticeSessionClient({
     },
   );
 
-  const [textResponses, setTextResponses] = useState<Record<string, string>>(
-    () => {
-      const initial: Record<string, string> = {};
-      for (const item of initialItems) {
-        initial[item.id] = item.response?.responseText ?? "";
-      }
-      return initial;
-    },
-  );
+  const [subResponses, setSubResponses] = useState<
+    Record<string, Record<string, string>>
+  >(() => {
+    const initial: Record<string, Record<string, string>> = {};
+    for (const item of initialItems) {
+      initial[item.id] = parseSubquestionAnswers(
+        item.response?.responseText,
+        item.subquestions,
+      );
+    }
+    return initial;
+  });
 
   const [times, setTimes] = useState<Record<string, number>>(() => {
     const initial: Record<string, number> = {};
@@ -122,7 +165,6 @@ export function PracticeSessionClient({
   const activeItemId = activeItem?.id;
 
   const selectedAlt = selections[activeItemId];
-  const responseText = textResponses[activeItemId] ?? "";
   const seconds = times[activeItemId] ?? 0;
 
   const isVerified = !!activeItem?.response?.verifiedAt;
@@ -167,19 +209,31 @@ export function PracticeSessionClient({
 
         // Auto-save draft every 10 seconds if any selection or text exists
         const currentSelection = selections[activeItemId];
-        const currentText = textResponses[activeItemId] ?? "";
+        const currentSubMap = subResponses[activeItemId] || {};
         const hasSelection =
           activeItem.type === "multiple_choice"
             ? !!currentSelection
-            : currentText.trim().length > 0;
+            : activeItem.subquestions && activeItem.subquestions.length > 0
+              ? activeItem.subquestions.some(
+                  (s) => (currentSubMap[s.letter] || "").trim().length > 0,
+                )
+              : (currentSubMap[""] || "").trim().length > 0;
 
         if (nextSeconds % 10 === 0 && hasSelection) {
+          const serialized =
+            activeItem.type === "open_ended"
+              ? serializeSubquestionAnswers(
+                  currentSubMap,
+                  activeItem.subquestions,
+                )
+              : undefined;
+
           saveDraftSilent(
             sessionId,
             activeItemId,
             activeItem.type === "multiple_choice" ? currentSelection : null,
             nextSeconds,
-            activeItem.type === "multiple_choice" ? undefined : currentText,
+            serialized,
           );
         }
 
@@ -195,7 +249,7 @@ export function PracticeSessionClient({
     activeItemId,
     isVerified,
     selections,
-    textResponses,
+    subResponses,
     sessionId,
     activeItem,
   ]);
@@ -245,35 +299,47 @@ export function PracticeSessionClient({
     });
   };
 
-  const handleTextResponseChange = (text: string) => {
+  const handleSubquestionResponseChange = (letter: string, text: string) => {
     if (isVerified) return;
 
-    setTextResponses((prev) => ({
-      ...prev,
-      [activeItemId]: text,
-    }));
+    setSubResponses((prev) => {
+      const updatedMap = {
+        ...(prev[activeItemId] || {}),
+        [letter]: text,
+      };
 
-    setItems((prev) =>
-      prev.map((it) =>
-        it.id === activeItemId
-          ? {
-              ...it,
-              response: {
-                ...(it.response ?? {
-                  id: crypto.randomUUID(),
-                  selectedAlternativeId: null,
-                  isCorrect: null,
-                  metacognitiveMark: null,
-                  isFavorite: false,
-                  verifiedAt: null,
-                }),
-                responseText: text,
-                timeTakenSeconds: seconds,
-              },
-            }
-          : it,
-      ),
-    );
+      const serialized = serializeSubquestionAnswers(
+        updatedMap,
+        activeItem.subquestions,
+      );
+
+      setItems((prevItems) =>
+        prevItems.map((it) =>
+          it.id === activeItemId
+            ? {
+                ...it,
+                response: {
+                  ...(it.response ?? {
+                    id: crypto.randomUUID(),
+                    selectedAlternativeId: null,
+                    isCorrect: null,
+                    metacognitiveMark: null,
+                    isFavorite: false,
+                    verifiedAt: null,
+                  }),
+                  responseText: serialized,
+                  timeTakenSeconds: seconds,
+                },
+              }
+            : it,
+        ),
+      );
+
+      return {
+        ...prev,
+        [activeItemId]: updatedMap,
+      };
+    });
   };
 
   const handleToggleDiscard = (alternativeId: string) => {
@@ -284,11 +350,29 @@ export function PracticeSessionClient({
     }));
   };
 
+  const isVerifyDisabled = () => {
+    if (activeItem.type === "multiple_choice") {
+      return !selectedAlt;
+    }
+    const currentSubMap = subResponses[activeItemId] || {};
+    if (activeItem.subquestions && activeItem.subquestions.length > 0) {
+      return !activeItem.subquestions.every(
+        (sub) => (currentSubMap[sub.letter] || "").trim().length > 0,
+      );
+    }
+    return !(currentSubMap[""] || "").trim().length;
+  };
+
   const handleVerify = () => {
     if (isVerified) return;
 
     if (activeItem.type === "open_ended") {
-      if (!responseText.trim()) return;
+      const currentSubMap = subResponses[activeItemId] || {};
+      const serialized = serializeSubquestionAnswers(
+        currentSubMap,
+        activeItem.subquestions,
+      );
+      if (!serialized.trim()) return;
 
       startTransition(async () => {
         try {
@@ -298,10 +382,10 @@ export function PracticeSessionClient({
             activeItemId,
             null,
             seconds,
-            responseText,
+            serialized,
           );
 
-          // Fetch explanation (espelho de correção) securely from server
+          // Fetch explanation and subquestions criteria securely from server
           const result = await revealCorrectionCriteriaAction(
             sessionId,
             activeItemId,
@@ -310,7 +394,13 @@ export function PracticeSessionClient({
           setItems((prev) =>
             prev.map((it) =>
               it.id === activeItemId
-                ? { ...it, explanation: result.explanation }
+                ? {
+                    ...it,
+                    explanation: result.explanation,
+                    subquestions:
+                      (result.subquestions as Subquestion[] | null) ??
+                      it.subquestions,
+                  }
                 : it,
             ),
           );
@@ -389,13 +479,17 @@ export function PracticeSessionClient({
         );
 
         if (result && "response" in result) {
-          const { response } = result;
+          const { response, subquestions, explanation } = result;
 
           setItems((prev) =>
             prev.map((it) =>
               it.id === activeItemId
                 ? {
                     ...it,
+                    explanation: explanation ?? it.explanation,
+                    subquestions:
+                      (subquestions as Subquestion[] | null) ??
+                      it.subquestions,
                     response: {
                       ...it.response!,
                       isCorrect: response.isCorrect,
@@ -496,14 +590,21 @@ export function PracticeSessionClient({
               seconds,
               undefined,
             );
-          } else if (activeItem.type === "open_ended" && responseText.trim()) {
-            await saveDraftSilent(
-              sessionId,
-              activeItemId,
-              null,
-              seconds,
-              responseText,
+          } else if (activeItem.type === "open_ended") {
+            const currentSubMap = subResponses[activeItemId] || {};
+            const serialized = serializeSubquestionAnswers(
+              currentSubMap,
+              activeItem.subquestions,
             );
+            if (serialized.trim()) {
+              await saveDraftSilent(
+                sessionId,
+                activeItemId,
+                null,
+                seconds,
+                serialized,
+              );
+            }
           }
         }
         await finishSessionAction(sessionId, locale);
@@ -550,10 +651,16 @@ export function PracticeSessionClient({
             {items.map((item, idx) => {
               const itemVerified = !!item.response?.verifiedAt;
               const itemCorrect = item.response?.isCorrect;
+              const currentSubMap = subResponses[item.id] || {};
               const itemHasDraft =
                 item.type === "multiple_choice"
                   ? selections[item.id] !== null
-                  : (textResponses[item.id] || "").trim().length > 0;
+                  : item.subquestions && item.subquestions.length > 0
+                    ? item.subquestions.some(
+                        (s) =>
+                          (currentSubMap[s.letter] || "").trim().length > 0,
+                      )
+                    : (currentSubMap[""] || "").trim().length > 0;
 
               let btnBg =
                 "bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100";
@@ -721,17 +828,89 @@ export function PracticeSessionClient({
           </div>
         )}
 
-        {/* Text response input (if open ended) */}
+        {/* Text response input / Subquestions (if open ended) */}
         {activeItem.type === "open_ended" && (
-          <div className="flex flex-col gap-2">
-            <textarea
-              disabled={isVerified || showOpenEndedEvaluation[activeItemId]}
-              value={responseText}
-              onChange={(e) => handleTextResponseChange(e.target.value)}
-              placeholder={textPlaceholder}
-              rows={6}
-              className="w-full resize-y rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-teal-500 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500 md:text-base"
-            />
+          <div className="space-y-6">
+            {activeItem.subquestions && activeItem.subquestions.length > 0 ? (
+              activeItem.subquestions.map((sub) => {
+                const subAnswer =
+                  subResponses[activeItemId]?.[sub.letter] ?? "";
+                const isEvalOrVerified =
+                  isVerified || showOpenEndedEvaluation[activeItemId];
+
+                return (
+                  <div
+                    key={sub.letter}
+                    className="space-y-3 rounded-xl border border-slate-200/80 bg-slate-50/30 p-5 shadow-xs"
+                  >
+                    {/* Subquestion Header */}
+                    <div className="flex items-start gap-3">
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#102A43] text-xs font-bold text-white uppercase">
+                        {sub.letter}
+                      </span>
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold text-slate-800 md:text-base">
+                          {sub.statement}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Subquestion Textarea */}
+                    <div className="flex flex-col gap-2">
+                      <textarea
+                        disabled={isEvalOrVerified}
+                        value={subAnswer}
+                        onChange={(e) =>
+                          handleSubquestionResponseChange(
+                            sub.letter,
+                            e.target.value,
+                          )
+                        }
+                        placeholder={
+                          locale === "es"
+                            ? `Escribe tu respuesta para la subpregunta ${sub.letter}...`
+                            : `Escreva sua resposta para a subpergunta ${sub.letter}...`
+                        }
+                        rows={4}
+                        className="w-full resize-y rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm focus:border-teal-500 focus:outline-none disabled:bg-slate-100/70 disabled:text-slate-600 md:text-base"
+                      />
+                    </div>
+
+                    {/* Subquestion Espelho de Correção (when evaluating or verified) */}
+                    {isEvalOrVerified && sub.explanation && (
+                      <div className="animate-fadeIn space-y-1.5 rounded-xl border border-teal-100 bg-teal-50/40 p-4">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold tracking-wider text-teal-800 uppercase">
+                            {criteriaTitle} —{" "}
+                            {locale === "es" ? "Subpregunta" : "Subpergunta"}{" "}
+                            {sub.letter}
+                          </span>
+                        </div>
+                        <p className="text-sm leading-relaxed whitespace-pre-line text-slate-700 md:text-base">
+                          {sub.explanation}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            ) : (
+              /* Fallback for legacy single open-ended without subquestions */
+              <div className="flex flex-col gap-2">
+                <textarea
+                  disabled={
+                    isVerified || showOpenEndedEvaluation[activeItemId]
+                  }
+                  value={subResponses[activeItemId]?.[""] ?? ""}
+                  onChange={(e) =>
+                    handleSubquestionResponseChange("", e.target.value)
+                  }
+                  placeholder={textPlaceholder}
+                  rows={6}
+                  className="w-full resize-y rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-teal-500 focus:outline-none disabled:bg-slate-50 disabled:text-slate-500 md:text-base"
+                />
+              </div>
+            )}
           </div>
         )}
 
@@ -739,11 +918,7 @@ export function PracticeSessionClient({
         {!isVerified && !showOpenEndedEvaluation[activeItemId] && (
           <button
             onClick={handleVerify}
-            disabled={
-              activeItem.type === "multiple_choice"
-                ? !selectedAlt
-                : !responseText.trim()
-            }
+            disabled={isVerifyDisabled()}
             className="block w-full cursor-pointer rounded-xl bg-[#13A89E] py-3 text-center text-base font-medium text-white transition-colors hover:bg-[#0f8e85] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400"
           >
             {t.verify}
@@ -755,17 +930,19 @@ export function PracticeSessionClient({
           !isVerified &&
           showOpenEndedEvaluation[activeItemId] && (
             <div className="animate-fadeIn space-y-6 border-t border-slate-100 pt-4">
-              {/* Correction Criteria (Espelho) */}
-              {activeItem.explanation && (
-                <div className="space-y-2 rounded-xl border border-teal-100 bg-teal-50/20 p-5">
-                  <h4 className="text-base font-bold text-teal-800">
-                    {criteriaTitle}
-                  </h4>
-                  <p className="text-sm leading-relaxed whitespace-pre-line text-slate-700 md:text-base">
-                    {activeItem.explanation}
-                  </p>
-                </div>
-              )}
+              {/* General Question Explanation if not using subquestions */}
+              {(!activeItem.subquestions ||
+                activeItem.subquestions.length === 0) &&
+                activeItem.explanation && (
+                  <div className="space-y-2 rounded-xl border border-teal-100 bg-teal-50/20 p-5">
+                    <h4 className="text-base font-bold text-teal-800">
+                      {criteriaTitle}
+                    </h4>
+                    <p className="text-sm leading-relaxed whitespace-pre-line text-slate-700 md:text-base">
+                      {activeItem.explanation}
+                    </p>
+                  </div>
+                )}
 
               {/* Self assessment banner */}
               <div className="space-y-4 rounded-xl border border-slate-200 bg-white p-5 text-center shadow-sm">
@@ -801,7 +978,9 @@ export function PracticeSessionClient({
                   : "border-red-200 bg-red-50 text-red-800"
               }`}
             >
-              <span className="text-2xl">{isCorrect === true ? "✓" : "✗"}</span>
+              <span className="text-2xl">
+                {isCorrect === true ? "✓" : "✗"}
+              </span>
               <div>
                 <h4 className="text-base font-bold">
                   {isCorrect === true ? t.correct : t.incorrect}
@@ -857,19 +1036,21 @@ export function PracticeSessionClient({
               </div>
             </div>
 
-            {/* Criteria / Explanation */}
-            {activeItem.explanation && (
-              <div className="space-y-2 rounded-xl border border-slate-100 p-5">
-                <h4 className="text-base font-bold text-[#102A43]">
-                  {activeItem.type === "open_ended"
-                    ? criteriaTitle
-                    : t.explanation}
-                </h4>
-                <p className="text-sm leading-relaxed whitespace-pre-line text-slate-600 md:text-base">
-                  {activeItem.explanation}
-                </p>
-              </div>
-            )}
+            {/* Criteria / Explanation (for multiple choice or fallback single open-ended) */}
+            {activeItem.explanation &&
+              (!activeItem.subquestions ||
+                activeItem.subquestions.length === 0) && (
+                <div className="space-y-2 rounded-xl border border-slate-100 p-5">
+                  <h4 className="text-base font-bold text-[#102A43]">
+                    {activeItem.type === "open_ended"
+                      ? criteriaTitle
+                      : t.explanation}
+                  </h4>
+                  <p className="text-sm leading-relaxed whitespace-pre-line text-slate-600 md:text-base">
+                    {activeItem.explanation}
+                  </p>
+                </div>
+              )}
 
             {/* Navigation Button */}
             {currentIndex < items.length - 1 ? (

@@ -61,6 +61,7 @@ export default async function PracticeSessionPage({
     statement: item.statement,
     type: item.type,
     explanation: item.explanation,
+    subquestions: item.subquestions ?? null,
     alternatives: item.alternatives,
     images: item.images,
     response: item.response

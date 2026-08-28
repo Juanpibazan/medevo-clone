@@ -285,13 +285,18 @@ describe("Practice, Correction and Spaced Repetition Integration", () => {
         status: "published",
         type: "open_ended",
         title: "Test Discursive Q1",
-        statement: "Explain why the sky is blue.",
-        explanation: "Rayleigh scattering",
+        statement: "Paciente con cuadro respiratorio...",
+        explanation: "Explicación general",
         subquestions: [
           {
             letter: "a",
-            statement: "Explain why the sky is blue.",
-            explanation: "Rayleigh scattering",
+            statement: "¿Cuál es el diagnóstico más probable?",
+            explanation: "Neumonía adquirida en la comunidad",
+          },
+          {
+            letter: "b",
+            statement: "¿Cuál es la conducta terapéutica inicial?",
+            explanation: "Amoxicilina + Clavulánico vía oral por 7 días",
           },
         ],
         taxonomyNodeId: taxonomyId,
@@ -315,14 +320,23 @@ describe("Practice, Correction and Spaced Repetition Integration", () => {
 
       const [item] = sessionDetails!.items;
 
-      // 3. Save draft answer (responseText)
+      // Ensure subquestions exist and their explanations are hidden before verification
+      expect(item.subquestions).toHaveLength(2);
+      expect(item.subquestions![0].explanation).toBeNull();
+      expect(item.subquestions![1].explanation).toBeNull();
+
+      // 3. Save draft answer (JSON-serialized responseText for subquestions)
+      const answersPayload = JSON.stringify({
+        a: "Neumonía comunitaria",
+        b: "Amoxicilina",
+      });
       await practiceService.saveDraftResponse(
         session.id,
         item.id,
         userId,
         null,
         30,
-        "It's blue because of Rayleigh scattering.",
+        answersPayload,
       );
 
       const sessionAfterDraft = await practiceService.getSession(
@@ -330,7 +344,7 @@ describe("Practice, Correction and Spaced Repetition Integration", () => {
         userId,
       );
       expect(sessionAfterDraft!.items[0].response?.responseText).toBe(
-        "It's blue because of Rayleigh scattering.",
+        answersPayload,
       );
 
       // 4. Verify/Evaluate response with self-evaluated correct=true
@@ -343,6 +357,22 @@ describe("Practice, Correction and Spaced Repetition Integration", () => {
         true, // selfCorrect = true
       );
       expect(verifyResult.response.isCorrect).toBe(true);
+      expect(verifyResult.subquestions).toHaveLength(2);
+      expect(verifyResult.subquestions![0].explanation).toBe(
+        "Neumonía adquirida en la comunidad",
+      );
+
+      // 4.1 Session details after verification now reveals subquestion explanations
+      const sessionAfterVerify = await practiceService.getSession(
+        session.id,
+        userId,
+      );
+      expect(sessionAfterVerify!.items[0].subquestions![0].explanation).toBe(
+        "Neumonía adquirida en la comunidad",
+      );
+      expect(sessionAfterVerify!.items[0].subquestions![1].explanation).toBe(
+        "Amoxicilina + Clavulánico vía oral por 7 días",
+      );
 
       // 5. Finish session
       const results = await practiceService.finishSession(session.id, userId);

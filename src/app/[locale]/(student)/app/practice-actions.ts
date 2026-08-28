@@ -215,5 +215,8 @@ export async function revealCorrectionCriteriaAction(
   );
   if (!questionData) throw new Error("Question not found");
 
-  return { explanation: questionData.version.explanation };
+  return {
+    explanation: questionData.version.explanation,
+    subquestions: questionData.version.subquestions ?? null,
+  };
 }

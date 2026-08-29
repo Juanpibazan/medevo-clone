@@ -43,10 +43,12 @@ El bootstrap técnico, el tramo de identidad/onboarding y el **vertical slice co
 - ADR aceptados para monolito modular, PostgreSQL/`pg`/Drizzle, Better Auth y soporte de despliegue.
 - Pipeline de ingesta y conversión automatizada de exámenes: Herramienta `./markitdown` adaptada para parsear archivos PDF de exámenes y gabaritos/patrones a Markdown, y un script CLI en TypeScript (`ingest.ts`) que inserta las preguntas en PostgreSQL local/Neon utilizando la API de DeepSeek (`deepseek-chat`) para la clasificación de taxonomías.
 - Ampliación de Taxonomía Médica: Expansión de la tabla `taxonomy_nodes` con especialidades, temas, focos y subfocos adicionales para clasificaciones de preguntas más granulares, totalmente funcional.
+- Subpreguntas Discursivas en Práctica: Visualización de enunciados y captura de respuestas independientes por subpregunta en preguntas discursivas/abiertas (`open_ended`), con serialización estructurada JSON en `responseText`, validación de completitud y despliegue del Espelho de Corrección individual por subpregunta al verificar.
+- Autoevaluación Granular por Subpregunta en Preguntas Discursivas: Flujo interactivo de autoevaluación individual por subpregunta ("Acerté" / "Me equivoqué") bajo su espelho de corrección, cálculo estricto de precisión (> 50%) en servidor para determinar `is_correct`, serialización estructurada de respuestas y evaluaciones en `responseText`, y suites de prueba de integración correspondientes. Totalmente funcional.
 
 El siguiente tramo prioritario del vertical slice es:
 
-> Selección por Niveles (Tiered Selection)
+> Piloto cerrado con usuarios reales para validar estabilidad y hábito de estudio.
 
 No existen todavía implementaciones de analítica externa o IA (el módulo de IA se mantiene planeado como opcional y desacoplado).
 
@@ -703,8 +705,10 @@ Criterio de salida: calidad clínica y costo por usuario dentro de umbrales defi
 17. ~~**Ampliación de Taxonomía Médica**: Expandir la tabla `taxonomy_nodes` con más especialidades, temas, focos y subfocos para robustecer la clasificación automática y manual.~~ **Completado.**
 18. ~~**Vertical Slice — Integración de Imágenes y AWS S3**: Relacionar una o más imágenes con una pregunta (múltiple opción / abierta). En las sesiones de preguntas, mostrar la pregunta, las imágenes y las alternativas o campo para respuesta abierta. En el backoffice, permitir que el editor o admin visualice, cambie o elimine la imagen de cada pregunta, y mostrar miniaturas en la lista principal de preguntas. Forzar el uso de AWS S3 como almacenamiento real tanto en desarrollo como en producción.~~ **Completado.**
 19. ~~**Vertical Slice — Backoffice Editorial Visual (Subpreguntas Discursivas)**: Adaptar el editor visual de backoffice para mostrar y gestionar las subpreguntas y sus respuestas correctas para preguntas discursivas/abiertas en el listado, vista de creación, edición y revisión médica utilizando un formulario repetidor dinámico. Pruebas: flujos de edición de subpreguntas por rol.~~ **Completado.**
-20. **Vertical Slice — Selección por Niveles (Tiered Selection)**: Implementar la priorización de preguntas al generar sesiones de práctica de 10 preguntas. El orden de prioridad debe ser: Tier 1 (preguntas no respondidas por el usuario), Tier 2 (preguntas respondidas incorrectamente en su último intento / cuaderno de errores) y Tier 3 (preguntas respondidas correctamente / dominadas). Pruebas: Creación de sesión priorizada y validación del orden de selección.
-21. **Vertical Slice — Piloto cerrado**: Puesta en marcha con un volumen inicial de usuarios reales para validar la estabilidad de la plataforma y el hábito antes de gamificar o agregar IA.
+20. ~~**Vertical Slice — Selección por Niveles (Tiered Selection)**: Implementar la priorización de preguntas al generar sesiones de práctica de 10 preguntas. El orden de prioridad debe ser: Tier 1 (preguntas no respondidas por el usuario), Tier 2 (preguntas respondidas incorrectamente en su último intento / cuaderno de errores) y Tier 3 (preguntas respondidas correctamente / dominadas). Pruebas: Creación de sesión priorizada y validación del orden de selección.~~ **Completado.**
+21. ~~**Vertical Slice — Subpreguntas Discursivas en Sesiones de Práctica y Espelho de Correção**: Mostrar el enunciado principal y cada subpregunta con su propio textarea independiente en el reproductor de sesiones de práctica. Serialización estructurada JSON en `responseText`, validación de obligatoriedad de todas las subpreguntas y despliegue del espelho de corrección por subpregunta al verificar la respuesta. Pruebas: integración de práctica con subpreguntas y seguridad de ocultamiento de explicaciones.~~ **Completado.**
+22. ~~**Vertical Slice — Autoevaluación Granular por Subpregunta (Preguntas Discursivas)**: Adaptar el flujo de autoevaluación tras desplegar los espelhos de corrección para que el estudiante evalúe individualmente cada subpregunta ("Acerté" / "Me equivoqué"). Enviar el mapa de evaluaciones al servidor, donde se valida y calcula la precisión final (`aciertos / totalSubpreguntas`). Si la precisión es estrictamente mayor al 50% (`> 0.5`), la pregunta se marca como correcta (`is_correct = true`); de lo contrario, se marca como incorrecta. Pruebas: validación de evaluación granular por subpregunta y cálculo de precisión en `PracticeService`.~~ **Completado.**
+23. **Vertical Slice — Piloto cerrado**: Puesta en marcha con un volumen inicial de usuarios reales para validar la estabilidad de la plataforma y el hábito antes de gamificar o agregar IA.
 
 ## 17. Estrategia de pruebas
 
@@ -767,9 +771,9 @@ Usar Plan mode y enviar:
 ```text
 Lee completamente CONTEXTO_CODEX_MEDEVO_CLONE.md y cualquier AGENTS.md del repositorio. Inspecciona el estado actual sin modificar archivos. Después:
 
-1. revisa la cobertura de pruebas de extremo a extremo (E2E) mediante Playwright en `tests/e2e/` para asegurar que el flujo crítico de práctica, billing, onboarding y backoffice pase limpiamente;
-2. realiza una auditoría detallada de seguridad y autorización en servidor para asegurar que los endpoints, Server Actions y APIs validen correctamente los roles (`medical_editor`, `medical_reviewer`, `admin`) y que los datos sensibles de los estudiantes no estén expuestos;
-3. prepara y optimiza las consultas a la base de datos de los filtros de taxonomía y métricas agregadas de analítica mediante índices si es necesario;
+1. analiza los preparativos para el despliegue del Piloto Cerrado: monitoreo de salud, verificación de límites y flujos de usuario;
+2. verifica la consistencia de datos de las preguntas publicadas y taxonomías sembradas;
+3. ejecuta la suite completa de pruebas y validaciones locales;
 4. hazme únicamente las preguntas bloqueantes y espera aprobación antes de implementar.
 
 No copies contenido ni diseño de MedEvo.

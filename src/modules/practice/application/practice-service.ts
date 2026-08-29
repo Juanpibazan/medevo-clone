@@ -272,7 +272,8 @@ export class PracticeService {
     userId: string,
     alternativeId: string | null,
     elapsedSeconds: number,
-    isCorrectOverride?: boolean,
+    isCorrectOverride?: boolean | Record<string, boolean>,
+    subquestionEvaluations?: Record<string, boolean>,
   ) {
     const data = await this.repository.getSession(sessionId, userId);
     if (!data || data.session.status !== "in_progress") {
@@ -292,11 +293,110 @@ export class PracticeService {
     if (!questionData) throw new Error("Question version not found");
 
     let isCorrect = false;
+    let finalResponseText: string | undefined = undefined;
+
     if (questionData.version.type === "open_ended") {
-      if (isCorrectOverride === undefined) {
-        throw new Error("Self-evaluation is required for discursive questions");
+      const evalMap =
+        subquestionEvaluations ??
+        (typeof isCorrectOverride === "object" && isCorrectOverride !== null
+          ? isCorrectOverride
+          : null);
+
+      if (
+        questionData.version.subquestions &&
+        questionData.version.subquestions.length > 0
+      ) {
+        if (!evalMap) {
+          if (typeof isCorrectOverride === "boolean") {
+            isCorrect = isCorrectOverride;
+          } else {
+            throw new Error(
+              "Self-evaluation map is required for discursive questions with subquestions",
+            );
+          }
+        } else {
+          for (const sub of questionData.version.subquestions) {
+            if (typeof evalMap[sub.letter] !== "boolean") {
+              throw new Error(
+                `Missing evaluation for subquestion ${sub.letter}`,
+              );
+            }
+          }
+          const correctCount = questionData.version.subquestions.filter(
+            (sub) => evalMap[sub.letter] === true,
+          ).length;
+          const total = questionData.version.subquestions.length;
+          const precision = correctCount / total;
+          isCorrect = precision > 0.5;
+
+          // Build structured responseText with answers & evaluations
+          let currentAnswers: Record<string, string> = {};
+          if (item.response?.responseText) {
+            try {
+              const parsed = JSON.parse(item.response.responseText);
+              if (
+                parsed &&
+                typeof parsed === "object" &&
+                !Array.isArray(parsed)
+              ) {
+                if (parsed.answers && typeof parsed.answers === "object") {
+                  currentAnswers = parsed.answers;
+                } else {
+                  currentAnswers = parsed;
+                }
+              }
+            } catch {
+              currentAnswers = { "": item.response.responseText };
+            }
+          }
+          finalResponseText = JSON.stringify({
+            answers: currentAnswers,
+            evaluations: evalMap,
+          });
+        }
+      } else {
+        // Fallback for single open_ended without subquestions
+        if (evalMap) {
+          const values = Object.values(evalMap);
+          if (values.length === 0) {
+            throw new Error(
+              "Self-evaluation is required for discursive questions",
+            );
+          }
+          const correctCount = values.filter(Boolean).length;
+          isCorrect = correctCount / values.length > 0.5;
+
+          let currentAnswers: Record<string, string> = {};
+          if (item.response?.responseText) {
+            try {
+              const parsed = JSON.parse(item.response.responseText);
+              if (
+                parsed &&
+                typeof parsed === "object" &&
+                !Array.isArray(parsed)
+              ) {
+                if (parsed.answers && typeof parsed.answers === "object") {
+                  currentAnswers = parsed.answers;
+                } else {
+                  currentAnswers = parsed;
+                }
+              }
+            } catch {
+              currentAnswers = { "": item.response.responseText };
+            }
+          }
+          finalResponseText = JSON.stringify({
+            answers: currentAnswers,
+            evaluations: evalMap,
+          });
+        } else if (typeof isCorrectOverride === "boolean") {
+          isCorrect = isCorrectOverride;
+        } else {
+          throw new Error(
+            "Self-evaluation is required for discursive questions",
+          );
+        }
       }
-      isCorrect = isCorrectOverride;
     } else {
       if (!alternativeId) {
         throw new Error(
@@ -309,13 +409,29 @@ export class PracticeService {
 
     const responseId = item.response?.id ?? crypto.randomUUID();
 
-    const response = await this.repository.saveResponse(responseId, itemId, {
+    const responsePatch: {
+      selectedAlternativeId: string | null;
+      isCorrect: boolean;
+      timeTakenSeconds: number;
+      verifiedAt: Date;
+      updatedAt: Date;
+      responseText?: string;
+    } = {
       selectedAlternativeId: alternativeId,
       isCorrect,
       timeTakenSeconds: elapsedSeconds,
       verifiedAt: new Date(),
       updatedAt: new Date(),
-    });
+    };
+    if (finalResponseText !== undefined) {
+      responsePatch.responseText = finalResponseText;
+    }
+
+    const response = await this.repository.saveResponse(
+      responseId,
+      itemId,
+      responsePatch,
+    );
 
     if (this.scheduleReviewFn) {
       const rating = isCorrect ? (3 as const) : (1 as const);

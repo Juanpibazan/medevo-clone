@@ -75,6 +75,9 @@ function parseSubquestionAnswers(
       parsed !== null &&
       !Array.isArray(parsed)
     ) {
+      if (parsed.answers && typeof parsed.answers === "object") {
+        return parsed.answers as Record<string, string>;
+      }
       return parsed as Record<string, string>;
     }
   } catch {
@@ -84,6 +87,25 @@ function parseSubquestionAnswers(
     return { [subquestions[0].letter]: rawText };
   }
   return { "": rawText };
+}
+
+function parseSubquestionEvaluations(
+  rawText: string | null | undefined,
+): Record<string, boolean> {
+  if (!rawText) return {};
+  try {
+    const parsed = JSON.parse(rawText);
+    if (
+      typeof parsed === "object" &&
+      parsed !== null &&
+      !Array.isArray(parsed) &&
+      parsed.evaluations &&
+      typeof parsed.evaluations === "object"
+    ) {
+      return parsed.evaluations as Record<string, boolean>;
+    }
+  } catch {}
+  return {};
 }
 
 function serializeSubquestionAnswers(
@@ -127,6 +149,18 @@ export function PracticeSessionClient({
       initial[item.id] = parseSubquestionAnswers(
         item.response?.responseText,
         item.subquestions,
+      );
+    }
+    return initial;
+  });
+
+  const [granularEvals, setGranularEvals] = useState<
+    Record<string, Record<string, boolean>>
+  >(() => {
+    const initial: Record<string, Record<string, boolean>> = {};
+    for (const item of initialItems) {
+      initial[item.id] = parseSubquestionEvaluations(
+        item.response?.responseText,
       );
     }
     return initial;
@@ -465,6 +499,77 @@ export function PracticeSessionClient({
     });
   };
 
+  const handleSubquestionEvalChange = (letter: string, evalValue: boolean) => {
+    if (isVerified) return;
+    setGranularEvals((prev) => ({
+      ...prev,
+      [activeItemId]: {
+        ...(prev[activeItemId] || {}),
+        [letter]: evalValue,
+      },
+    }));
+  };
+
+  const handleConfirmDiscursiveEvaluation = () => {
+    if (isVerified) return;
+    const currentEvals = granularEvals[activeItemId] || {};
+
+    startTransition(async () => {
+      try {
+        const result = await verifyResponseAction(
+          sessionId,
+          activeItemId,
+          null,
+          seconds,
+          currentEvals,
+          currentEvals,
+        );
+
+        if (result && "response" in result) {
+          const { response, subquestions, explanation } = result;
+
+          setItems((prev) =>
+            prev.map((it) =>
+              it.id === activeItemId
+                ? {
+                    ...it,
+                    explanation: explanation ?? it.explanation,
+                    subquestions:
+                      (subquestions as Subquestion[] | null) ??
+                      it.subquestions,
+                    response: {
+                      ...it.response!,
+                      isCorrect: response.isCorrect,
+                      verifiedAt: response.verifiedAt,
+                      timeTakenSeconds: seconds,
+                      responseText:
+                        response.responseText ??
+                        it.response?.responseText ??
+                        null,
+                    },
+                  }
+                : it,
+            ),
+          );
+
+          // Clear temporary evaluation trigger state
+          setShowOpenEndedEvaluation((prev) => ({
+            ...prev,
+            [activeItemId]: false,
+          }));
+        } else if (
+          result &&
+          "error" in result &&
+          result.error === "quota_exceeded"
+        ) {
+          setShowQuotaModal(true);
+        }
+      } catch (err) {
+        console.error("Self-evaluation failed:", err);
+      }
+    });
+  };
+
   const handleDiscursiveSelfEvaluate = (selfCorrect: boolean) => {
     if (isVerified) return;
 
@@ -495,6 +600,10 @@ export function PracticeSessionClient({
                       isCorrect: response.isCorrect,
                       verifiedAt: response.verifiedAt,
                       timeTakenSeconds: seconds,
+                      responseText:
+                        response.responseText ??
+                        it.response?.responseText ??
+                        null,
                     },
                   }
                 : it,
@@ -837,6 +946,8 @@ export function PracticeSessionClient({
                   subResponses[activeItemId]?.[sub.letter] ?? "";
                 const isEvalOrVerified =
                   isVerified || showOpenEndedEvaluation[activeItemId];
+                const currentItemEvals = granularEvals[activeItemId] || {};
+                const subEval = currentItemEvals[sub.letter];
 
                 return (
                   <div
@@ -878,7 +989,7 @@ export function PracticeSessionClient({
 
                     {/* Subquestion Espelho de Correção (when evaluating or verified) */}
                     {isEvalOrVerified && sub.explanation && (
-                      <div className="animate-fadeIn space-y-1.5 rounded-xl border border-teal-100 bg-teal-50/40 p-4">
+                      <div className="animate-fadeIn space-y-3 rounded-xl border border-teal-100 bg-teal-50/40 p-4">
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-bold tracking-wider text-teal-800 uppercase">
                             {criteriaTitle} —{" "}
@@ -889,6 +1000,72 @@ export function PracticeSessionClient({
                         <p className="text-sm leading-relaxed whitespace-pre-line text-slate-700 md:text-base">
                           {sub.explanation}
                         </p>
+
+                        {/* Granular Subquestion Evaluation Buttons (during evaluation) */}
+                        {!isVerified &&
+                          showOpenEndedEvaluation[activeItemId] && (
+                            <div className="flex flex-col items-start justify-between gap-3 border-t border-teal-200/60 pt-3 sm:flex-row sm:items-center">
+                              <span className="text-xs font-semibold text-slate-700">
+                                {locale === "es"
+                                  ? "¿Cómo fue tu respuesta en esta subpregunta?"
+                                  : "Como foi sua resposta nesta subpergunta?"}
+                              </span>
+                              <div className="flex w-full items-center gap-2 sm:w-auto">
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleSubquestionEvalChange(
+                                      sub.letter,
+                                      true,
+                                    )
+                                  }
+                                  className={`flex-1 cursor-pointer rounded-lg border px-3.5 py-1.5 text-xs font-bold transition-all sm:flex-none ${
+                                    subEval === true
+                                      ? "border-emerald-600 bg-emerald-600 text-white shadow-xs"
+                                      : "border-emerald-300 bg-white text-emerald-700 hover:bg-emerald-50"
+                                  }`}
+                                >
+                                  ✓ {btnCorrect}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleSubquestionEvalChange(
+                                      sub.letter,
+                                      false,
+                                    )
+                                  }
+                                  className={`flex-1 cursor-pointer rounded-lg border px-3.5 py-1.5 text-xs font-bold transition-all sm:flex-none ${
+                                    subEval === false
+                                      ? "border-rose-600 bg-rose-600 text-white shadow-xs"
+                                      : "border-rose-300 bg-white text-rose-700 hover:bg-rose-50"
+                                  }`}
+                                >
+                                  ✗ {btnIncorrect}
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
+                        {/* Granular Subquestion Evaluation Badge (when verified) */}
+                        {isVerified && subEval !== undefined && (
+                          <div className="flex items-center justify-between gap-2 border-t border-teal-200/60 pt-2.5">
+                            <span className="text-xs font-semibold text-slate-500">
+                              {locale === "es"
+                                ? "Autoevaluación:"
+                                : "Autoavaliação:"}
+                            </span>
+                            <span
+                              className={`inline-flex items-center gap-1 rounded-md px-2.5 py-0.5 text-xs font-bold ${
+                                subEval
+                                  ? "border border-emerald-200 bg-emerald-100 text-emerald-800"
+                                  : "border border-rose-200 bg-rose-100 text-rose-800"
+                              }`}
+                            >
+                              {subEval ? `✓ ${btnCorrect}` : `✗ ${btnIncorrect}`}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -932,38 +1109,69 @@ export function PracticeSessionClient({
             <div className="animate-fadeIn space-y-6 border-t border-slate-100 pt-4">
               {/* General Question Explanation if not using subquestions */}
               {(!activeItem.subquestions ||
-                activeItem.subquestions.length === 0) &&
-                activeItem.explanation && (
-                  <div className="space-y-2 rounded-xl border border-teal-100 bg-teal-50/20 p-5">
-                    <h4 className="text-base font-bold text-teal-800">
-                      {criteriaTitle}
-                    </h4>
-                    <p className="text-sm leading-relaxed whitespace-pre-line text-slate-700 md:text-base">
-                      {activeItem.explanation}
+                activeItem.subquestions.length === 0) && (
+                <div className="space-y-4">
+                  {activeItem.explanation && (
+                    <div className="space-y-2 rounded-xl border border-teal-100 bg-teal-50/20 p-5">
+                      <h4 className="text-base font-bold text-teal-800">
+                        {criteriaTitle}
+                      </h4>
+                      <p className="text-sm leading-relaxed whitespace-pre-line text-slate-700 md:text-base">
+                        {activeItem.explanation}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Self assessment banner for single open-ended */}
+                  <div className="space-y-4 rounded-xl border border-slate-200 bg-white p-5 text-center shadow-sm">
+                    <p className="text-sm font-semibold text-[#102A43] md:text-base">
+                      {promptEval}
                     </p>
+                    <div className="mx-auto flex max-w-sm gap-4">
+                      <button
+                        onClick={() => handleDiscursiveSelfEvaluate(true)}
+                        className="flex-1 cursor-pointer rounded-xl bg-emerald-600 py-2.5 text-sm font-bold text-white shadow transition-colors hover:bg-emerald-500"
+                      >
+                        ✓ {btnCorrect}
+                      </button>
+                      <button
+                        onClick={() => handleDiscursiveSelfEvaluate(false)}
+                        className="flex-1 cursor-pointer rounded-xl bg-rose-600 py-2.5 text-sm font-bold text-white shadow transition-colors hover:bg-rose-500"
+                      >
+                        ✗ {btnIncorrect}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Confirmation Banner for subquestions */}
+              {activeItem.subquestions &&
+                activeItem.subquestions.length > 0 && (
+                  <div className="space-y-3 rounded-xl border border-slate-200 bg-white p-5 text-center shadow-sm">
+                    <p className="text-sm font-semibold text-[#102A43] md:text-base">
+                      {locale === "es"
+                        ? "Califica cada subpregunta arriba y confirma tu autoevaluación."
+                        : "Avalie cada subpergunta acima e confirme sua autoavaliação."}
+                    </p>
+                    <button
+                      onClick={handleConfirmDiscursiveEvaluation}
+                      disabled={
+                        !activeItem.subquestions.every(
+                          (sub) =>
+                            typeof (granularEvals[activeItemId] || {})[
+                              sub.letter
+                            ] === "boolean",
+                        )
+                      }
+                      className="block w-full cursor-pointer rounded-xl bg-[#13A89E] py-3 text-center text-base font-medium text-white transition-colors hover:bg-[#0f8e85] disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400"
+                    >
+                      {locale === "es"
+                        ? "Confirmar autoevaluación"
+                        : "Confirmar autoavaliação"}
+                    </button>
                   </div>
                 )}
-
-              {/* Self assessment banner */}
-              <div className="space-y-4 rounded-xl border border-slate-200 bg-white p-5 text-center shadow-sm">
-                <p className="text-sm font-semibold text-[#102A43] md:text-base">
-                  {promptEval}
-                </p>
-                <div className="mx-auto flex max-w-sm gap-4">
-                  <button
-                    onClick={() => handleDiscursiveSelfEvaluate(true)}
-                    className="flex-1 cursor-pointer rounded-xl bg-emerald-600 py-2.5 text-sm font-bold text-white shadow transition-colors hover:bg-emerald-500"
-                  >
-                    ✓ {btnCorrect}
-                  </button>
-                  <button
-                    onClick={() => handleDiscursiveSelfEvaluate(false)}
-                    className="flex-1 cursor-pointer rounded-xl bg-rose-600 py-2.5 text-sm font-bold text-white shadow transition-colors hover:bg-rose-500"
-                  >
-                    ✗ {btnIncorrect}
-                  </button>
-                </div>
-              </div>
             </div>
           )}
 

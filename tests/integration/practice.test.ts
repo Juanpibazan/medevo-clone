@@ -347,14 +347,14 @@ describe("Practice, Correction and Spaced Repetition Integration", () => {
         answersPayload,
       );
 
-      // 4. Verify/Evaluate response with self-evaluated correct=true
+      // 4. Verify/Evaluate response with granular subquestion evaluation
       const verifyResult = await practiceService.verifyResponse(
         session.id,
         item.id,
         userId,
         null,
         45,
-        true, // selfCorrect = true
+        { a: true, b: true }, // 2/2 = 1.0 > 0.5 -> true
       );
       expect(verifyResult.response.isCorrect).toBe(true);
       expect(verifyResult.subquestions).toHaveLength(2);
@@ -362,7 +362,7 @@ describe("Practice, Correction and Spaced Repetition Integration", () => {
         "Neumonía adquirida en la comunidad",
       );
 
-      // 4.1 Session details after verification now reveals subquestion explanations
+      // 4.1 Session details after verification now reveals subquestion explanations and structured responseText
       const sessionAfterVerify = await practiceService.getSession(
         session.id,
         userId,
@@ -373,6 +373,12 @@ describe("Practice, Correction and Spaced Repetition Integration", () => {
       expect(sessionAfterVerify!.items[0].subquestions![1].explanation).toBe(
         "Amoxicilina + Clavulánico vía oral por 7 días",
       );
+
+      const parsedResponse = JSON.parse(
+        sessionAfterVerify!.items[0].response!.responseText!,
+      );
+      expect(parsedResponse.evaluations).toEqual({ a: true, b: true });
+      expect(parsedResponse.answers.a).toBe("Neumonía comunitaria");
 
       // 5. Finish session
       const results = await practiceService.finishSession(session.id, userId);
@@ -417,6 +423,211 @@ describe("Practice, Correction and Spaced Repetition Integration", () => {
         .delete(questionVersions)
         .where(eq(questionVersions.id, versionId));
       await db.delete(questions).where(eq(questions.id, questionId));
+      await db.delete(taxonomyNodes).where(eq(taxonomyNodes.id, taxonomyId));
+      await db.delete(users).where(eq(users.id, userId));
+    }
+  });
+
+  it("should evaluate precision strictly > 50% across 2, 3, and 4 subquestions and enforce complete evaluation", async () => {
+    const userId = randomUUID();
+    const taxonomyId = "tax-granular-test";
+    const qId2 = "q-disc-2sub";
+    const qId3 = "q-disc-3sub";
+    const qId4 = "q-disc-4sub";
+    const vId2 = "qv-disc-2sub";
+    const vId3 = "qv-disc-3sub";
+    const vId4 = "qv-disc-4sub";
+
+    try {
+      await db.insert(users).values({
+        id: userId,
+        name: "Granular Student",
+        email: `${userId}@example.test`,
+      });
+
+      await db.insert(taxonomyNodes).values({
+        id: taxonomyId,
+        name: "Test Taxonomy",
+        level: "specialty",
+      });
+
+      // 2 subquestions question
+      await db.insert(questions).values({ id: qId2 });
+      await db.insert(questionVersions).values({
+        id: vId2,
+        questionId: qId2,
+        versionNumber: 1,
+        status: "published",
+        title: "2 Subquestions",
+        statement: "Enunciado 2 subpreguntas",
+        explanation: "Explicacion general",
+        type: "open_ended",
+        subquestions: [
+          { letter: "a", statement: "Sub A", explanation: "Exp A" },
+          { letter: "b", statement: "Sub B", explanation: "Exp B" },
+        ],
+        taxonomyNodeId: taxonomyId,
+        createdBy: userId,
+      });
+      await db
+        .update(questions)
+        .set({ publishedVersionId: vId2 })
+        .where(eq(questions.id, qId2));
+
+      // 3 subquestions question
+      await db.insert(questions).values({ id: qId3 });
+      await db.insert(questionVersions).values({
+        id: vId3,
+        questionId: qId3,
+        versionNumber: 1,
+        status: "published",
+        title: "3 Subquestions",
+        statement: "Enunciado 3 subpreguntas",
+        explanation: "Explicacion general",
+        type: "open_ended",
+        subquestions: [
+          { letter: "a", statement: "Sub A", explanation: "Exp A" },
+          { letter: "b", statement: "Sub B", explanation: "Exp B" },
+          { letter: "c", statement: "Sub C", explanation: "Exp C" },
+        ],
+        taxonomyNodeId: taxonomyId,
+        createdBy: userId,
+      });
+      await db
+        .update(questions)
+        .set({ publishedVersionId: vId3 })
+        .where(eq(questions.id, qId3));
+
+      // 4 subquestions question
+      await db.insert(questions).values({ id: qId4 });
+      await db.insert(questionVersions).values({
+        id: vId4,
+        questionId: qId4,
+        versionNumber: 1,
+        status: "published",
+        title: "4 Subquestions",
+        statement: "Enunciado 4 subpreguntas",
+        explanation: "Explicacion general",
+        type: "open_ended",
+        subquestions: [
+          { letter: "a", statement: "Sub A", explanation: "Exp A" },
+          { letter: "b", statement: "Sub B", explanation: "Exp B" },
+          { letter: "c", statement: "Sub C", explanation: "Exp C" },
+          { letter: "d", statement: "Sub D", explanation: "Exp D" },
+        ],
+        taxonomyNodeId: taxonomyId,
+        createdBy: userId,
+      });
+      await db
+        .update(questions)
+        .set({ publishedVersionId: vId4 })
+        .where(eq(questions.id, qId4));
+
+      // Test 1: 2 subquestions - 1/2 (50%) must be INCORRECT (strict > 50%)
+      const session2 = await practiceService.createSession(userId, [vId2]);
+      const item2 = (await practiceService.getSession(session2.id, userId))!
+        .items[0];
+
+      // Missing evaluation should throw
+      await expect(
+        practiceService.verifyResponse(
+          session2.id,
+          item2.id,
+          userId,
+          null,
+          20,
+          { a: true } as Record<string, boolean>, // missing 'b'
+        ),
+      ).rejects.toThrow("Missing evaluation for subquestion b");
+
+      // 1 of 2 correct (50% precision) -> isCorrect: false
+      const result2 = await practiceService.verifyResponse(
+        session2.id,
+        item2.id,
+        userId,
+        null,
+        25,
+        { a: true, b: false },
+      );
+      expect(result2.response.isCorrect).toBe(false);
+
+      // Test 2: 3 subquestions - 2/3 (66.7%) must be CORRECT (> 50%)
+      const session3 = await practiceService.createSession(userId, [vId3]);
+      const item3 = (await practiceService.getSession(session3.id, userId))!
+        .items[0];
+
+      const result3 = await practiceService.verifyResponse(
+        session3.id,
+        item3.id,
+        userId,
+        null,
+        30,
+        { a: true, b: true, c: false },
+      );
+      expect(result3.response.isCorrect).toBe(true);
+
+      // Test 3: 4 subquestions - 2/4 (50%) must be INCORRECT, 3/4 (75%) must be CORRECT
+      const session4a = await practiceService.createSession(userId, [vId4]);
+      const item4a = (await practiceService.getSession(session4a.id, userId))!
+        .items[0];
+
+      const result4a = await practiceService.verifyResponse(
+        session4a.id,
+        item4a.id,
+        userId,
+        null,
+        40,
+        { a: true, b: true, c: false, d: false }, // 2 of 4 (50%)
+      );
+      expect(result4a.response.isCorrect).toBe(false);
+
+      const session4b = await practiceService.createSession(userId, [vId4]);
+      const item4b = (await practiceService.getSession(session4b.id, userId))!
+        .items[0];
+
+      const result4b = await practiceService.verifyResponse(
+        session4b.id,
+        item4b.id,
+        userId,
+        null,
+        40,
+        { a: true, b: true, c: true, d: false }, // 3 of 4 (75%)
+      );
+      expect(result4b.response.isCorrect).toBe(true);
+    } finally {
+      // Clean up
+      await db.delete(reviewQueue).where(eq(reviewQueue.userId, userId));
+      await db
+        .delete(responses)
+        .where(
+          inArray(
+            responses.sessionItemId,
+            db
+              .select({ id: studySessionItems.id })
+              .from(studySessionItems)
+              .innerJoin(
+                studySessions,
+                eq(studySessionItems.sessionId, studySessions.id),
+              )
+              .where(eq(studySessions.userId, userId)),
+          ),
+        );
+      await db
+        .delete(studySessionItems)
+        .where(
+          inArray(
+            studySessionItems.sessionId,
+            db
+              .select({ id: studySessions.id })
+              .from(studySessions)
+              .where(eq(studySessions.userId, userId)),
+          ),
+        );
+      await db.delete(studySessions).where(eq(studySessions.userId, userId));
+      await db
+        .delete(questionVersions)
+        .where(inArray(questionVersions.id, [vId2, vId3, vId4]));
+      await db.delete(questions).where(inArray(questions.id, [qId2, qId3, qId4]));
       await db.delete(taxonomyNodes).where(eq(taxonomyNodes.id, taxonomyId));
       await db.delete(users).where(eq(users.id, userId));
     }

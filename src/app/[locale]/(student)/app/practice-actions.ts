@@ -95,7 +95,8 @@ export async function verifyResponseAction(
   itemId: string,
   alternativeId: string | null,
   elapsedSeconds: number,
-  isCorrectOverride?: boolean,
+  isCorrectOverride?: boolean | Record<string, boolean>,
+  subquestionEvaluations?: Record<string, boolean>,
 ) {
   const session = await requireAuth();
   const quota = await billingService.checkDailyQuota(session.user.id);
@@ -109,6 +110,7 @@ export async function verifyResponseAction(
     alternativeId,
     elapsedSeconds,
     isCorrectOverride,
+    subquestionEvaluations,
   );
   analyticsService.trackEvent(session.user.id, "question_answered", {
     sessionId,

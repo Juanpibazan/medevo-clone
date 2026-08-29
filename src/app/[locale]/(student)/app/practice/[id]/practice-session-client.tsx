@@ -104,7 +104,7 @@ function parseSubquestionEvaluations(
     ) {
       return parsed.evaluations as Record<string, boolean>;
     }
-  } catch {}
+  } catch { }
   return {};
 }
 
@@ -249,17 +249,17 @@ export function PracticeSessionClient({
             ? !!currentSelection
             : activeItem.subquestions && activeItem.subquestions.length > 0
               ? activeItem.subquestions.some(
-                  (s) => (currentSubMap[s.letter] || "").trim().length > 0,
-                )
+                (s) => (currentSubMap[s.letter] || "").trim().length > 0,
+              )
               : (currentSubMap[""] || "").trim().length > 0;
 
         if (nextSeconds % 10 === 0 && hasSelection) {
           const serialized =
             activeItem.type === "open_ended"
               ? serializeSubquestionAnswers(
-                  currentSubMap,
-                  activeItem.subquestions,
-                )
+                currentSubMap,
+                activeItem.subquestions,
+              )
               : undefined;
 
           saveDraftSilent(
@@ -301,20 +301,20 @@ export function PracticeSessionClient({
         prev.map((it) =>
           it.id === activeItemId
             ? {
-                ...it,
-                response: {
-                  ...(it.response ?? {
-                    id: crypto.randomUUID(),
-                    isCorrect: null,
-                    metacognitiveMark: null,
-                    isFavorite: false,
-                    verifiedAt: null,
-                    responseText: null,
-                  }),
-                  selectedAlternativeId: alternativeId,
-                  timeTakenSeconds: seconds,
-                },
-              }
+              ...it,
+              response: {
+                ...(it.response ?? {
+                  id: crypto.randomUUID(),
+                  isCorrect: null,
+                  metacognitiveMark: null,
+                  isFavorite: false,
+                  verifiedAt: null,
+                  responseText: null,
+                }),
+                selectedAlternativeId: alternativeId,
+                timeTakenSeconds: seconds,
+              },
+            }
             : it,
         ),
       );
@@ -351,20 +351,20 @@ export function PracticeSessionClient({
         prevItems.map((it) =>
           it.id === activeItemId
             ? {
-                ...it,
-                response: {
-                  ...(it.response ?? {
-                    id: crypto.randomUUID(),
-                    selectedAlternativeId: null,
-                    isCorrect: null,
-                    metacognitiveMark: null,
-                    isFavorite: false,
-                    verifiedAt: null,
-                  }),
-                  responseText: serialized,
-                  timeTakenSeconds: seconds,
-                },
-              }
+              ...it,
+              response: {
+                ...(it.response ?? {
+                  id: crypto.randomUUID(),
+                  selectedAlternativeId: null,
+                  isCorrect: null,
+                  metacognitiveMark: null,
+                  isFavorite: false,
+                  verifiedAt: null,
+                }),
+                responseText: serialized,
+                timeTakenSeconds: seconds,
+              },
+            }
             : it,
         ),
       );
@@ -429,12 +429,12 @@ export function PracticeSessionClient({
             prev.map((it) =>
               it.id === activeItemId
                 ? {
-                    ...it,
-                    explanation: result.explanation,
-                    subquestions:
-                      (result.subquestions as Subquestion[] | null) ??
-                      it.subquestions,
-                  }
+                  ...it,
+                  explanation: result.explanation,
+                  subquestions:
+                    (result.subquestions as Subquestion[] | null) ??
+                    it.subquestions,
+                }
                 : it,
             ),
           );
@@ -469,20 +469,20 @@ export function PracticeSessionClient({
             prev.map((it) =>
               it.id === activeItemId
                 ? {
-                    ...it,
-                    explanation,
-                    alternatives: it.alternatives.map((alt) =>
-                      alt.id === correctAlternativeId
-                        ? { ...alt, isCorrect: true }
-                        : { ...alt, isCorrect: false },
-                    ),
-                    response: {
-                      ...it.response!,
-                      isCorrect: response.isCorrect,
-                      verifiedAt: response.verifiedAt,
-                      timeTakenSeconds: seconds,
-                    },
-                  }
+                  ...it,
+                  explanation,
+                  alternatives: it.alternatives.map((alt) =>
+                    alt.id === correctAlternativeId
+                      ? { ...alt, isCorrect: true }
+                      : { ...alt, isCorrect: false },
+                  ),
+                  response: {
+                    ...it.response!,
+                    isCorrect: response.isCorrect,
+                    verifiedAt: response.verifiedAt,
+                    timeTakenSeconds: seconds,
+                  },
+                }
                 : it,
             ),
           );
@@ -532,22 +532,22 @@ export function PracticeSessionClient({
             prev.map((it) =>
               it.id === activeItemId
                 ? {
-                    ...it,
-                    explanation: explanation ?? it.explanation,
-                    subquestions:
-                      (subquestions as Subquestion[] | null) ??
-                      it.subquestions,
-                    response: {
-                      ...it.response!,
-                      isCorrect: response.isCorrect,
-                      verifiedAt: response.verifiedAt,
-                      timeTakenSeconds: seconds,
-                      responseText:
-                        response.responseText ??
-                        it.response?.responseText ??
-                        null,
-                    },
-                  }
+                  ...it,
+                  explanation: explanation ?? it.explanation,
+                  subquestions:
+                    (subquestions as Subquestion[] | null) ??
+                    it.subquestions,
+                  response: {
+                    ...it.response!,
+                    isCorrect: response.isCorrect,
+                    verifiedAt: response.verifiedAt,
+                    timeTakenSeconds: seconds,
+                    responseText:
+                      response.responseText ??
+                      it.response?.responseText ??
+                      null,
+                  },
+                }
                 : it,
             ),
           );
@@ -590,22 +590,22 @@ export function PracticeSessionClient({
             prev.map((it) =>
               it.id === activeItemId
                 ? {
-                    ...it,
-                    explanation: explanation ?? it.explanation,
-                    subquestions:
-                      (subquestions as Subquestion[] | null) ??
-                      it.subquestions,
-                    response: {
-                      ...it.response!,
-                      isCorrect: response.isCorrect,
-                      verifiedAt: response.verifiedAt,
-                      timeTakenSeconds: seconds,
-                      responseText:
-                        response.responseText ??
-                        it.response?.responseText ??
-                        null,
-                    },
-                  }
+                  ...it,
+                  explanation: explanation ?? it.explanation,
+                  subquestions:
+                    (subquestions as Subquestion[] | null) ??
+                    it.subquestions,
+                  response: {
+                    ...it.response!,
+                    isCorrect: response.isCorrect,
+                    verifiedAt: response.verifiedAt,
+                    timeTakenSeconds: seconds,
+                    responseText:
+                      response.responseText ??
+                      it.response?.responseText ??
+                      null,
+                  },
+                }
                 : it,
             ),
           );
@@ -640,13 +640,13 @@ export function PracticeSessionClient({
           prev.map((it) =>
             it.id === activeItemId
               ? {
-                  ...it,
-                  response: {
-                    ...it.response!,
-                    metacognitiveMark:
-                      updatedResp.metacognitiveMark as MetacognitiveMark,
-                  },
-                }
+                ...it,
+                response: {
+                  ...it.response!,
+                  metacognitiveMark:
+                    updatedResp.metacognitiveMark as MetacognitiveMark,
+                },
+              }
               : it,
           ),
         );
@@ -664,20 +664,20 @@ export function PracticeSessionClient({
           prev.map((it) =>
             it.id === activeItemId
               ? {
-                  ...it,
-                  response: {
-                    ...(it.response ?? {
-                      id: crypto.randomUUID(),
-                      selectedAlternativeId: null,
-                      responseText: null,
-                      isCorrect: null,
-                      timeTakenSeconds: 0,
-                      metacognitiveMark: null,
-                      verifiedAt: null,
-                    }),
-                    isFavorite: updatedResp.isFavorite,
-                  },
-                }
+                ...it,
+                response: {
+                  ...(it.response ?? {
+                    id: crypto.randomUUID(),
+                    selectedAlternativeId: null,
+                    responseText: null,
+                    isCorrect: null,
+                    timeTakenSeconds: 0,
+                    metacognitiveMark: null,
+                    verifiedAt: null,
+                  }),
+                  isFavorite: updatedResp.isFavorite,
+                },
+              }
               : it,
           ),
         );
@@ -766,9 +766,9 @@ export function PracticeSessionClient({
                   ? selections[item.id] !== null
                   : item.subquestions && item.subquestions.length > 0
                     ? item.subquestions.some(
-                        (s) =>
-                          (currentSubMap[s.letter] || "").trim().length > 0,
-                      )
+                      (s) =>
+                        (currentSubMap[s.letter] || "").trim().length > 0,
+                    )
                     : (currentSubMap[""] || "").trim().length > 0;
 
               let btnBg =
@@ -832,11 +832,10 @@ export function PracticeSessionClient({
           </div>
           <button
             onClick={handleToggleFavorite}
-            className={`cursor-pointer rounded-lg border p-2 transition-all ${
-              isFavorited
-                ? "border-amber-300 bg-amber-50 text-amber-500"
-                : "border-slate-200 bg-white text-slate-400 hover:text-amber-500"
-            }`}
+            className={`cursor-pointer rounded-lg border p-2 transition-all ${isFavorited
+              ? "border-amber-300 bg-amber-50 text-amber-500"
+              : "border-slate-200 bg-white text-slate-400 hover:text-amber-500"
+              }`}
             title={t.favorite}
           >
             ★
@@ -864,7 +863,8 @@ export function PracticeSessionClient({
 
         {/* Statement */}
         <p className="rounded-xl border border-slate-100/50 bg-slate-50/50 p-4 text-sm leading-relaxed whitespace-pre-line text-slate-700 md:text-base">
-          {activeItem.statement}
+          {/* {activeItem.statement} */}
+          {activeItem.statement.replace(/<!--\s*image\s*-->/gi, "").trim()}
         </p>
 
         {/* Alternatives (if multiple choice) */}
@@ -909,9 +909,8 @@ export function PracticeSessionClient({
                     type="button"
                     disabled={isVerified}
                     onClick={() => handleSelectAlternative(alt.id)}
-                    className={`flex flex-1 items-center gap-3 rounded-xl border p-3.5 text-left text-sm transition-all md:text-base ${altStyle} ${
-                      !isVerified && "cursor-pointer"
-                    }`}
+                    className={`flex flex-1 items-center gap-3 rounded-xl border p-3.5 text-left text-sm transition-all md:text-base ${altStyle} ${!isVerified && "cursor-pointer"
+                      }`}
                   >
                     <span
                       className={`flex h-8 w-8 items-center justify-center rounded-lg border text-sm font-bold ${letterStyle}`}
@@ -1019,11 +1018,10 @@ export function PracticeSessionClient({
                                       true,
                                     )
                                   }
-                                  className={`flex-1 cursor-pointer rounded-lg border px-3.5 py-1.5 text-xs font-bold transition-all sm:flex-none ${
-                                    subEval === true
-                                      ? "border-emerald-600 bg-emerald-600 text-white shadow-xs"
-                                      : "border-emerald-300 bg-white text-emerald-700 hover:bg-emerald-50"
-                                  }`}
+                                  className={`flex-1 cursor-pointer rounded-lg border px-3.5 py-1.5 text-xs font-bold transition-all sm:flex-none ${subEval === true
+                                    ? "border-emerald-600 bg-emerald-600 text-white shadow-xs"
+                                    : "border-emerald-300 bg-white text-emerald-700 hover:bg-emerald-50"
+                                    }`}
                                 >
                                   ✓ {btnCorrect}
                                 </button>
@@ -1035,11 +1033,10 @@ export function PracticeSessionClient({
                                       false,
                                     )
                                   }
-                                  className={`flex-1 cursor-pointer rounded-lg border px-3.5 py-1.5 text-xs font-bold transition-all sm:flex-none ${
-                                    subEval === false
-                                      ? "border-rose-600 bg-rose-600 text-white shadow-xs"
-                                      : "border-rose-300 bg-white text-rose-700 hover:bg-rose-50"
-                                  }`}
+                                  className={`flex-1 cursor-pointer rounded-lg border px-3.5 py-1.5 text-xs font-bold transition-all sm:flex-none ${subEval === false
+                                    ? "border-rose-600 bg-rose-600 text-white shadow-xs"
+                                    : "border-rose-300 bg-white text-rose-700 hover:bg-rose-50"
+                                    }`}
                                 >
                                   ✗ {btnIncorrect}
                                 </button>
@@ -1056,11 +1053,10 @@ export function PracticeSessionClient({
                                 : "Autoavaliação:"}
                             </span>
                             <span
-                              className={`inline-flex items-center gap-1 rounded-md px-2.5 py-0.5 text-xs font-bold ${
-                                subEval
-                                  ? "border border-emerald-200 bg-emerald-100 text-emerald-800"
-                                  : "border border-rose-200 bg-rose-100 text-rose-800"
-                              }`}
+                              className={`inline-flex items-center gap-1 rounded-md px-2.5 py-0.5 text-xs font-bold ${subEval
+                                ? "border border-emerald-200 bg-emerald-100 text-emerald-800"
+                                : "border border-rose-200 bg-rose-100 text-rose-800"
+                                }`}
                             >
                               {subEval ? `✓ ${btnCorrect}` : `✗ ${btnIncorrect}`}
                             </span>
@@ -1110,40 +1106,40 @@ export function PracticeSessionClient({
               {/* General Question Explanation if not using subquestions */}
               {(!activeItem.subquestions ||
                 activeItem.subquestions.length === 0) && (
-                <div className="space-y-4">
-                  {activeItem.explanation && (
-                    <div className="space-y-2 rounded-xl border border-teal-100 bg-teal-50/20 p-5">
-                      <h4 className="text-base font-bold text-teal-800">
-                        {criteriaTitle}
-                      </h4>
-                      <p className="text-sm leading-relaxed whitespace-pre-line text-slate-700 md:text-base">
-                        {activeItem.explanation}
-                      </p>
-                    </div>
-                  )}
+                  <div className="space-y-4">
+                    {activeItem.explanation && (
+                      <div className="space-y-2 rounded-xl border border-teal-100 bg-teal-50/20 p-5">
+                        <h4 className="text-base font-bold text-teal-800">
+                          {criteriaTitle}
+                        </h4>
+                        <p className="text-sm leading-relaxed whitespace-pre-line text-slate-700 md:text-base">
+                          {activeItem.explanation}
+                        </p>
+                      </div>
+                    )}
 
-                  {/* Self assessment banner for single open-ended */}
-                  <div className="space-y-4 rounded-xl border border-slate-200 bg-white p-5 text-center shadow-sm">
-                    <p className="text-sm font-semibold text-[#102A43] md:text-base">
-                      {promptEval}
-                    </p>
-                    <div className="mx-auto flex max-w-sm gap-4">
-                      <button
-                        onClick={() => handleDiscursiveSelfEvaluate(true)}
-                        className="flex-1 cursor-pointer rounded-xl bg-emerald-600 py-2.5 text-sm font-bold text-white shadow transition-colors hover:bg-emerald-500"
-                      >
-                        ✓ {btnCorrect}
-                      </button>
-                      <button
-                        onClick={() => handleDiscursiveSelfEvaluate(false)}
-                        className="flex-1 cursor-pointer rounded-xl bg-rose-600 py-2.5 text-sm font-bold text-white shadow transition-colors hover:bg-rose-500"
-                      >
-                        ✗ {btnIncorrect}
-                      </button>
+                    {/* Self assessment banner for single open-ended */}
+                    <div className="space-y-4 rounded-xl border border-slate-200 bg-white p-5 text-center shadow-sm">
+                      <p className="text-sm font-semibold text-[#102A43] md:text-base">
+                        {promptEval}
+                      </p>
+                      <div className="mx-auto flex max-w-sm gap-4">
+                        <button
+                          onClick={() => handleDiscursiveSelfEvaluate(true)}
+                          className="flex-1 cursor-pointer rounded-xl bg-emerald-600 py-2.5 text-sm font-bold text-white shadow transition-colors hover:bg-emerald-500"
+                        >
+                          ✓ {btnCorrect}
+                        </button>
+                        <button
+                          onClick={() => handleDiscursiveSelfEvaluate(false)}
+                          className="flex-1 cursor-pointer rounded-xl bg-rose-600 py-2.5 text-sm font-bold text-white shadow transition-colors hover:bg-rose-500"
+                        >
+                          ✗ {btnIncorrect}
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
 
               {/* Confirmation Banner for subquestions */}
               {activeItem.subquestions &&
@@ -1160,7 +1156,7 @@ export function PracticeSessionClient({
                         !activeItem.subquestions.every(
                           (sub) =>
                             typeof (granularEvals[activeItemId] || {})[
-                              sub.letter
+                            sub.letter
                             ] === "boolean",
                         )
                       }
@@ -1180,11 +1176,10 @@ export function PracticeSessionClient({
           <div className="animate-fadeIn space-y-6 border-t border-slate-100 pt-4">
             {/* Answer Result banner */}
             <div
-              className={`flex items-center gap-3 rounded-xl border p-4 ${
-                isCorrect === true
-                  ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-                  : "border-red-200 bg-red-50 text-red-800"
-              }`}
+              className={`flex items-center gap-3 rounded-xl border p-4 ${isCorrect === true
+                ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                : "border-red-200 bg-red-50 text-red-800"
+                }`}
             >
               <span className="text-2xl">
                 {isCorrect === true ? "✓" : "✗"}
@@ -1232,11 +1227,10 @@ export function PracticeSessionClient({
                   <button
                     key={mark.key}
                     onClick={() => handleMetacognitiveMark(mark.key)}
-                    className={`cursor-pointer rounded-lg border border-slate-200 p-2.5 text-center text-sm font-semibold transition-all ${
-                      verifiedMark === mark.key
-                        ? mark.active
-                        : `bg-white text-slate-600 ${mark.bg}`
-                    }`}
+                    className={`cursor-pointer rounded-lg border border-slate-200 p-2.5 text-center text-sm font-semibold transition-all ${verifiedMark === mark.key
+                      ? mark.active
+                      : `bg-white text-slate-600 ${mark.bg}`
+                      }`}
                   >
                     {mark.label}
                   </button>

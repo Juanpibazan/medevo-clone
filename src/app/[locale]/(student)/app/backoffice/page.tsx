@@ -10,6 +10,7 @@ import {
   CreateDraftButton,
   AnnulButton,
 } from "./backoffice-client-helpers";
+import { getEffectiveRoles } from "./backoffice-actions";
 
 export default async function BackofficePage({
   params,
@@ -26,7 +27,7 @@ export default async function BackofficePage({
 
   // Ensure student profile is setup
   await profileService.getProfile(session.user.id);
-  const roles = await profileService.getUserRoles(session.user.id);
+  const roles = await getEffectiveRoles(session.user.id);
   const isEditor = roles.includes("medical_editor") || roles.includes("admin");
   const isReviewer =
     roles.includes("medical_reviewer") || roles.includes("admin");

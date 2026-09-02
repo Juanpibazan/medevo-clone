@@ -2,14 +2,15 @@
 
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
-import { auth, profileService } from "@/modules/identity";
+import { auth } from "@/modules/identity";
 import { contentService } from "@/modules/content";
+import { getEffectiveRoles } from "./backoffice-actions";
 
 async function requireEditor() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) throw new Error("Unauthorized");
 
-  const roles = await profileService.getUserRoles(session.user.id);
+  const roles = await getEffectiveRoles(session.user.id);
   if (!roles.includes("medical_editor") && !roles.includes("admin")) {
     throw new Error("Forbidden");
   }

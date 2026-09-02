@@ -1,12 +1,11 @@
 "use server";
 
-import { headers } from "next/headers";
+import { headers, cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { auth, profileService } from "@/modules/identity";
 import { editorialService, type QuestionType } from "@/modules/content";
 import { db } from "@/db/client";
 import { userRoles } from "@/db/schema";
-import { eq } from "drizzle-orm";
 
 async function getRequiredSession() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -14,9 +13,31 @@ async function getRequiredSession() {
   return session;
 }
 
+export async function getEffectiveRoles(userId: string): Promise<string[]> {
+  const roles = await profileService.getUserRoles(userId);
+  const isPrivileged =
+    process.env.NODE_ENV === "development" ||
+    roles.includes("admin") ||
+    roles.includes("medical_editor");
+
+  if (isPrivileged) {
+    const cookieStore = await cookies();
+    const activeRole = cookieStore.get("dev_active_role")?.value;
+    if (activeRole) {
+      if (activeRole === "student") return ["student"];
+      if (activeRole === "medical_editor") return ["medical_editor", "student"];
+      if (activeRole === "medical_reviewer")
+        return ["medical_reviewer", "student"];
+      if (activeRole === "admin")
+        return ["admin", "medical_editor", "medical_reviewer", "student"];
+    }
+  }
+  return roles;
+}
+
 async function requireRole(allowedRoles: string[]) {
   const session = await getRequiredSession();
-  const roles = await profileService.getUserRoles(session.user.id);
+  const roles = await getEffectiveRoles(session.user.id);
   const hasAccess = roles.some((role) => allowedRoles.includes(role));
   if (!hasAccess) {
     throw new Error("Forbidden");
@@ -129,14 +150,32 @@ export async function switchRoleAction(roleCode: string) {
     );
   }
 
+  // Preserve essential roles in DB (admin / medical_editor / student) and ensure the new role exists
   await db.transaction(async (tx) => {
-    // Delete existing roles
-    await tx.delete(userRoles).where(eq(userRoles.userId, session.user.id));
-    // Insert new role
-    await tx.insert(userRoles).values({
-      userId: session.user.id,
-      roleCode,
-    });
+    const rolesToEnsure = new Set<string>();
+    if (rolesList.includes("admin")) rolesToEnsure.add("admin");
+    if (rolesList.includes("medical_editor")) rolesToEnsure.add("medical_editor");
+    rolesToEnsure.add("student");
+    rolesToEnsure.add(roleCode);
+
+    for (const role of rolesToEnsure) {
+      if (!rolesList.includes(role)) {
+        await tx
+          .insert(userRoles)
+          .values({
+            userId: session.user.id,
+            roleCode: role,
+          })
+          .onConflictDoNothing();
+      }
+    }
+  });
+
+  const cookieStore = await cookies();
+  cookieStore.set("dev_active_role", roleCode, {
+    path: "/",
+    sameSite: "lax",
+    httpOnly: false,
   });
 
   revalidatePath("/");

@@ -5,6 +5,7 @@ import { contentService } from "@/modules/content";
 import { StudentHeader } from "@/components/student-header";
 import { Link } from "@/i18n/navigation";
 import { ReviewForm } from "./review-form";
+import { getEffectiveRoles } from "../../backoffice-actions";
 
 export default async function RevisarQuestaoPage({
   params,
@@ -22,7 +23,7 @@ export default async function RevisarQuestaoPage({
 
   // Authorize user (must be reviewer or admin)
   await profileService.getProfile(session.user.id);
-  const roles = await profileService.getUserRoles(session.user.id);
+  const roles = await getEffectiveRoles(session.user.id);
   const isReviewer =
     roles.includes("medical_reviewer") || roles.includes("admin");
 

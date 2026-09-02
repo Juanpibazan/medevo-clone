@@ -16,6 +16,7 @@ import { billingService } from "@/modules/billing";
 import { contentService } from "@/modules/content";
 import { PracticeFilters } from "@/components/practice-filters";
 import { analyticsService } from "@/modules/analytics";
+import { getEffectiveRoles } from "./backoffice/backoffice-actions";
 
 export default async function AppPage({
   params,
@@ -62,7 +63,7 @@ export default async function AppPage({
     Math.round((profile.weeklyStudyMinutes || 300) / 10),
   );
 
-  const roles = await profileService.getUserRoles(session.user.id);
+  const roles = await getEffectiveRoles(session.user.id);
   const isEditorOrAdmin =
     roles.includes("medical_editor") || roles.includes("admin");
 

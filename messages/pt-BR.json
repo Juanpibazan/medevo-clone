@@ -195,7 +195,20 @@
     "save": "Salvar e Publicar",
     "status": "Status",
     "version": "Versão",
-    "noQuestions": "Nenhuma questão cadastrada."
+    "noQuestions": "Nenhuma questão cadastrada.",
+    "searchPlaceholder": "Buscar por título ou ID da questão...",
+    "filterTypeAll": "Todas",
+    "filterTypeMultipleChoice": "Múltipla Escolha",
+    "filterTypeOpenEnded": "Discursiva",
+    "specialty": "Especialidade",
+    "theme": "Tema",
+    "focus": "Foco",
+    "allSpecialties": "Todas as especialidades",
+    "allThemes": "Todos os temas",
+    "allFocuses": "Todos os focos",
+    "resultsCount": "Mostrando {filtered} de {total} questões",
+    "clearFilters": "Limpar filtros",
+    "noResultsFound": "Nenhuma questão encontrada com os filtros selecionados."
   },
   "billing": {
     "title": "Assinatura e Limites",

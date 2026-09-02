@@ -195,7 +195,20 @@
     "save": "Guardar y Publicar",
     "status": "Estado",
     "version": "Versión",
-    "noQuestions": "No hay preguntas registradas."
+    "noQuestions": "No hay preguntas registradas.",
+    "searchPlaceholder": "Buscar por título o ID de pregunta...",
+    "filterTypeAll": "Todas",
+    "filterTypeMultipleChoice": "Opción Múltiple",
+    "filterTypeOpenEnded": "Discursiva",
+    "specialty": "Especialidad",
+    "theme": "Tema",
+    "focus": "Foco",
+    "allSpecialties": "Todas las especialidades",
+    "allThemes": "Todos los temas",
+    "allFocuses": "Todos los focos",
+    "resultsCount": "Mostrando {filtered} de {total} preguntas",
+    "clearFilters": "Limpiar filtros",
+    "noResultsFound": "No se encontraron preguntas con los filtros seleccionados."
   },
   "billing": {
     "title": "Suscripción y Límites",

@@ -1,8 +1,8 @@
-# MedEvo Clone — Contexto maestro para Codex
+# MedEvo Clone — Contexto maestro para el Agente
 
 > Documento de arranque para planificar y construir una plataforma fullstack de preparación médica inspirada funcionalmente en MedEvo, con identidad, contenido y código propios.
 >
-> Última actualización del contexto: 8 de agosto de 2026.
+> Última actualización del contexto: 3 de septiembre de 2026.
 
 ## 1. Propósito de este documento
 
@@ -19,7 +19,7 @@ Antes de escribir código, Codex debe leer este archivo completo, inspeccionar e
 
 ### 1.1 Estado actual del repositorio
 
-El bootstrap técnico, el tramo de identidad/onboarding y el **vertical slice completo de práctica** (sesión de preguntas, corrección, resultados, cuaderno de errores, favoritos y revisión programada FSRS) están totalmente implementados. Este estado describe el código existente al 12 de agosto de 2026 y debe verificarse contra el repositorio antes de planificar cambios:
+El bootstrap técnico, el tramo de identidad/onboarding y el **vertical slice completo de práctica** (sesión de preguntas, corrección, resultados, cuaderno de errores, favoritos y revisión programada FSRS) están totalmente implementados. Este estado describe el código existente al 3 de septiembre de 2026 y debe verificarse contra el repositorio antes de planificar cambios:
 
 - Next.js 16 con App Router, React 19, TypeScript estricto, Tailwind CSS 4, `src/`, npm y Node.js 24 LTS.
 - Interfaz mobile-first bilingüe desde el inicio, con prefijos obligatorios `pt-BR` y `es`, `next-intl`, Manrope y los tokens de marca de MedCiclo.
@@ -34,8 +34,8 @@ El bootstrap técnico, el tramo de identidad/onboarding y el **vertical slice co
 - Cuaderno de errores en `/app/errors` para revisar preguntas contestadas incorrectamente o marcadas como favoritos.
 - Base de datos inicial sembrada mediante `npm run db:seed` con taxonomía de especialidades y 12 preguntas de Revalida reales.
 - CI y scripts locales para formato, lint, tipos, migraciones, pruebas unitarias, integración, E2E y build.
-- Soporte para variables de entorno para migraciones y seeds en Neon/Vercel mediante `MIGRATION_DATABASE_URL` and `DATABASE_URL`.
-- Módulo de Billing y límites Freemium completamente funcional (con cuota de 4 preguntas diarias para cuentas gratuitas, simulación de pagos, bloqueo visual y pruebas correspondientes).
+- Soporte para variables de entorno para migraciones y seeds en Neon/Vercel mediante `MIGRATION_DATABASE_URL` y `DATABASE_URL`.
+- Módulo de Billing y límites Freemium completamente funcional, con cuota de 10 preguntas diarias para cuentas gratuitas, bloqueo visual e integración real con Paddle Sandbox. La integración incluye precios localizados mediante Price Preview, checkout overlay mensual y anual, asociación firmada entre el checkout y el usuario, verificación de webhooks con el SDK oficial, aprovisionamiento idempotente de suscripciones y una página de confirmación que consulta el estado activado.
 - Verificación obligatoria de correo electrónico tras el registro, integrada con Resend (llamadas directas de fetch) y Better Auth (requireEmailVerification: true), con pantalla de espera de confirmación y reenvío en `/cadastro/confirmar`, control de error en el inicio de sesión (`/entrar`) y suites de prueba unitaria/integración correspondientes.
 - Backoffice Editorial Visual completamente funcional (con panel unificado en `/app/backoffice`, editor de borradores con taxonomía jerárquica y alternativas, flujo de aprobación/comentado para revisores, e inmutabilidad de versiones publicadas mediante auto-incremento de rascunhos novos; además de un selector de roles integrado en la cabecera visible en desarrollo y para usuarios administradores/editores en producción) y pruebas automatizadas correspondientes.
 - Analítica de Producto y Observabilidad en tiempo real completamente funcional, con el módulo modular `src/modules/analytics`, la tabla `analytics_events` persistiendo los eventos de práctica asíncronamente en segundo plano, visualización interactiva de progreso diario, precisión global, tiempo medio y rendimiento por especialidad raíz en el Dashboard, así como pruebas de integración robustas en Vitest.
@@ -697,7 +697,7 @@ Criterio de salida: calidad clínica y costo por usuario dentro de umbrales defi
 8. ~~Añadir revisión programada; incorporar FSRS y flashcards solo con el alcance aprobado.~~ **Completado.**
 9. ~~Implementar filtros, conteos y generación ampliada de sesiones.~~ **Completado.**
 10. ~~Diseñar e implementar el módulo de Billing, planes de suscripción y límites freemium en el backend (e.g. cuota diaria de preguntas).~~ **Completado.**
-11. ~~**Vertical Slice — Simulación de pago y límites freemium (Billing)**: Implementar la UI para el flujo de pago con un formulario simulado de tarjeta en `/app/billing` y la lógica para activar inmediatamente el plan Premium al enviar el formulario, desbloqueando los límites diarios en la práctica de preguntas y mostrando el estado activo en el panel del estudiante. Pruebas: integración de transiciones del estado de suscripción y límites freemium.~~ **Completado.**
+11. ~~**Vertical Slice — Simulación de pago y límites freemium (Billing)**: Implementar la UI para el flujo de pago con un formulario simulado de tarjeta en `/app/billing` y la lógica para activar inmediatamente el plan Premium al enviar el formulario, desbloqueando los límites diarios en la práctica de preguntas y mostrando el estado activo en el panel del estudiante. Pruebas: integración de transiciones del estado de suscripción y límites freemium.~~ **Completado y posteriormente sustituido por la integración real con Paddle Sandbox del punto 24; el formulario y la activación simulados ya no forman parte del producto.**
 12. ~~**Vertical Slice — Verificación de correo electrónico real**: Implementar flujo completo de registro con verificación obligatoria. UI: pantalla de espera de confirmación y opción de reenvío en `/cadastro/confirmar`, más aviso y reenvío en `/entrar` ante el error `EMAIL_NOT_VERIFIED`. Backend: Better Auth con `requireEmailVerification: true`, integración de Resend SDK, y límite de 2 correos en tests para evitar abusar del API. Pruebas: unitarias del servicio e integración de envío.~~ **Completado.**
 13. ~~**Vertical Slice — Backoffice Editorial Visual**: Interfaz web completa para que editores y revisores médicos gestionen preguntas. UI: listado, creación, edición, borrador, revisión y publicación de preguntas con alternativas. Backend: Server Actions con roles `medical_editor` y `medical_reviewer`. BD: persistencia en `question_versions`, `question_alternatives` y `editorial_reviews`. Pruebas: flujo editorial completo por rol.~~ **Completado.**
 14. ~~**Vertical Slice — Selección de preguntas por taxonomía (Filtros)**: Permitir que el estudiante elija qué especialidades, temas, focos o subfocos quiere practicar en cascada antes de iniciar una sesión de 10 preguntas. UI: Selectores en cascada en el Dashboard. Backend: Actualizar `createSession` en `PracticeService` para admitir y resolver de forma recursiva los descendientes del nodo de taxonomía filtrado. Pruebas: Selección de preguntas filtradas y creación de sesión correspondiente.~~ **Completado.**
@@ -710,7 +710,8 @@ Criterio de salida: calidad clínica y costo por usuario dentro de umbrales defi
 21. ~~**Vertical Slice — Subpreguntas Discursivas en Sesiones de Práctica y Espelho de Correção**: Mostrar el enunciado principal y cada subpregunta con su propio textarea independiente en el reproductor de sesiones de práctica. Serialización estructurada JSON en `responseText`, validación de obligatoriedad de todas las subpreguntas y despliegue del espelho de corrección por subpregunta al verificar la respuesta. Pruebas: integración de práctica con subpreguntas y seguridad de ocultamiento de explicaciones.~~ **Completado.**
 22. ~~**Vertical Slice — Autoevaluación Granular por Subpregunta (Preguntas Discursivas)**: Adaptar el flujo de autoevaluación tras desplegar los espelhos de corrección para que el estudiante evalúe individualmente cada subpregunta ("Acerté" / "Me equivoqué"). Enviar el mapa de evaluaciones al servidor, donde se valida y calcula la precisión final (`aciertos / totalSubpreguntas`). Si la precisión es estrictamente mayor al 50% (`> 0.5`), la pregunta se marca como correcta (`is_correct = true`); de lo contrario, se marca como incorrecta. Pruebas: validación de evaluación granular por subpregunta y cálculo de precisión en `PracticeService`.~~ **Completado.**
 23. ~~**Vertical Slice — Preservación de Roles y Simulación Segura en Selector de Roles**: Actualización de `switchRoleAction` y `StudentHeader` para preservar de forma no destructiva los roles base del usuario en PostgreSQL (`admin`, `student`, `medical_editor`) y gestionar la selección activa vía cookie `dev_active_role` con evaluación en servidor mediante `getEffectiveRoles`, evitando la pérdida de privilegios y el bloqueo del selector en producción. Pruebas: validación de tipos, lint y suite unitaria completas.~~ **Completado.**
-24. **Vertical Slice — Piloto cerrado**: Puesta en marcha con un volumen inicial de usuarios reales para validar la estabilidad de la plataforma y el hábito antes de gamificar o agregar IA.
+24. ~~**Vertical Slice — Integración con Paddle Sandbox**: Sustituir el pago simulado por precios localizados y checkout overlay de Paddle, vincular de forma firmada el checkout al usuario autenticado, verificar webhooks con el SDK oficial y aprovisionar suscripciones de manera idempotente, con confirmación posterior al pago.~~ **Completado.**
+25. **Vertical Slice — Piloto cerrado**: Puesta en marcha con un volumen inicial de usuarios reales para validar la estabilidad de la plataforma y el hábito antes de gamificar o agregar IA.
 
 ## 17. Estrategia de pruebas
 
@@ -748,17 +749,19 @@ El slice de onboarding quedó cubierto por pruebas unitarias de dominio/servicio
 - Onboarding: obligatorio, reanudable, objetivo Revalida fijo y perfil como fuente canónica del locale para usuarios autenticados.
 - Persistencia: PostgreSQL 15, un único pool `pg` y Drizzle como único sistema de esquema/migraciones.
 - Desarrollo local: solo PostgreSQL se ejecuta en Podman; Next.js corre con Node local.
+- Pagos en desarrollo: Paddle es el proveedor integrado y toda la operación actual usa exclusivamente su entorno sandbox.
+- Freemium actual: las cuentas gratuitas disponen de una cuota de 10 preguntas diarias.
 
 ### 19.2 Decisiones que siguen abiertas
 
 Antes de cerrar la arquitectura o implementar las áreas afectadas, presentar opciones y obtener decisión del propietario:
 
-1. País de constitución, mercado de cobro inicial y proveedor de pagos.
+1. País de constitución, mercado de cobro inicial y habilitación de Paddle Live para producción.
 2. Hosting y servicios administrados.
 3. Proveedor de correo transaccional y política de verificación/recuperación de cuenta.
 4. Fuente y licenciamiento de las primeras preguntas.
 5. Composición exacta del equipo editorial y política de doble revisión.
-6. Modelo freemium, cuotas y precio.
+6. Precio definitivo y posibles ajustes futuros al modelo freemium.
 7. Fecha objetivo del piloto.
 8. Alcance exacto de flashcards/FSRS en la primera entrega.
 9. Proveedor de analítica y política de consentimiento.
@@ -766,7 +769,7 @@ Antes de cerrar la arquitectura o implementar las áreas afectadas, presentar op
 
 Para avanzar sin una decisión, Codex puede crear una interfaz, stub o ADR con estado `proposed`; no debe acoplar el sistema a una elección irreversible.
 
-## 20. Próximo encargo recomendado para Codex
+## 20. Próximo encargo recomendado para el Agente
 
 Usar Plan mode y enviar:
 
@@ -778,10 +781,10 @@ Lee completamente CONTEXTO_CODEX_MEDEVO_CLONE.md y cualquier AGENTS.md del repos
 3. ejecuta la suite completa de pruebas y validaciones locales;
 4. hazme únicamente las preguntas bloqueantes y espera aprobación antes de implementar.
 
-No copies contenido ni diseño propietario de MedEvo.
+No copies contenido ni diseño de MedEvo.
 ```
 
-## 21. Forma de trabajo esperada de Codex
+## 21. Forma de trabajo esperada del Agente
 
 - Liderar con el resultado esperado y mantener cambios pequeños y revisables.
 - Inspeccionar antes de editar.

@@ -13,22 +13,6 @@ export class BillingService {
     return this.repository.getActiveSubscription(userId);
   }
 
-  async upgradeToPremium(userId: string): Promise<Subscription> {
-    const id = crypto.randomUUID();
-    const now = new Date();
-    // Premium subscription active for 1 year
-    const nextYear = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000);
-
-    return this.repository.createOrUpdateSubscription({
-      id,
-      userId,
-      status: "active",
-      planCode: "premium",
-      currentPeriodStart: now,
-      currentPeriodEnd: nextYear,
-    });
-  }
-
   async checkDailyQuota(userId: string): Promise<{
     isBlocked: boolean;
     answeredToday: number;

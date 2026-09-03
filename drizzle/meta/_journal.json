@@ -57,6 +57,20 @@
       "when": 1787773472320,
       "tag": "0007_clean_energizer",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1788397146428,
+      "tag": "0008_pretty_gateway",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1788398977060,
+      "tag": "0009_huge_silver_sable",
+      "breakpoints": true
     }
   ]
 }

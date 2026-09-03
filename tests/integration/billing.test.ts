@@ -13,8 +13,10 @@ import {
   studySessionItems,
   responses,
   subscriptions,
+  paddleWebhookEvents,
 } from "@/db/schema";
 import { billingService } from "@/modules/billing";
+import { DrizzleBillingRepository } from "@/modules/billing/infrastructure/drizzle-billing-repository";
 
 describe("Billing & Subscription Integration Tests", () => {
   afterAll(() => pool.end());
@@ -38,10 +40,100 @@ describe("Billing & Subscription Integration Tests", () => {
       expect(quotaBefore.tier).toBe("free");
       expect(quotaBefore.isBlocked).toBe(false);
 
-      // Upgrade to Premium
-      const premiumSub = await billingService.upgradeToPremium(userId);
-      expect(premiumSub.status).toBe("active");
-      expect(premiumSub.planCode).toBe("premium");
+      // Paddle webhook is the only provisioning path.
+      const now = new Date();
+      const repository = new DrizzleBillingRepository();
+      const paddleEvent = {
+        eventId: `evt_${userId}`,
+        eventType: "subscription.activated",
+        occurredAt: now,
+        subscriptionId: `sub_${userId}`,
+        customerId: `ctm_${userId}`,
+        userId,
+        priceId: "pri_test",
+        quantity: 1,
+        status: "active",
+        currentPeriodStart: now,
+        currentPeriodEnd: new Date(now.getTime() + 86_400_000),
+      } as const;
+      expect(
+        await repository.processPaddleSubscriptionEvent({
+          ...paddleEvent,
+          eventId: `evt_terminal_first_${userId}`,
+          eventType: "subscription.canceled",
+          occurredAt: new Date(now.getTime() + 10_000),
+          subscriptionId: `sub_terminal_${userId}`,
+          status: "canceled",
+          currentPeriodStart: null,
+          currentPeriodEnd: null,
+        }),
+      ).toBe("ignored");
+      expect(
+        await repository.processPaddleSubscriptionEvent({
+          ...paddleEvent,
+          eventId: `evt_terminal_old_${userId}`,
+          occurredAt: new Date(now.getTime() + 9_000),
+          subscriptionId: `sub_terminal_${userId}`,
+        }),
+      ).toBe("ignored");
+      expect(await billingService.getActiveSubscription(userId)).toBeNull();
+
+      await Promise.all([
+        repository.processPaddleSubscriptionEvent({
+          ...paddleEvent,
+          eventId: `evt_race_active_${userId}`,
+          occurredAt: new Date(now.getTime() + 19_000),
+          subscriptionId: `sub_race_${userId}`,
+        }),
+        repository.processPaddleSubscriptionEvent({
+          ...paddleEvent,
+          eventId: `evt_race_terminal_${userId}`,
+          eventType: "subscription.canceled",
+          occurredAt: new Date(now.getTime() + 20_000),
+          subscriptionId: `sub_race_${userId}`,
+          status: "canceled",
+          currentPeriodStart: null,
+          currentPeriodEnd: null,
+        }),
+      ]);
+      expect(await billingService.getActiveSubscription(userId)).toBeNull();
+
+      expect(await repository.processPaddleSubscriptionEvent(paddleEvent)).toBe(
+        "processed",
+      );
+      expect(await repository.processPaddleSubscriptionEvent(paddleEvent)).toBe(
+        "duplicate",
+      );
+      expect(
+        await repository.processPaddleSubscriptionEvent({
+          ...paddleEvent,
+          eventId: `evt_old_${userId}`,
+          occurredAt: new Date(now.getTime() - 1000),
+          status: "canceled",
+        }),
+      ).toBe("ignored");
+
+      expect(
+        await repository.processPaddleSubscriptionEvent({
+          ...paddleEvent,
+          eventId: `evt_paused_${userId}`,
+          eventType: "subscription.paused",
+          occurredAt: new Date(now.getTime() + 1000),
+          status: "paused",
+          currentPeriodStart: null,
+          currentPeriodEnd: null,
+        }),
+      ).toBe("processed");
+
+      const pausedSubscription =
+        await billingService.getActiveSubscription(userId);
+      expect(pausedSubscription).toBeNull();
+
+      await repository.processPaddleSubscriptionEvent({
+        ...paddleEvent,
+        eventId: `evt_reactivated_${userId}`,
+        occurredAt: new Date(now.getTime() + 2000),
+      });
 
       // Verify active subscription exists now
       const subAfter = await billingService.getActiveSubscription(userId);
@@ -67,6 +159,15 @@ describe("Billing & Subscription Integration Tests", () => {
     } finally {
       // Cleanup
       await db.delete(subscriptions).where(eq(subscriptions.userId, userId));
+      await db
+        .delete(paddleWebhookEvents)
+        .where(
+          inArray(paddleWebhookEvents.subscriptionId, [
+            `sub_${userId}`,
+            `sub_terminal_${userId}`,
+            `sub_race_${userId}`,
+          ]),
+        );
       await db.delete(users).where(eq(users.id, userId));
     }
   });

@@ -1,18 +1,20 @@
-import { eq, and, gte, lt, sql } from "drizzle-orm";
+import { eq, and, gte, inArray, lt, ne, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import {
   subscriptions,
   responses,
   studySessionItems,
   studySessions,
+  paddleWebhookEvents,
+  users,
 } from "@/db/schema";
-import type { Subscription } from "../domain/billing";
+import type { PaddleSubscriptionEvent, Subscription } from "../domain/billing";
 
 export interface BillingRepository {
   getActiveSubscription(userId: string): Promise<Subscription | null>;
-  createOrUpdateSubscription(
-    subscription: Omit<Subscription, "createdAt" | "updatedAt">,
-  ): Promise<Subscription>;
+  processPaddleSubscriptionEvent(
+    event: PaddleSubscriptionEvent,
+  ): Promise<"processed" | "duplicate" | "ignored">;
   getVerifiedResponsesCountToday(
     userId: string,
     startOfDay: Date,
@@ -29,7 +31,7 @@ export class DrizzleBillingRepository implements BillingRepository {
       .where(
         and(
           eq(subscriptions.userId, userId),
-          eq(subscriptions.status, "active"),
+          inArray(subscriptions.status, ["active", "trialing"]),
           gte(subscriptions.currentPeriodEnd, now),
         ),
       )
@@ -46,65 +48,103 @@ export class DrizzleBillingRepository implements BillingRepository {
       currentPeriodEnd: row.currentPeriodEnd,
       createdAt: row.createdAt,
       updatedAt: row.updatedAt,
+      paddleSubscriptionId: row.paddleSubscriptionId,
+      paddleCustomerId: row.paddleCustomerId,
+      paddlePriceId: row.paddlePriceId,
+      lastPaddleEventAt: row.lastPaddleEventAt,
     };
   }
 
-  async createOrUpdateSubscription(
-    subscription: Omit<Subscription, "createdAt" | "updatedAt">,
-  ): Promise<Subscription> {
-    const now = new Date();
-
-    // Check if subscription already exists for this user
-    const [existing] = await db
-      .select()
-      .from(subscriptions)
-      .where(eq(subscriptions.userId, subscription.userId))
-      .limit(1);
-
-    if (existing) {
-      await db
-        .update(subscriptions)
-        .set({
-          status: subscription.status,
-          planCode: subscription.planCode,
-          currentPeriodStart: subscription.currentPeriodStart,
-          currentPeriodEnd: subscription.currentPeriodEnd,
-          updatedAt: now,
+  async processPaddleSubscriptionEvent(event: PaddleSubscriptionEvent) {
+    return db.transaction(async (tx) => {
+      // Paddle may deliver events for one subscription concurrently. A
+      // transaction-scoped PostgreSQL lock makes the occurredAt ordering check
+      // race-free without blocking events for other subscriptions.
+      await tx.execute(
+        sql`select pg_advisory_xact_lock(hashtextextended(${event.subscriptionId}, 0))`,
+      );
+      const [knownUser] = await tx
+        .select({ id: users.id })
+        .from(users)
+        .where(eq(users.id, event.userId))
+        .limit(1);
+      if (!knownUser) return "ignored" as const;
+      const inserted = await tx
+        .insert(paddleWebhookEvents)
+        .values({
+          eventId: event.eventId,
+          subscriptionId: event.subscriptionId,
+          eventType: event.eventType,
+          occurredAt: event.occurredAt,
+          outcome: "processed",
         })
-        .where(eq(subscriptions.id, existing.id));
-    } else {
-      await db.insert(subscriptions).values({
-        id: subscription.id,
-        userId: subscription.userId,
-        status: subscription.status,
-        planCode: subscription.planCode,
-        currentPeriodStart: subscription.currentPeriodStart,
-        currentPeriodEnd: subscription.currentPeriodEnd,
-        createdAt: now,
-        updatedAt: now,
-      });
-    }
-
-    const [updated] = await db
-      .select()
-      .from(subscriptions)
-      .where(eq(subscriptions.userId, subscription.userId))
-      .limit(1);
-
-    if (!updated) {
-      throw new Error("Failed to retrieve updated subscription");
-    }
-
-    return {
-      id: updated.id,
-      userId: updated.userId,
-      status: updated.status,
-      planCode: updated.planCode,
-      currentPeriodStart: updated.currentPeriodStart,
-      currentPeriodEnd: updated.currentPeriodEnd,
-      createdAt: updated.createdAt,
-      updatedAt: updated.updatedAt,
-    };
+        .onConflictDoNothing()
+        .returning({ id: paddleWebhookEvents.eventId });
+      if (!inserted.length) return "duplicate" as const;
+      const [newerEvent] = await tx
+        .select({ eventId: paddleWebhookEvents.eventId })
+        .from(paddleWebhookEvents)
+        .where(
+          and(
+            eq(paddleWebhookEvents.subscriptionId, event.subscriptionId),
+            ne(paddleWebhookEvents.eventId, event.eventId),
+            gte(paddleWebhookEvents.occurredAt, event.occurredAt),
+          ),
+        )
+        .limit(1);
+      if (newerEvent) {
+        await tx
+          .update(paddleWebhookEvents)
+          .set({ outcome: "ignored", reason: "out_of_order" })
+          .where(eq(paddleWebhookEvents.eventId, event.eventId));
+        return "ignored" as const;
+      }
+      const [existing] = await tx
+        .select()
+        .from(subscriptions)
+        .where(eq(subscriptions.paddleSubscriptionId, event.subscriptionId))
+        .limit(1);
+      if (
+        existing?.lastPaddleEventAt &&
+        event.occurredAt <= existing.lastPaddleEventAt
+      ) {
+        await tx
+          .update(paddleWebhookEvents)
+          .set({ outcome: "ignored", reason: "out_of_order" })
+          .where(eq(paddleWebhookEvents.eventId, event.eventId));
+        return "ignored" as const;
+      }
+      if (!existing && (!event.currentPeriodStart || !event.currentPeriodEnd)) {
+        await tx
+          .update(paddleWebhookEvents)
+          .set({ outcome: "ignored", reason: "missing_period" })
+          .where(eq(paddleWebhookEvents.eventId, event.eventId));
+        return "ignored" as const;
+      }
+      const values = {
+        userId: event.userId,
+        status: event.status,
+        planCode: "premium",
+        currentPeriodStart:
+          event.currentPeriodStart ?? existing?.currentPeriodStart,
+        currentPeriodEnd: event.currentPeriodEnd ?? existing?.currentPeriodEnd,
+        paddleSubscriptionId: event.subscriptionId,
+        paddleCustomerId: event.customerId,
+        paddlePriceId: event.priceId,
+        lastPaddleEventAt: event.occurredAt,
+        updatedAt: new Date(),
+      };
+      if (existing)
+        await tx
+          .update(subscriptions)
+          .set(values)
+          .where(eq(subscriptions.id, existing.id));
+      else
+        await tx
+          .insert(subscriptions)
+          .values({ id: crypto.randomUUID(), ...values });
+      return "processed" as const;
+    });
   }
 
   async getVerifiedResponsesCountToday(

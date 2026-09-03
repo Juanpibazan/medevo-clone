@@ -19,12 +19,16 @@ describe("BillingService Unit Tests", () => {
     currentPeriodEnd: new Date(Date.now() + 10000000),
     createdAt: new Date(),
     updatedAt: new Date(),
+    paddleSubscriptionId: "sub_1",
+    paddleCustomerId: "ctm_1",
+    paddlePriceId: "pri_1",
+    lastPaddleEventAt: new Date(),
   };
 
   beforeEach(() => {
     mockRepository = {
       getActiveSubscription: vi.fn(),
-      createOrUpdateSubscription: vi.fn(),
+      processPaddleSubscriptionEvent: vi.fn(),
       getVerifiedResponsesCountToday: vi.fn(),
     };
     service = new BillingService(mockRepository);
@@ -80,22 +84,5 @@ describe("BillingService Unit Tests", () => {
     expect(quota.tier).toBe("free");
     expect(quota.isBlocked).toBe(true);
     expect(quota.answeredToday).toBe(DAILY_LIMIT_FREE + 2);
-  });
-
-  it("should successfully upgrade a user to premium subscription", async () => {
-    vi.mocked(mockRepository.createOrUpdateSubscription).mockImplementation(
-      async (sub) => ({
-        ...sub,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      }),
-    );
-
-    const subscription = await service.upgradeToPremium("user-1");
-
-    expect(subscription.userId).toBe("user-1");
-    expect(subscription.status).toBe("active");
-    expect(subscription.planCode).toBe("premium");
-    expect(mockRepository.createOrUpdateSubscription).toHaveBeenCalledOnce();
   });
 });

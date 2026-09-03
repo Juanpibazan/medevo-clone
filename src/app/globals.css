@@ -628,3 +628,171 @@ h1 {
     animation: none !important;
   }
 }
+
+.pricing-wrap {
+  display: grid;
+  justify-items: center;
+  gap: 1.5rem;
+  padding: clamp(2rem, 6vw, 5rem) 0 6rem;
+}
+.pricing-copy {
+  max-width: 700px;
+  text-align: center;
+}
+.pricing-copy h1 {
+  max-width: 15ch;
+  margin-inline: auto;
+  font-size: clamp(2.5rem, 7vw, 5rem);
+}
+.pricing-copy > p:last-child {
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+.billing-toggle {
+  display: flex;
+  padding: 0.3rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: white;
+  box-shadow: 0 8px 24px rgba(16, 42, 67, 0.07);
+}
+.billing-toggle label {
+  position: relative;
+  cursor: pointer;
+}
+.billing-toggle input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.billing-toggle span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.6rem 1.2rem;
+  background: transparent;
+  color: var(--navy);
+  font-weight: 800;
+}
+.billing-toggle input:checked + span {
+  background: var(--navy);
+  color: white;
+}
+.billing-toggle input:focus-visible + span {
+  outline: 3px solid color-mix(in srgb, var(--teal), white 35%);
+  outline-offset: 2px;
+}
+.pricing-card {
+  position: relative;
+  isolation: isolate;
+  width: min(100%, 480px);
+  overflow: hidden;
+  padding: clamp(1.5rem, 5vw, 2.5rem);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: white;
+  box-shadow: 0 28px 70px rgba(16, 42, 67, 0.14);
+}
+.study-sheet {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  opacity: 0.55;
+  background: linear-gradient(
+    90deg,
+    transparent 52px,
+    rgba(255, 122, 107, 0.22) 53px,
+    transparent 54px
+  );
+}
+.study-sheet span {
+  display: block;
+  height: 42px;
+  border-bottom: 1px solid rgba(11, 127, 120, 0.1);
+}
+.plan-label {
+  display: inline-flex;
+  margin: 0;
+  border-radius: 999px;
+  padding: 0.4rem 0.75rem;
+  background: #e6f5f3;
+  color: #075d58;
+  font-size: 0.8rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.pricing-card h2 {
+  margin: 1.4rem 0 0;
+  font-size: clamp(2.7rem, 10vw, 4.5rem);
+  letter-spacing: -0.06em;
+}
+.period,
+.plan-description,
+.checkout-note {
+  color: var(--muted);
+}
+.period {
+  margin: 0.15rem 0 1.3rem;
+  font-weight: 700;
+}
+.plan-description {
+  line-height: 1.6;
+}
+.pricing-card ul {
+  display: grid;
+  gap: 0.8rem;
+  margin: 1.6rem 0;
+  padding: 0;
+  list-style: none;
+}
+.pricing-card li {
+  display: flex;
+  gap: 0.7rem;
+  align-items: flex-start;
+  font-weight: 700;
+}
+.pricing-card li span {
+  color: var(--teal);
+  font-weight: 900;
+}
+.subscribe-button {
+  width: 100%;
+}
+.checkout-note {
+  margin: 0.85rem 0 0;
+  text-align: center;
+  font-size: 0.78rem;
+}
+.pricing-error {
+  padding: 0.75rem;
+  border-left: 4px solid var(--coral);
+  background: #fff2f0;
+  color: #8a2721;
+}
+.pricing-error button {
+  border: 0;
+  background: transparent;
+  color: var(--teal);
+  font-weight: 900;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.welcome-card {
+  text-align: center;
+}
+.welcome-card h1 {
+  margin-inline: auto;
+}
+.welcome-card p {
+  color: var(--muted);
+  line-height: 1.6;
+}
+.welcome-card .button {
+  margin-top: 1rem;
+}

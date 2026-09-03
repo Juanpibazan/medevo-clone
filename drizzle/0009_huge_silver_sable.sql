@@ -1,0 +1,2 @@
+ALTER TABLE "paddle_webhook_events" ADD COLUMN "subscription_id" text NOT NULL;--> statement-breakpoint
+CREATE INDEX "paddle_webhook_subscription_occurred_idx" ON "paddle_webhook_events" USING btree ("subscription_id","occurred_at");

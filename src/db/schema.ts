@@ -4,6 +4,7 @@ import {
   check,
   date,
   integer,
+  index,
   pgEnum,
   pgTable,
   primaryKey,
@@ -350,6 +351,10 @@ export const subscriptions = pgTable("subscriptions", {
     .references(() => users.id, { onDelete: "cascade" }),
   status: text("status").notNull(), // 'active' | 'cancelled' | 'expired'
   planCode: text("plan_code").notNull().default("premium"),
+  paddleSubscriptionId: text("paddle_subscription_id").unique(),
+  paddleCustomerId: text("paddle_customer_id"),
+  paddlePriceId: text("paddle_price_id"),
+  lastPaddleEventAt: timestamp("last_paddle_event_at", { withTimezone: true }),
   currentPeriodStart: timestamp("current_period_start", {
     withTimezone: true,
   }).notNull(),
@@ -363,6 +368,27 @@ export const subscriptions = pgTable("subscriptions", {
     .notNull()
     .defaultNow(),
 });
+
+export const paddleWebhookEvents = pgTable(
+  "paddle_webhook_events",
+  {
+    eventId: text("event_id").primaryKey(),
+    subscriptionId: text("subscription_id").notNull(),
+    eventType: text("event_type").notNull(),
+    occurredAt: timestamp("occurred_at", { withTimezone: true }).notNull(),
+    processedAt: timestamp("processed_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    outcome: text("outcome", { enum: ["processed", "ignored"] }).notNull(),
+    reason: text("reason"),
+  },
+  (table) => [
+    index("paddle_webhook_subscription_occurred_idx").on(
+      table.subscriptionId,
+      table.occurredAt,
+    ),
+  ],
+);
 
 export const editorialReviews = pgTable("editorial_reviews", {
   id: text("id").primaryKey(),

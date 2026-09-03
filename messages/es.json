@@ -238,6 +238,38 @@
     "modalButton": "Ver Planes y Mejorar",
     "goBack": "Volver a la aplicación"
   },
+  "pricing": {
+    "eyebrow": "Plan Premium MedCiclo",
+    "title": "Un ritmo de estudio que no se corta.",
+    "intro": "Practica, comprende cada error y vuelve a revisar cuando corresponde.",
+    "description": "Todo el ciclo de preparación para Revalida, sin límites diarios.",
+    "features": {
+      "unlimited": "Preguntas ilimitadas",
+      "explanations": "Explicaciones detalladas",
+      "errors": "Cuaderno de errores y revisiones programadas"
+    },
+    "cycleLabel": "Frecuencia de facturación",
+    "month": "Mensual",
+    "year": "Anual",
+    "perMonth": "por mes",
+    "perYear": "por año",
+    "loading": "Consultando precio…",
+    "priceError": "No pudimos consultar el precio localizado.",
+    "retry": "Reintentar",
+    "subscribe": "Suscribirme a Premium",
+    "signInToSubscribe": "Ingresar para suscribirme",
+    "checkoutNote": "Pago seguro procesado por Paddle."
+  },
+  "welcome": {
+    "activeTitle": "Tu Premium está activo",
+    "activeBody": "Tu ciclo completo de estudio ya está disponible.",
+    "goToApp": "Ir a estudiar",
+    "pendingTitle": "Estamos confirmando tu suscripción",
+    "pendingBody": "Paddle ya recibió el pago. Esta página se actualizará automáticamente.",
+    "timeoutTitle": "La confirmación está tardando",
+    "timeoutBody": "Tu pago no se perdió. Espera un momento y vuelve a consultar.",
+    "retry": "Consultar de nuevo"
+  },
   "cadastroConfirmar": {
     "eyebrow": "Verificación de cuenta",
     "title": "¡Casi listo!",

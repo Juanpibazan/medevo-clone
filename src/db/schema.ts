@@ -344,30 +344,166 @@ export const reviewQueue = pgTable("review_queue", {
     .defaultNow(),
 });
 
-export const subscriptions = pgTable("subscriptions", {
-  id: text("id").primaryKey(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
-  status: text("status").notNull(), // 'active' | 'cancelled' | 'expired'
-  planCode: text("plan_code").notNull().default("premium"),
-  paddleSubscriptionId: text("paddle_subscription_id").unique(),
-  paddleCustomerId: text("paddle_customer_id"),
-  paddlePriceId: text("paddle_price_id"),
-  lastPaddleEventAt: timestamp("last_paddle_event_at", { withTimezone: true }),
-  currentPeriodStart: timestamp("current_period_start", {
-    withTimezone: true,
-  }).notNull(),
-  currentPeriodEnd: timestamp("current_period_end", {
-    withTimezone: true,
-  }).notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-});
+export const subscriptions = pgTable(
+  "subscriptions",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    status: text("status").notNull(), // 'active' | 'cancelled' | 'expired'
+    planCode: text("plan_code").notNull().default("premium"),
+    provider: text("provider", { enum: ["paddle", "suby"] })
+      .notNull()
+      .default("paddle"),
+    providerSubscriptionId: text("provider_subscription_id"),
+    providerCustomerId: text("provider_customer_id"),
+    providerProductId: text("provider_product_id"),
+    lastProviderEventAt: timestamp("last_provider_event_at", {
+      withTimezone: true,
+    }),
+    cancelAtPeriodEnd: boolean("cancel_at_period_end").notNull().default(false),
+    cancelsAt: timestamp("cancels_at", { withTimezone: true }),
+    paddleSubscriptionId: text("paddle_subscription_id").unique(),
+    paddleCustomerId: text("paddle_customer_id"),
+    paddlePriceId: text("paddle_price_id"),
+    lastPaddleEventAt: timestamp("last_paddle_event_at", {
+      withTimezone: true,
+    }),
+    currentPeriodStart: timestamp("current_period_start", {
+      withTimezone: true,
+    }),
+    currentPeriodEnd: timestamp("current_period_end", {
+      withTimezone: true,
+    }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    check(
+      "subscriptions_provider_check",
+      sql`${table.provider} in ('paddle', 'suby')`,
+    ),
+    check(
+      "subscriptions_status_check",
+      sql`${table.status} in ('active', 'trialing', 'past_due', 'paused', 'canceled', 'expired', 'incomplete')`,
+    ),
+    uniqueIndex("subscriptions_provider_external_idx").on(
+      table.provider,
+      table.providerSubscriptionId,
+    ),
+    index("subscriptions_user_status_idx").on(table.userId, table.status),
+  ],
+);
+
+export const billingProviderCustomers = pgTable(
+  "billing_provider_customers",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    provider: text("provider", { enum: ["paddle", "suby"] }).notNull(),
+    providerCustomerId: text("provider_customer_id").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    check(
+      "billing_provider_customers_provider_check",
+      sql`${table.provider} in ('paddle', 'suby')`,
+    ),
+    uniqueIndex("billing_provider_customers_external_idx").on(
+      table.provider,
+      table.providerCustomerId,
+    ),
+    uniqueIndex("billing_provider_customers_user_idx").on(
+      table.provider,
+      table.userId,
+    ),
+  ],
+);
+
+export const billingCheckoutAttempts = pgTable(
+  "billing_checkout_attempts",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    provider: text("provider", { enum: ["paddle", "suby"] }).notNull(),
+    billingCycle: text("billing_cycle", { enum: ["month", "year"] }).notNull(),
+    idempotencyKey: text("idempotency_key").notNull().unique(),
+    providerCheckoutId: text("provider_checkout_id"),
+    status: text("status", {
+      enum: ["pending", "created", "failed", "expired"],
+    })
+      .notNull()
+      .default("pending"),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    check(
+      "billing_checkout_attempts_provider_check",
+      sql`${table.provider} in ('paddle', 'suby')`,
+    ),
+    check(
+      "billing_checkout_attempts_cycle_check",
+      sql`${table.billingCycle} in ('month', 'year')`,
+    ),
+    check(
+      "billing_checkout_attempts_status_check",
+      sql`${table.status} in ('pending', 'created', 'failed', 'expired')`,
+    ),
+    index("billing_checkout_attempts_user_idx").on(table.userId),
+  ],
+);
+
+export const billingWebhookEvents = pgTable(
+  "billing_webhook_events",
+  {
+    provider: text("provider", { enum: ["paddle", "suby"] }).notNull(),
+    eventId: text("event_id").notNull(),
+    subscriptionId: text("subscription_id").notNull(),
+    eventType: text("event_type").notNull(),
+    occurredAt: timestamp("occurred_at", { withTimezone: true }).notNull(),
+    processedAt: timestamp("processed_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    outcome: text("outcome", { enum: ["processed", "ignored"] }).notNull(),
+    reason: text("reason"),
+  },
+  (table) => [
+    check(
+      "billing_webhook_events_provider_check",
+      sql`${table.provider} in ('paddle', 'suby')`,
+    ),
+    check(
+      "billing_webhook_events_outcome_check",
+      sql`${table.outcome} in ('processed', 'ignored')`,
+    ),
+    primaryKey({ columns: [table.provider, table.eventId] }),
+    index("billing_webhook_subscription_occurred_idx").on(
+      table.provider,
+      table.subscriptionId,
+      table.occurredAt,
+    ),
+  ],
+);
 
 export const paddleWebhookEvents = pgTable(
   "paddle_webhook_events",

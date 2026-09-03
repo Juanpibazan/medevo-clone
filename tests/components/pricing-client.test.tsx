@@ -6,15 +6,19 @@ import {
   type Tier,
 } from "@/app/[locale]/(public)/pricing/pricing-client";
 
-const { initialize, open, preview } = vi.hoisted(() => ({
+const { initialize, open, preview, startCheckout } = vi.hoisted(() => ({
   initialize: vi.fn(),
   open: vi.fn(),
   preview: vi.fn(),
+  startCheckout: vi.fn(),
 }));
 vi.mock("next-intl", () => ({ useTranslations: () => (key: string) => key }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock("@paddle/paddle-js", () => ({
   initializePaddle: initialize,
+}));
+vi.mock("@/app/[locale]/(public)/pricing/actions", () => ({
+  startCheckoutAction: startCheckout,
 }));
 
 const tier: Tier = {
@@ -51,7 +55,6 @@ describe("PricingClient", () => {
         locale="es"
         clientToken="test_token"
         paddleEnvironment="sandbox"
-        appUrl="https://medevo-clone.vercel.app"
       />,
     );
 
@@ -89,12 +92,7 @@ describe("PricingClient", () => {
         locale="pt-BR"
         clientToken="test_token"
         paddleEnvironment="sandbox"
-        appUrl="https://medevo-clone.vercel.app"
-        user={{ id: "user-1", email: "student@example.test" }}
-        checkoutCustomData={{
-          app_user_id: "user-1",
-          app_user_signature: "signed-user-1",
-        }}
+        isAuthenticated
       />,
     );
     await waitFor(() =>
@@ -112,6 +110,19 @@ describe("PricingClient", () => {
     expect(screen.getByRole("heading", { level: 2 }).textContent).toBe(
       "R$ 49,90",
     );
+    startCheckout.mockResolvedValue({
+      kind: "paddle_overlay",
+      provider: "paddle",
+      priceId: "pri_month",
+      clientToken: "test_token",
+      environment: "sandbox",
+      successUrl: "https://medevo-clone.vercel.app/pt-BR/welcome",
+      customerEmail: "student@example.test",
+      customData: {
+        app_user_id: "user-1",
+        app_user_signature: "signed-user-1",
+      },
+    });
     await user.click(screen.getByRole("button", { name: "subscribe" }));
     await waitFor(() =>
       expect(open).toHaveBeenCalledWith({
@@ -124,7 +135,7 @@ describe("PricingClient", () => {
         settings: {
           displayMode: "overlay",
           variant: "one-page",
-          successUrl: "https://medevo-clone.vercel.app/welcome",
+          successUrl: "https://medevo-clone.vercel.app/pt-BR/welcome",
           locale: "pt",
         },
       }),

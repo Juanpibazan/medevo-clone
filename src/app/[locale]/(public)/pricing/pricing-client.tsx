@@ -3,6 +3,9 @@ import { initializePaddle, type Paddle } from "@paddle/paddle-js";
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+import type { BillingProvider } from "@/modules/billing/domain/billing";
+import { startCheckoutAction } from "./actions";
+
 export interface Tier {
   name: "Premium";
   description: string;
@@ -15,10 +18,7 @@ let paddlePromise: Promise<Paddle | undefined> | undefined;
 async function getPaddle(clientToken: string, environment: "sandbox") {
   const pending =
     paddlePromise ??
-    (paddlePromise = initializePaddle({
-      environment,
-      token: clientToken,
-    }));
+    (paddlePromise = initializePaddle({ environment, token: clientToken }));
   try {
     return await pending;
   } catch (error) {
@@ -43,43 +43,53 @@ export function mapPreviewTotals(paddle: Paddle | undefined, tier: Tier) {
         item.formattedTotals.total,
       ]),
     );
-    if (!totals[tier.priceId.month] || !totals[tier.priceId.year]) {
+    if (!totals[tier.priceId.month] || !totals[tier.priceId.year])
       throw new Error("Paddle did not return every requested price");
-    }
     return totals;
   };
 }
+
 export function PricingClient({
   tier,
   locale,
   countryCode,
   clientToken,
   paddleEnvironment,
-  appUrl,
-  user,
-  checkoutCustomData,
+  isAuthenticated,
+  paddleAvailable = true,
+  checkoutBlocked = false,
+  suby,
 }: {
   tier: Tier;
   locale: "pt-BR" | "es";
   countryCode?: string;
-  clientToken: string;
+  clientToken?: string;
   paddleEnvironment: "sandbox";
-  appUrl: string;
-  user?: { id: string; email: string };
-  checkoutCustomData?: {
-    app_user_id: string;
-    app_user_signature: string;
+  isAuthenticated?: boolean;
+  paddleAvailable?: boolean;
+  checkoutBlocked?: boolean;
+  suby?: {
+    available: boolean;
+    prices?: { month: string; year: string };
   };
 }) {
   const t = useTranslations("pricing");
   const router = useRouter();
   const [cycle, setCycle] = useState<Cycle>("year");
+  const [provider, setProvider] = useState<BillingProvider>(() =>
+    paddleAvailable ? "paddle" : suby?.available ? "suby" : "paddle",
+  );
   const [prices, setPrices] = useState<Record<string, string>>({});
   const [paddle, setPaddle] = useState<Paddle>();
   const [state, setState] = useState<"loading" | "ready" | "error">("loading");
+  const [submitting, setSubmitting] = useState(false);
+  const [checkoutError, setCheckoutError] = useState(false);
+  const authenticated = Boolean(isAuthenticated);
+
   const load = async () => {
     setState("loading");
     try {
+      if (!clientToken) throw new Error("Paddle unavailable");
       const instance = await getPaddle(clientToken, paddleEnvironment);
       setPaddle(instance);
       setPrices(await mapPreviewTotals(instance, tier)(countryCode));
@@ -90,8 +100,9 @@ export function PricingClient({
   };
   useEffect(() => {
     let cancelled = false;
-    async function initialize() {
+    void (async () => {
       try {
+        if (!clientToken) throw new Error("Paddle unavailable");
         const instance = await getPaddle(clientToken, paddleEnvironment);
         const totals = await mapPreviewTotals(instance, tier)(countryCode);
         if (!cancelled) {
@@ -102,35 +113,47 @@ export function PricingClient({
       } catch {
         if (!cancelled) setState("error");
       }
-    }
-    void initialize();
+    })();
     return () => {
       cancelled = true;
     };
   }, [clientToken, countryCode, paddleEnvironment, tier]);
+
   const priceId = tier.priceId[cycle];
-  const subscribe = () => {
-    if (!user || !checkoutCustomData) {
+  const subscribe = async () => {
+    if (!authenticated) {
       router.push(
         `/${locale}/entrar?callbackUrl=${encodeURIComponent(`/${locale}/pricing`)}`,
       );
       return;
     }
-    paddle?.Checkout.open({
-      items: [{ priceId, quantity: 1 }],
-      customer: {
-        email: user.email,
-        ...(countryCode ? { address: { countryCode } } : {}),
-      },
-      customData: checkoutCustomData,
-      settings: {
-        displayMode: "overlay",
-        variant: "one-page",
-        successUrl: `${appUrl}/welcome`,
-        locale: locale === "pt-BR" ? "pt" : "es",
-      },
-    });
+    setSubmitting(true);
+    setCheckoutError(false);
+    try {
+      const result = await startCheckoutAction({ provider, cycle, locale });
+      if (result.kind === "hosted_redirect") {
+        window.location.assign(result.url);
+        return;
+      }
+      const instance = await getPaddle(result.clientToken, result.environment);
+      instance?.Checkout.open({
+        items: [{ priceId: result.priceId, quantity: 1 }],
+        customer: { email: result.customerEmail },
+        customData: result.customData,
+        settings: {
+          displayMode: "overlay",
+          variant: "one-page",
+          successUrl: result.successUrl,
+          locale: locale === "pt-BR" ? "pt" : "es",
+        },
+      });
+    } catch {
+      setCheckoutError(true);
+    } finally {
+      setSubmitting(false);
+    }
   };
+
   return (
     <section className="pricing-wrap" aria-labelledby="pricing-title">
       <div className="pricing-copy">
@@ -138,11 +161,11 @@ export function PricingClient({
         <h1 id="pricing-title">{t("title")}</h1>
         <p>{t("intro")}</p>
       </div>
-      <div
+      <fieldset
         className="billing-toggle"
-        role="radiogroup"
-        aria-label={t("cycleLabel")}
+        disabled={submitting || checkoutBlocked}
       >
+        <legend className="sr-only">{t("cycleLabel")}</legend>
         {(["month", "year"] as const).map((value) => (
           <label key={value}>
             <input
@@ -150,26 +173,61 @@ export function PricingClient({
               name="billing-cycle"
               value={value}
               checked={cycle === value}
-              onChange={() => setCycle(value)}
+              onChange={() => {
+                setCycle(value);
+                setCheckoutError(false);
+              }}
             />
             <span>{t(value)}</span>
           </label>
         ))}
-      </div>
+      </fieldset>
+      <fieldset
+        className="billing-toggle provider-toggle"
+        disabled={submitting || checkoutBlocked}
+      >
+        <legend className="sr-only">{t("providerLabel")}</legend>
+        <label>
+          <input
+            type="radio"
+            name="billing-provider"
+            value="paddle"
+            checked={provider === "paddle"}
+            onChange={() => {
+              setProvider("paddle");
+              setCheckoutError(false);
+            }}
+          />
+          <span>{t("providers.paddle")}</span>
+        </label>
+        {suby && (
+          <label>
+            <input
+              type="radio"
+              name="billing-provider"
+              value="suby"
+              checked={provider === "suby"}
+              onChange={() => {
+                setProvider("suby");
+                setCheckoutError(false);
+              }}
+            />
+            <span>{t("providers.suby")}</span>
+          </label>
+        )}
+      </fieldset>
       <article className="pricing-card">
-        <div className="study-sheet" aria-hidden="true">
-          <span />
-          <span />
-          <span />
-          <span />
-        </div>
         <p className="plan-label">{tier.name}</p>
         <h2 aria-live="polite">
-          {state === "ready"
-            ? prices[priceId]
-            : state === "error"
-              ? "—"
-              : t("loading")}
+          {provider === "suby"
+            ? suby?.available
+              ? suby.prices?.[cycle]
+              : "—"
+            : state === "ready"
+              ? prices[priceId]
+              : state === "error"
+                ? "—"
+                : t("loading")}
         </h2>
         <p className="period">
           {t(cycle === "month" ? "perMonth" : "perYear")}
@@ -183,7 +241,7 @@ export function PricingClient({
             </li>
           ))}
         </ul>
-        {state === "error" && (
+        {provider === "paddle" && state === "error" && (
           <p role="alert" className="pricing-error">
             {t("priceError")}{" "}
             <button type="button" onClick={() => void load()}>
@@ -191,15 +249,49 @@ export function PricingClient({
             </button>
           </p>
         )}
+        {provider === "suby" && !suby?.available && (
+          <p role="alert" className="pricing-error">
+            {t("providerUnavailable")}
+          </p>
+        )}
+        {provider === "suby" && suby?.available && (
+          <p className="checkout-note">{t("subyTaxNote")}</p>
+        )}
+        {checkoutError && (
+          <p role="alert" className="pricing-error">
+            {t("checkoutError")}
+          </p>
+        )}
+        {checkoutBlocked && (
+          <p className="pricing-error">
+            {t("checkoutBlocked")}{" "}
+            <a href={`/${locale}/app/billing`}>{t("manageSubscription")}</a>
+          </p>
+        )}
         <button
           className="button subscribe-button"
           type="button"
-          disabled={state !== "ready" || !paddle}
-          onClick={subscribe}
+          disabled={
+            submitting ||
+            checkoutBlocked ||
+            (provider === "paddle" &&
+              (!paddleAvailable || state !== "ready" || !paddle)) ||
+            (provider === "suby" && !suby?.available)
+          }
+          onClick={() => void subscribe()}
         >
-          {user ? t("subscribe") : t("signInToSubscribe")}
+          {checkoutBlocked
+            ? t("alreadySubscribed")
+            : submitting
+              ? t("startingCheckout")
+              : authenticated
+                ? t("subscribe")
+                : t("signInToSubscribe")}
         </button>
-        <p className="checkout-note">{t("checkoutNote")}</p>
+        <p className="checkout-note">
+          {provider === "paddle" ? t("checkoutNote") : t("subyCheckoutNote")}
+        </p>
+        <p className="checkout-note">{t("renewalNote")}</p>
       </article>
     </section>
   );

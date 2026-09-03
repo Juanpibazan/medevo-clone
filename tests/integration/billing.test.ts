@@ -14,6 +14,7 @@ import {
   responses,
   subscriptions,
   paddleWebhookEvents,
+  billingWebhookEvents,
 } from "@/db/schema";
 import { billingService } from "@/modules/billing";
 import { DrizzleBillingRepository } from "@/modules/billing/infrastructure/drizzle-billing-repository";
@@ -44,17 +45,20 @@ describe("Billing & Subscription Integration Tests", () => {
       const now = new Date();
       const repository = new DrizzleBillingRepository();
       const paddleEvent = {
+        provider: "paddle",
         eventId: `evt_${userId}`,
         eventType: "subscription.activated",
         occurredAt: now,
         subscriptionId: `sub_${userId}`,
         customerId: `ctm_${userId}`,
         userId,
-        priceId: "pri_test",
+        productId: "pri_test",
         quantity: 1,
         status: "active",
         currentPeriodStart: now,
-        currentPeriodEnd: new Date(now.getTime() + 86_400_000),
+        accessEndsAt: new Date(now.getTime() + 86_400_000),
+        cancelAtPeriodEnd: false,
+        cancelsAt: null,
       } as const;
       expect(
         await repository.processPaddleSubscriptionEvent({
@@ -65,7 +69,7 @@ describe("Billing & Subscription Integration Tests", () => {
           subscriptionId: `sub_terminal_${userId}`,
           status: "canceled",
           currentPeriodStart: null,
-          currentPeriodEnd: null,
+          accessEndsAt: null,
         }),
       ).toBe("ignored");
       expect(
@@ -93,7 +97,7 @@ describe("Billing & Subscription Integration Tests", () => {
           subscriptionId: `sub_race_${userId}`,
           status: "canceled",
           currentPeriodStart: null,
-          currentPeriodEnd: null,
+          accessEndsAt: null,
         }),
       ]);
       expect(await billingService.getActiveSubscription(userId)).toBeNull();
@@ -121,7 +125,7 @@ describe("Billing & Subscription Integration Tests", () => {
           occurredAt: new Date(now.getTime() + 1000),
           status: "paused",
           currentPeriodStart: null,
-          currentPeriodEnd: null,
+          accessEndsAt: null,
         }),
       ).toBe("processed");
 
@@ -169,6 +173,260 @@ describe("Billing & Subscription Integration Tests", () => {
           ]),
         );
       await db.delete(users).where(eq(users.id, userId));
+    }
+  });
+
+  it("provisions Suby by customer link and deduplicates events per provider", async () => {
+    const userId = randomUUID();
+    const sharedEventId = `evt_shared_${userId}`;
+    const unknownEventId = `evt_unknown_${userId}`;
+    const unknownProductEventId = `evt_unknown_product_${userId}`;
+    const now = new Date();
+    const repository = new DrizzleBillingRepository();
+    try {
+      await db.insert(users).values({
+        id: userId,
+        name: "Multi-provider Student",
+        email: `${userId}@example.test`,
+      });
+      await repository.linkProviderCustomer(userId, "suby", `cus_${userId}`);
+      const subyEvent = {
+        provider: "suby",
+        eventId: sharedEventId,
+        eventType: "subscription.created",
+        occurredAt: now,
+        subscriptionId: `sub_suby_${userId}`,
+        customerId: `cus_${userId}`,
+        productId: "pro_month",
+        quantity: 1,
+        status: "active",
+        currentPeriodStart: null,
+        accessEndsAt: new Date(now.getTime() + 86_400_000),
+        cancelAtPeriodEnd: false,
+        cancelsAt: null,
+      } as const;
+      expect(await repository.processSubscriptionEvent(subyEvent)).toBe(
+        "processed",
+      );
+      expect(await repository.processSubscriptionEvent(subyEvent)).toBe(
+        "duplicate",
+      );
+      expect(
+        await repository.processPaddleSubscriptionEvent({
+          ...subyEvent,
+          provider: "paddle",
+          eventType: "subscription.activated",
+          subscriptionId: `sub_paddle_${userId}`,
+          customerId: `ctm_${userId}`,
+          productId: "pri_month",
+          userId,
+          currentPeriodStart: now,
+        }),
+      ).toBe("processed");
+      expect(
+        await repository.processSubscriptionEvent({
+          ...subyEvent,
+          eventId: unknownEventId,
+          subscriptionId: `sub_unknown_${userId}`,
+          customerId: "cus_unknown",
+        }),
+      ).toBe("ignored");
+      await repository.recordIgnoredWebhookEvent(
+        {
+          ...subyEvent,
+          eventId: unknownProductEventId,
+          productId: "pro_foreign",
+        },
+        "unknown_product",
+      );
+      const events = await db
+        .select()
+        .from(billingWebhookEvents)
+        .where(
+          inArray(billingWebhookEvents.eventId, [
+            sharedEventId,
+            unknownEventId,
+            unknownProductEventId,
+          ]),
+        );
+      expect(
+        events.filter((event) => event.eventId === sharedEventId),
+      ).toHaveLength(2);
+      expect(
+        events.find((event) => event.eventId === unknownEventId)?.reason,
+      ).toBe("unknown_customer");
+      expect(
+        events.find((event) => event.eventId === unknownProductEventId)?.reason,
+      ).toBe("unknown_product");
+
+      const cancelsAt = new Date(now.getTime() + 86_400_000);
+      expect(
+        await repository.processSubscriptionEvent({
+          ...subyEvent,
+          eventId: `evt_cancel_${userId}`,
+          eventType: "subscription.updated",
+          occurredAt: new Date(now.getTime() + 1000),
+          cancelAtPeriodEnd: true,
+          cancelsAt,
+        }),
+      ).toBe("processed");
+      const subySubscription = (
+        await repository.getUserSubscriptions(userId)
+      ).find((subscription) => subscription.provider === "suby");
+      expect(subySubscription).toMatchObject({
+        status: "active",
+        cancelAtPeriodEnd: true,
+        cancelsAt,
+      });
+      expect(
+        await repository.processSubscriptionEvent({
+          ...subyEvent,
+          eventId: `evt_optional_cancel_${userId}`,
+          eventType: "subscription.renewed",
+          occurredAt: new Date(now.getTime() + 2000),
+          cancelAtPeriodEnd: undefined,
+          cancelsAt: undefined,
+        }),
+      ).toBe("processed");
+      expect(
+        (await repository.getUserSubscriptions(userId)).find(
+          (subscription) => subscription.provider === "suby",
+        ),
+      ).toMatchObject({ cancelAtPeriodEnd: true, cancelsAt });
+    } finally {
+      await db.delete(subscriptions).where(eq(subscriptions.userId, userId));
+      await db
+        .delete(billingWebhookEvents)
+        .where(
+          inArray(billingWebhookEvents.eventId, [
+            sharedEventId,
+            unknownEventId,
+            unknownProductEventId,
+            `evt_cancel_${userId}`,
+            `evt_optional_cancel_${userId}`,
+          ]),
+        );
+      await db
+        .delete(paddleWebhookEvents)
+        .where(eq(paddleWebhookEvents.eventId, sharedEventId));
+      await db.delete(users).where(eq(users.id, userId));
+    }
+  });
+
+  it("keeps legacy Premium rows readable and blocks a second checkout", async () => {
+    const userId = randomUUID();
+    const repository = new DrizzleBillingRepository();
+    try {
+      await db.insert(users).values({
+        id: userId,
+        name: "Legacy Billing Student",
+        email: `${userId}@example.test`,
+      });
+      await db.insert(subscriptions).values({
+        id: randomUUID(),
+        userId,
+        status: "active",
+        currentPeriodEnd: new Date(Date.now() + 86_400_000),
+      });
+
+      const active = await billingService.getActiveSubscription(userId);
+      expect(active).toMatchObject({
+        userId,
+        status: "active",
+        providerSubscriptionId: null,
+        providerCustomerId: null,
+        providerProductId: null,
+      });
+      expect(
+        await repository.reserveCheckoutAttempt(userId, "suby", "month"),
+      ).toMatchObject({ kind: "blocked" });
+      expect((await billingService.checkDailyQuota(userId)).tier).toBe(
+        "premium",
+      );
+    } finally {
+      await db.delete(subscriptions).where(eq(subscriptions.userId, userId));
+      await db.delete(users).where(eq(users.id, userId));
+    }
+  });
+
+  it("keeps a Paddle attempt pending to block delayed cross-provider purchases", async () => {
+    const userId = randomUUID();
+    const repository = new DrizzleBillingRepository();
+    try {
+      await db.insert(users).values({
+        id: userId,
+        name: "Checkout Retry Student",
+        email: `${userId}@example.test`,
+      });
+      expect(
+        await repository.reserveCheckoutAttempt(userId, "paddle", "year"),
+      ).toMatchObject({ kind: "created" });
+      expect(await repository.getPendingCheckoutAttempt(userId)).toMatchObject({
+        provider: "paddle",
+        billingCycle: "year",
+      });
+
+      expect(
+        await repository.reserveCheckoutAttempt(userId, "suby", "month"),
+      ).toMatchObject({ kind: "blocked" });
+    } finally {
+      await db.delete(users).where(eq(users.id, userId));
+    }
+  });
+
+  it("rejects a Paddle customer already linked to another user", async () => {
+    const ownerId = randomUUID();
+    const otherId = randomUUID();
+    const customerId = `ctm_${ownerId}`;
+    const eventId = `evt_owner_${ownerId}`;
+    const repository = new DrizzleBillingRepository();
+    try {
+      await db.insert(users).values([
+        {
+          id: ownerId,
+          name: "Billing Customer Owner",
+          email: `${ownerId}@example.test`,
+        },
+        {
+          id: otherId,
+          name: "Other Billing Customer",
+          email: `${otherId}@example.test`,
+        },
+      ]);
+      await repository.linkProviderCustomer(ownerId, "paddle", customerId);
+      const now = new Date();
+      expect(
+        await repository.processPaddleSubscriptionEvent({
+          provider: "paddle",
+          eventId,
+          eventType: "subscription.created",
+          occurredAt: now,
+          subscriptionId: `sub_${otherId}`,
+          customerId,
+          userId: otherId,
+          productId: "pri_month",
+          quantity: 1,
+          status: "active",
+          currentPeriodStart: now,
+          accessEndsAt: new Date(now.getTime() + 86_400_000),
+          cancelAtPeriodEnd: false,
+          cancelsAt: null,
+        }),
+      ).toBe("ignored");
+      expect(await repository.getUserSubscriptions(otherId)).toHaveLength(0);
+      expect(
+        (
+          await db
+            .select()
+            .from(billingWebhookEvents)
+            .where(eq(billingWebhookEvents.eventId, eventId))
+        )[0]?.reason,
+      ).toBe("customer_ownership_mismatch");
+    } finally {
+      await db
+        .delete(billingWebhookEvents)
+        .where(eq(billingWebhookEvents.eventId, eventId));
+      await db.delete(users).where(inArray(users.id, [ownerId, otherId]));
     }
   });
 

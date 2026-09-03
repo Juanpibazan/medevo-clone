@@ -42,7 +42,7 @@ export async function StudentHeader({
   }
 
   return (
-    <header className="site-header">
+    <header className="site-header site-header-authenticated">
       <Link href="/app" aria-label={t("home")}>
         <Brand alt={t("logoAlt")} />
       </Link>

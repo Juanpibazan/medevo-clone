@@ -22,7 +22,7 @@ export async function POST(request: Request) {
   if (
     event.quantity !== 1 ||
     ![config.PADDLE_MONTHLY_PRICE_ID, config.PADDLE_YEARLY_PRICE_ID].includes(
-      event.priceId,
+      event.productId,
     )
   )
     return new Response("Ignored", { status: 200 });

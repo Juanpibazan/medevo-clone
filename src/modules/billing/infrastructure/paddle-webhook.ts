@@ -5,6 +5,7 @@ import { getPaddleConfig } from "./paddle-config";
 import {
   PADDLE_SUBSCRIPTION_EVENTS,
   type PaddleSubscriptionEvent,
+  normalizeSubscriptionStatus,
 } from "../domain/billing";
 import { verifyPaddleCheckoutUser } from "./paddle-checkout-signature";
 
@@ -19,6 +20,10 @@ const dataSchema = z.object({
   currentBillingPeriod: z
     .object({ startsAt: z.string(), endsAt: z.string() })
     .nullable(),
+  scheduledChange: z
+    .object({ action: z.string(), effectiveAt: z.string() })
+    .nullable()
+    .optional(),
 });
 
 export async function verifyAndMapPaddleEvent(
@@ -59,20 +64,26 @@ export async function verifyAndMapPaddleEvent(
   const item = data.items[0];
   if (!item) return null;
   return {
+    provider: "paddle",
     eventId: event.eventId,
     eventType: event.eventType as PaddleSubscriptionEvent["eventType"],
     occurredAt: new Date(event.occurredAt),
     subscriptionId: data.id,
     customerId: data.customerId,
     userId,
-    priceId: item.price.id,
+    productId: item.price.id,
     quantity: item.quantity,
-    status: data.status,
+    status: normalizeSubscriptionStatus(data.status),
     currentPeriodStart: data.currentBillingPeriod
       ? new Date(data.currentBillingPeriod.startsAt)
       : null,
-    currentPeriodEnd: data.currentBillingPeriod
+    accessEndsAt: data.currentBillingPeriod
       ? new Date(data.currentBillingPeriod.endsAt)
       : null,
+    cancelAtPeriodEnd: data.scheduledChange?.action === "cancel",
+    cancelsAt:
+      data.scheduledChange?.action === "cancel"
+        ? new Date(data.scheduledChange.effectiveAt)
+        : null,
   };
 }

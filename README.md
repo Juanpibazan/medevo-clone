@@ -35,3 +35,11 @@ El monolito modular usa App Router. Identidad se divide en dominio, aplicación 
 Las ramas son cortas y nacen de `main`; una revisión integra cambios verificados. No se hace commit, merge ni despliegue de forma automática desde este bootstrap.
 
 Consulta `docs/adr` para las decisiones y `CONTEXTO_CODEX_MEDEVO_CLONE.md` para el alcance del producto. No uses contenido propietario de terceros.
+
+## Billing sandbox
+
+Paddle permanece como proveedor principal. Suby v3-beta puede habilitarse con `SUBY_ENABLED=true` después de configurar una clave sandbox, secreto de webhook y dos productos recurrentes USD (`pro_…`). Los precios son sin IVA y el checkout añade el impuesto. El endpoint de Suby es `/api/suby/webhook`; debe suscribirse a los seis eventos `subscription.*` documentados en el ADR 0005.
+
+Despliegue seguro: aplicar primero las migraciones 0010 y 0011, desplegar con Suby desactivado, probar checkout y webhook sandbox, y habilitar el flag. Para rollback, desactivar Suby; no se borran suscripciones, vínculos, intentos ni eventos. Nunca registrar secretos, payloads completos o datos de pago.
+
+Un intento de checkout permanece reservado durante 30 minutos o hasta que un webhook confirme la suscripción. Tras cerrar Paddle no se libera desde el navegador: durante esa ventana `/app/billing` muestra la confirmación pendiente y bloquea otra compra para evitar dobles cargos si el webhook llega tarde.

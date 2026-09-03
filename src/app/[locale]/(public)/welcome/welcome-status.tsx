@@ -26,31 +26,36 @@ export function WelcomeStatus({
   }, [active, attempt, router]);
   if (active)
     return (
-      <>
+      <div role="status" aria-live="polite" aria-atomic="true">
         <h1>{t("activeTitle")}</h1>
         <p>{t("activeBody")}</p>
         <a className="button" href={`/${locale}/app`}>
           {t("goToApp")}
         </a>
-      </>
+      </div>
     );
   return (
-    <>
+    <div role="status" aria-live="polite" aria-atomic="true">
       <h1>{timedOut ? t("timeoutTitle") : t("pendingTitle")}</h1>
       <p>{timedOut ? t("timeoutBody") : t("pendingBody")}</p>
       {timedOut && (
-        <button
-          className="button"
-          type="button"
-          onClick={() => {
-            setTimedOut(false);
-            setAttempt((current) => current + 1);
-            router.refresh();
-          }}
-        >
-          {t("retry")}
-        </button>
+        <div className="nav-actions">
+          <button
+            className="button"
+            type="button"
+            onClick={() => {
+              setTimedOut(false);
+              setAttempt((current) => current + 1);
+              router.refresh();
+            }}
+          >
+            {t("retry")}
+          </button>
+          <a className="secondary-button" href={`/${locale}/app/billing`}>
+            {t("manage")}
+          </a>
+        </div>
       )}
-    </>
+    </div>
   );
 }

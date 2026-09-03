@@ -71,6 +71,20 @@
       "when": 1788398977060,
       "tag": "0009_huge_silver_sable",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1788461276447,
+      "tag": "0010_loving_sasquatch",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1788472638687,
+      "tag": "0011_productive_beast",
+      "breakpoints": true
     }
   ]
 }

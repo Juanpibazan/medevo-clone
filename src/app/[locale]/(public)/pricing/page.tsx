@@ -32,7 +32,7 @@ export default async function PricingPage({
   };
   return (
     <main className="shell">
-      <SiteHeader />
+      <SiteHeader isAuthenticated={Boolean(session)} />
       <PricingClient
         tier={tier}
         locale={locale}

@@ -20,7 +20,7 @@ export default async function WelcomePage({
   );
   return (
     <main className="shell">
-      <SiteHeader />
+      <SiteHeader isAuthenticated />
       <section className="auth-wrap">
         <div className="card welcome-card">
           <WelcomeStatus active={active} locale={locale} />

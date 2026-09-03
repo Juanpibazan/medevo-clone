@@ -111,6 +111,36 @@ test("registers, resumes onboarding, blocks skips and shows the real summary", a
   await expect(page.getByText("5 h por semana")).toBeVisible();
   expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
 
+  await page.goto("/es/pricing");
+  const pricingHeader = page.getByRole("banner");
+  await expect(
+    pricingHeader.getByRole("link", { name: "Ir al panel", exact: true }),
+  ).toHaveAttribute("href", "/es/app");
+  await expect(
+    pricingHeader.getByRole("link", { name: "MedCiclo: Ir al panel" }),
+  ).toHaveAttribute("href", "/es/app");
+  await expect(
+    pricingHeader.getByRole("button", { name: "Cerrar sesión" }),
+  ).toBeVisible();
+  await expect(
+    pricingHeader.getByRole("link", { name: "Ingresar" }),
+  ).toHaveCount(0);
+  await expect(
+    pricingHeader.getByRole("link", { name: "Crear cuenta" }),
+  ).toHaveCount(0);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+  expect(
+    (await new AxeBuilder({ page }).include("header").analyze()).violations,
+  ).toEqual([]);
+  await pricingHeader
+    .getByRole("link", { name: "Ir al panel", exact: true })
+    .click();
+  await expect(page).toHaveURL(/\/es\/app$/);
+
   await page.locator('select[name="locale"]').selectOption("pt-BR");
   await expect(page).toHaveURL(/\/pt-BR\/app$/);
   await expect(

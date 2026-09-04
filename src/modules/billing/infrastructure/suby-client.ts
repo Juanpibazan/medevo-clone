@@ -48,7 +48,11 @@ export class SubyClient {
   private async call<T extends z.ZodType>(
     path: string,
     schema: T,
-    options: { method?: "GET" | "POST"; body?: unknown; key?: string } = {},
+    options: {
+      method?: "GET" | "POST" | "PATCH";
+      body?: unknown;
+      key?: string;
+    } = {},
   ): Promise<z.infer<T>> {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 8_000);
@@ -77,12 +81,30 @@ export class SubyClient {
     }
   }
 
-  createCustomer(email: string, idempotencyKey: string) {
+  createCustomer(
+    input: string | { email: string; firstName?: string; lastName?: string },
+    idempotencyKey: string,
+  ) {
+    const payload = typeof input === "string" ? { email: input } : input;
     return this.call("/v3/customers", customerSchema, {
       method: "POST",
       key: `${idempotencyKey}:customer`,
-      body: { email },
+      body: payload,
     });
+  }
+
+  updateCustomer(
+    customerId: string,
+    input: { firstName: string; lastName: string },
+  ) {
+    return this.call(
+      `/v3/customers/${encodeURIComponent(customerId)}`,
+      customerSchema,
+      {
+        method: "PATCH",
+        body: input,
+      },
+    );
   }
 
   createCheckout(input: {

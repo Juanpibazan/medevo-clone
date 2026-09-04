@@ -96,6 +96,61 @@ describe("Suby sandbox boundaries", () => {
     });
   });
 
+  it("creates and updates customer with firstName and lastName", async () => {
+    const parsed = parseSubyConfig(validConfig);
+    if (!parsed.enabled) throw new Error("Expected enabled Suby config");
+    const createRequest = vi.fn().mockResolvedValue(
+      Response.json({
+        success: true,
+        data: { id: "cus_123" },
+      }),
+    );
+    const client = new SubyClient(parsed, createRequest);
+    const customer = await client.createCustomer(
+      { email: "user@example.com", firstName: "Juan", lastName: "Pérez" },
+      "att-1",
+    );
+    expect(customer.id).toBe("cus_123");
+    const [createUrl, createInit] = createRequest.mock.calls[0] as [
+      URL,
+      RequestInit,
+    ];
+    expect(createUrl.toString()).toBe("https://api.beta.suby.fi/v3/customers");
+    expect(createInit.method).toBe("POST");
+    expect(createInit.headers).toMatchObject({
+      "Idempotency-Key": "att-1:customer",
+    });
+    expect(JSON.parse(String(createInit.body))).toEqual({
+      email: "user@example.com",
+      firstName: "Juan",
+      lastName: "Pérez",
+    });
+
+    const updateRequest = vi.fn().mockResolvedValue(
+      Response.json({
+        success: true,
+        data: { id: "cus_123" },
+      }),
+    );
+    const updateClient = new SubyClient(parsed, updateRequest);
+    await updateClient.updateCustomer("cus_123", {
+      firstName: "Juan Carlos",
+      lastName: "Pérez",
+    });
+    const [updateUrl, updateInit] = updateRequest.mock.calls[0] as [
+      URL,
+      RequestInit,
+    ];
+    expect(updateUrl.toString()).toBe(
+      "https://api.beta.suby.fi/v3/customers/cus_123",
+    );
+    expect(updateInit.method).toBe("PATCH");
+    expect(JSON.parse(String(updateInit.body))).toEqual({
+      firstName: "Juan Carlos",
+      lastName: "Pérez",
+    });
+  });
+
   it("only accepts the configured USD product with a positive integer price", async () => {
     const parsed = parseSubyConfig(validConfig);
     if (!parsed.enabled) throw new Error("Expected enabled Suby config");

@@ -48,7 +48,8 @@ test("registers, resumes onboarding, blocks skips and shows the real summary", a
   const password = "a-secure-e2e-password";
 
   await page.goto("/es/cadastro");
-  await page.getByLabel("Nombre").fill("Estudiante E2E");
+  await page.getByLabel("Nombre").fill("Estudiante");
+  await page.getByLabel("Apellido").fill("E2E");
   await page.getByLabel("Correo electrónico").fill(email);
   await page.getByLabel("Contraseña").fill(password);
   await page.getByRole("button", { name: "Crear mi cuenta" }).click();

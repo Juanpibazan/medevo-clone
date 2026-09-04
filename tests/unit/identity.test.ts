@@ -34,6 +34,34 @@ describe("identity contracts", () => {
       }).success,
     ).toBe(false);
   });
+  it("accepts firstName and lastName and rejects incomplete names", () => {
+    expect(
+      registrationSchema.safeParse({
+        firstName: "Ana",
+        lastName: "García",
+        email: "ana@example.com",
+        password: "123456789012",
+        locale: "es",
+      }).success,
+    ).toBe(true);
+    expect(
+      registrationSchema.safeParse({
+        firstName: "A",
+        lastName: "García",
+        email: "ana@example.com",
+        password: "123456789012",
+        locale: "es",
+      }).success,
+    ).toBe(false);
+    expect(
+      registrationSchema.safeParse({
+        firstName: "Ana",
+        email: "ana@example.com",
+        password: "123456789012",
+        locale: "es",
+      }).success,
+    ).toBe(false);
+  });
   it("only accepts internal localized callbacks", () => {
     expect(sanitizeLocalizedCallback("/es/app?tab=1", "es")).toBe(
       "/es/app?tab=1",

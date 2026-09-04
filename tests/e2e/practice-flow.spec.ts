@@ -10,7 +10,8 @@ test("complete practice and review flow", async ({ page }, testInfo) => {
 
   // 1. Sign up a new user
   await page.goto("/es/cadastro");
-  await page.getByLabel("Nombre").fill("Estudiante de Práctica");
+  await page.getByLabel("Nombre").fill("Estudiante");
+  await page.getByLabel("Apellido").fill("de Práctica");
   await page.getByLabel("Correo electrónico").fill(email);
   await page.getByLabel("Contraseña").fill(password);
   await page.getByRole("button", { name: "Crear mi cuenta" }).click();
@@ -101,7 +102,8 @@ test("cascading taxonomy filtering practice flow", async ({
 
   // 1. Sign up and verify email
   await page.goto("/es/cadastro");
-  await page.getByLabel("Nombre").fill("Filtros Student");
+  await page.getByLabel("Nombre").fill("Filtros");
+  await page.getByLabel("Apellido").fill("Student");
   await page.getByLabel("Correo electrónico").fill(email);
   await page.getByLabel("Contraseña").fill(password);
   await page.getByRole("button", { name: "Crear mi cuenta" }).click();

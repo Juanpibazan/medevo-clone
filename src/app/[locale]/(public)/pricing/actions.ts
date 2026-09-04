@@ -19,6 +19,16 @@ const inputSchema = z.object({
   locale: z.enum(["pt-BR", "es"]),
 });
 
+function splitFullName(fullName: string): {
+  firstName: string;
+  lastName: string;
+} {
+  const parts = fullName.trim().split(/\s+/);
+  const firstName = parts[0] || "Estudante";
+  const lastName = parts.slice(1).join(" ") || parts[0] || "MedCiclo";
+  return { firstName, lastName };
+}
+
 export async function startCheckoutAction(
   input: z.input<typeof inputSchema>,
 ): Promise<CheckoutResult> {
@@ -54,22 +64,36 @@ export async function startCheckoutAction(
         ),
       };
     }
+
     const config = getSubyConfig();
     if (!config.enabled) throw new Error("PROVIDER_UNAVAILABLE");
     const client = new SubyClient(config);
+    const names = splitFullName(session.user.name);
     let customerId = await repository.getProviderCustomer(
       session.user.id,
       "suby",
     );
     if (!customerId) {
       customerId = (
-        await client.createCustomer(session.user.email, attempt.idempotencyKey)
+        await client.createCustomer(
+          {
+            email: session.user.email,
+            firstName: names.firstName,
+            lastName: names.lastName,
+          },
+          attempt.idempotencyKey,
+        )
       ).id;
       await repository.linkProviderCustomer(
         session.user.id,
         "suby",
         customerId,
       );
+    } else {
+      await client.updateCustomer(customerId, {
+        firstName: names.firstName,
+        lastName: names.lastName,
+      });
     }
     const productId =
       parsed.cycle === "month"

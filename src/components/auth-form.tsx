@@ -62,8 +62,11 @@ export function AuthForm({ mode }: { mode: "signIn" | "signUp" }) {
           setError(t("validation"));
           return;
         }
+        const fullName =
+          parsed.data.name ??
+          `${parsed.data.firstName ?? ""} ${parsed.data.lastName ?? ""}`.trim();
         const result = await authClient.signUp.email({
-          name: parsed.data.name,
+          name: fullName,
           email: parsed.data.email,
           password: parsed.data.password,
           callbackURL: `${window.location.origin}/pt-BR/onboarding`,
@@ -105,17 +108,30 @@ export function AuthForm({ mode }: { mode: "signIn" | "signUp" }) {
   return (
     <form className="form" onSubmit={submit} noValidate>
       {mode === "signUp" && (
-        <div className="field">
-          <label htmlFor="name">{t("name")}</label>
-          <input
-            id="name"
-            name="name"
-            autoComplete="name"
-            minLength={2}
-            maxLength={100}
-            required
-          />
-        </div>
+        <>
+          <div className="field">
+            <label htmlFor="firstName">{t("firstName")}</label>
+            <input
+              id="firstName"
+              name="firstName"
+              autoComplete="given-name"
+              minLength={2}
+              maxLength={50}
+              required
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="lastName">{t("lastName")}</label>
+            <input
+              id="lastName"
+              name="lastName"
+              autoComplete="family-name"
+              minLength={2}
+              maxLength={50}
+              required
+            />
+          </div>
+        </>
       )}
       <div className="field">
         <label htmlFor="email">{t("email")}</label>

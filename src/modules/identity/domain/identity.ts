@@ -8,10 +8,20 @@ export const credentialsSchema = z.object({
 });
 export const registrationSchema = credentialsSchema
   .extend({
-    name: z.string().trim().min(2).max(100),
+    firstName: z.string().trim().min(2).max(50).optional(),
+    lastName: z.string().trim().min(2).max(50).optional(),
+    name: z.string().trim().min(2).max(100).optional(),
     locale: z.enum(supportedLocales),
   })
-  .strict();
+  .strict()
+  .refine(
+    (data) =>
+      Boolean(
+        (data.firstName && data.lastName) ||
+          (data.name && data.name.trim().length >= 2),
+      ),
+    { message: "Name is required" },
+  );
 export const recoverySchema = z
   .object({ email: z.string().trim().email().max(254) })
   .strict();

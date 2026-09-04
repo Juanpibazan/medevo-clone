@@ -36,6 +36,8 @@
     "signUpTitle": "Comienza tu ciclo",
     "signUpIntro": "Crea tu cuenta y prepara tu rutina para Revalida.",
     "name": "Nombre",
+    "firstName": "Nombre",
+    "lastName": "Apellido",
     "email": "Correo electrónico",
     "password": "Contraseña",
     "passwordHelp": "Usa entre 12 y 128 caracteres.",

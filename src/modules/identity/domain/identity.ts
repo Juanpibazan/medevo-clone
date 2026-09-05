@@ -12,6 +12,12 @@ export const registrationSchema = credentialsSchema
     lastName: z.string().trim().min(2).max(50).optional(),
     name: z.string().trim().min(2).max(100).optional(),
     locale: z.enum(supportedLocales),
+    termsAccepted: z.preprocess(
+      (val) => val === true || val === "true" || val === "on",
+      z.literal(true, {
+        message: "Must accept terms and privacy policy",
+      }),
+    ),
   })
   .strict()
   .refine(

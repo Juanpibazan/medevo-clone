@@ -59,7 +59,14 @@ export function AuthForm({ mode }: { mode: "signIn" | "signUp" }) {
       if (mode === "signUp") {
         const parsed = registrationSchema.safeParse({ ...data, locale });
         if (!parsed.success) {
-          setError(t("validation"));
+          const termsIssue = parsed.error.issues.some((issue) =>
+            issue.path.includes("termsAccepted"),
+          );
+          if (termsIssue) {
+            setError(t("termsRequired"));
+          } else {
+            setError(t("validation"));
+          }
           return;
         }
         const fullName =
@@ -161,6 +168,38 @@ export function AuthForm({ mode }: { mode: "signIn" | "signUp" }) {
           </p>
         )}
       </div>
+      {mode === "signUp" && (
+        <div className="flex items-start gap-2.5 py-1 text-xs leading-relaxed text-[var(--navy-2)]">
+          <input
+            id="termsAccepted"
+            name="termsAccepted"
+            type="checkbox"
+            required
+            className="mt-0.5 h-4 w-4 rounded border-[var(--line)] text-[var(--teal)] focus:ring-[var(--teal)] cursor-pointer"
+          />
+          <label htmlFor="termsAccepted" className="cursor-pointer">
+            {t("termsAcceptancePrefix")}{" "}
+            <Link
+              href="/termos"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-[var(--teal)] underline hover:text-[var(--navy)]"
+            >
+              {t("terms")}
+            </Link>{" "}
+            {t("termsAcceptanceAnd")}{" "}
+            <Link
+              href="/privacidade"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-[var(--teal)] underline hover:text-[var(--navy)]"
+            >
+              {t("privacy")}
+            </Link>
+            .
+          </label>
+        </div>
+      )}
       {error && (
         <div
           className="flex flex-col gap-2 rounded-lg border border-red-200 bg-red-50 p-3.5 text-xs text-red-800"

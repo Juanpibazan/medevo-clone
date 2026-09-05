@@ -51,7 +51,9 @@ El bootstrap técnico, el tramo de identidad/onboarding y el **vertical slice co
 
 El siguiente tramo prioritario del vertical slice es:
 
-> Piloto cerrado con usuarios reales para validar estabilidad y hábito de estudio.
+> Políticas de Privacidad y Términos de Servicio: Cumplimiento legal integral para la operación desde Bolivia hacia Brasil (LGPD, CDC, Marco Civil, deslinde de responsabilidad en Revalida y términos de suscripción).
+
+Seguido por el piloto cerrado con usuarios reales para validar estabilidad y hábito de estudio.
 
 No existen todavía implementaciones de analítica externa o IA (el módulo de IA se mantiene planeado como opcional y desacoplado).
 
@@ -714,7 +716,8 @@ Criterio de salida: calidad clínica y costo por usuario dentro de umbrales defi
 23. ~~**Vertical Slice — Preservación de Roles y Simulación Segura en Selector de Roles**: Actualización de `switchRoleAction` y `StudentHeader` para preservar de forma no destructiva los roles base del usuario en PostgreSQL (`admin`, `student`, `medical_editor`) y gestionar la selección activa vía cookie `dev_active_role` con evaluación en servidor mediante `getEffectiveRoles`, evitando la pérdida de privilegios y el bloqueo del selector en producción. Pruebas: validación de tipos, lint y suite unitaria completas.~~ **Completado.**
 24. ~~**Vertical Slice — Integración con Paddle Sandbox**: Sustituir el pago simulado por precios localizados y checkout overlay de Paddle, vincular de forma firmada el checkout al usuario autenticado, verificar webhooks con el SDK oficial y aprovisionar suscripciones de manera idempotente, con confirmación posterior al pago.~~ **Completado.**
 25. ~~**Vertical Slice — Billing Multiproveedor (Integración de Suby v3-beta)**: Implementación de arquitectura neutral de facturación, integración con Suby v3-beta bajo feature flag `SUBY_ENABLED`, verificación HMAC-SHA256 de webhooks en `/api/suby/webhook`, checkout alojado con validación de host, captura de Nombre y Apellido en registro con sincronización de cliente hacia Suby (`createCustomer` / `updateCustomer`), y validación exitosa de pago y activación Premium en producción.~~ **Completado.**
-26. **Vertical Slice — Piloto cerrado**: Puesta en marcha con un volumen inicial de usuarios reales para validar la estabilidad de la plataforma y el hábito antes de gamificar o agregar IA.
+26. **Vertical Slice — Políticas de Privacidad y Términos de Servicio (Cumplimiento Legal Brasil / LGPD / CDC)**: Redacción e implementación de las páginas bilingües de Términos de Servicio (`/termos`) y Política de Privacidad (`/privacidade`), identificación de Coding Is Giving S.R.L. y canales oficiales (`admin@codingisgiving.com`), deslinde formal de responsabilidad clínica y de resultados en Revalida, aclaración sobre bancos de preguntas públicas oficiales (INEP), política de arrepentimiento de 7 días (Art. 49 CDC), componente SiteFooter visible con descargos requeridos por la legislación brasileña, checkbox obligatorio de aceptación en el formulario de registro y persistencia de consentimientos afirmativos en la tabla `consents` para cumplimiento de la LGPD.
+27. **Vertical Slice — Piloto cerrado**: Puesta en marcha con un volumen inicial de usuarios reales para validar la estabilidad de la plataforma y el hábito antes de gamificar o agregar IA.
 
 ## 17. Estrategia de pruebas
 

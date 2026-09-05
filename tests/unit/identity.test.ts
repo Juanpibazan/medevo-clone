@@ -42,6 +42,7 @@ describe("identity contracts", () => {
         email: "ana@example.com",
         password: "123456789012",
         locale: "es",
+        termsAccepted: true,
       }).success,
     ).toBe(true);
     expect(
@@ -51,6 +52,7 @@ describe("identity contracts", () => {
         email: "ana@example.com",
         password: "123456789012",
         locale: "es",
+        termsAccepted: true,
       }).success,
     ).toBe(false);
     expect(
@@ -59,6 +61,58 @@ describe("identity contracts", () => {
         email: "ana@example.com",
         password: "123456789012",
         locale: "es",
+        termsAccepted: true,
+      }).success,
+    ).toBe(false);
+  });
+  it("strictly requires affirmative terms and privacy acceptance (LGPD compliance)", () => {
+    expect(
+      registrationSchema.safeParse({
+        firstName: "Ana",
+        lastName: "García",
+        email: "ana@example.com",
+        password: "123456789012",
+        locale: "pt-BR",
+        termsAccepted: true,
+      }).success,
+    ).toBe(true);
+    expect(
+      registrationSchema.safeParse({
+        firstName: "Ana",
+        lastName: "García",
+        email: "ana@example.com",
+        password: "123456789012",
+        locale: "pt-BR",
+        termsAccepted: "on",
+      }).success,
+    ).toBe(true);
+    expect(
+      registrationSchema.safeParse({
+        firstName: "Ana",
+        lastName: "García",
+        email: "ana@example.com",
+        password: "123456789012",
+        locale: "pt-BR",
+        termsAccepted: "true",
+      }).success,
+    ).toBe(true);
+    expect(
+      registrationSchema.safeParse({
+        firstName: "Ana",
+        lastName: "García",
+        email: "ana@example.com",
+        password: "123456789012",
+        locale: "pt-BR",
+        termsAccepted: false,
+      }).success,
+    ).toBe(false);
+    expect(
+      registrationSchema.safeParse({
+        firstName: "Ana",
+        lastName: "García",
+        email: "ana@example.com",
+        password: "123456789012",
+        locale: "pt-BR",
       }).success,
     ).toBe(false);
   });

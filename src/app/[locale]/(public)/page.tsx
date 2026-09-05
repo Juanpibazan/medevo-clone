@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { SiteHeader } from "@/components/site-header";
+import { SiteFooter } from "@/components/site-footer";
 import { auth, type SupportedLocale } from "@/modules/identity";
 
 export default async function HomePage({
@@ -48,6 +49,7 @@ export default async function HomePage({
           </li>
         </ol>
       </section>
+      <SiteFooter />
     </main>
   );
 }

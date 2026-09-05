@@ -49,6 +49,11 @@
     "forgot": "Olvidé mi contraseña",
     "needAccount": "Crear cuenta",
     "haveAccount": "Ya tengo una cuenta",
+    "termsAcceptancePrefix": "Declaro que he leído y acepto los",
+    "termsAcceptanceAnd": "y la",
+    "terms": "Términos de Uso",
+    "privacy": "Política de Privacidad",
+    "termsRequired": "Debes aceptar los Términos de Uso y la Política de Privacidad para crear tu cuenta.",
     "errors": {
       "emailNotVerified": "Tu correo electrónico no ha sido verificado. Por favor, revisa tu bandeja de entrada o haz clic abajo para reenviar el correo de verificación.",
       "resendLink": "Reenviar correo de verificación",
@@ -324,5 +329,91 @@
     "resendSuccess": "¡Correo de verificación reenviado con éxito!",
     "resendError": "Error al reenviar el correo de verificación. Inténtalo de nuevo.",
     "backToLogin": "Volver a ingresar"
+  },
+  "legal": {
+    "footer": {
+      "operatorNotice": "MedCiclo es una plataforma educativa operada por Coding Is Giving S.R.L.",
+      "contact": "Contacto y DPO: admin@codingisgiving.com",
+      "disclaimer": "Plataforma de estudio independiente. No poseemos vínculo, afiliación institucional, patrocinio ni respaldo oficial ante el INEP, MEC o CFM. Los exámenes del Revalida constituyen evaluaciones públicas federales reproducidas exclusivamente con fines didácticos.",
+      "terms": "Términos de Uso",
+      "privacy": "Política de Privacidad",
+      "rights": "Todos los derechos reservados."
+    },
+    "terms": {
+      "eyebrow": "Legal y Regulatorio",
+      "title": "Términos de Uso y Servicio",
+      "lastUpdated": "Última actualización: 5 de septiembre de 2026",
+      "intro": "Estos Términos de Uso y Servicio rigen el acceso y la utilización de la plataforma MedCiclo por parte de candidatos, estudiantes y médicos en preparación para el Examen de Revalidación de Títulos Médicos expedidos en el extranjero (Revalida). Al crear una cuenta o utilizar nuestros servicios, aceptas expresamente las condiciones aquí establecidas.",
+      "sections": [
+        {
+          "title": "1. Identificación de la Empresa y Proveedores de Pago",
+          "content": "La plataforma MedCiclo es desarrollada, mantenida y operada por Coding Is Giving S.R.L., sociedad de responsabilidad limitada legalmente constituida en Bolivia. Todas las comunicaciones oficiales, notificaciones legales y solicitudes de atención deben enviarse a la dirección electrónica oficial admin@codingisgiving.com. Para el procesamiento de transacciones comerciales y facturación con usuarios y consumidores en Brasil, la plataforma puede utilizar intermediarios de pago calificados o entidades que actúan como Merchant of Record (incluyendo Paddle y Suby), quienes figuran como vendedores contractuales en el momento de la liquidación financiera cuando corresponda."
+        },
+        {
+          "title": "2. Naturaleza Exclusivamente Educativa y Límites Clínicos",
+          "content": "MedCiclo es una herramienta estrictamente pedagógica de apoyo al estudio individual. El contenido disponible, incluyendo preguntas comentadas, mapas cognitivos, algoritmos de repetición espaciada (FSRS) y cuadernos de errores, NO constituye asesoría médica, telemedicina, prescripción farmacológica, diagnóstico o indicación de tratamiento para pacientes reales. El material disponible no sustituye la formación universitaria, las guías clínicas oficiales ni el juicio clínico individual y ético del profesional médico ante casos reales."
+        },
+        {
+          "title": "3. Exención Total de Garantía de Aprobación en el Revalida",
+          "content": "La aprobación en el Examen Revalida promovido por el INEP/MEC depende de múltiples factores estrictamente individuales, incluyendo la preparación previa, la trayectoria académica, el tiempo dedicado y el rendimiento el día de la evaluación oficial. Coding Is Giving S.R.L. y MedCiclo NO garantizan, prometen ni aseguran aprobación, obtención de notas de corte ni la revalidación de títulos médicos. MedCiclo no se responsabiliza civil, administrativa ni financieramente por el resultado individual del candidato en el examen."
+        },
+        {
+          "title": "4. Bancos de Preguntas Públicas y Derechos de Propiedad Intelectual",
+          "content": "Las pruebas, gabaritos preliminares y patrones de respuesta discursiva del Revalida son documentos y evaluaciones públicas federales emitidas por el INEP, utilizándose en la plataforma legítimamente para fines didácticos y de preparación académica. La plataforma MedCiclo no reclama titularidad sobre los enunciados oficiales originales del INEP. En contrapartida, todo el software, código fuente, arquitectura, diseño de interfaz, logotipos, taxonomía médica propietaria, algoritmos de programación y explicaciones comentadas elaboradas por el equipo editorial de MedCiclo son propiedad exclusiva de Coding Is Giving S.R.L., protegidos por las leyes de propiedad intelectual. Cualquier titular de derechos que identifique una supuesta infracción puede enviar una notificación fundamentada a admin@codingisgiving.com para su verificación inmediata."
+        },
+        {
+          "title": "5. Planes de Acceso, Cuota Gratuita y Suscripción Premium",
+          "content": "La plataforma opera bajo un modelo freemium. Las cuentas gratuitas cuentan con acceso limitado a una cuota diaria de preguntas prácticas. El acceso ilimitado al banco completo, repetición espaciada sin restricciones y analítica avanzada se habilita mediante suscripciones periódicas de pago (mensual o anual). Los precios y divisas aplicables se muestran de forma transparente antes de pagar en el checkout. Las suscripciones de pago se renuevan automáticamente al finalizar cada período, a menos que el usuario cancele la renovación en la configuración de su cuenta antes del cobro del ciclo siguiente."
+        },
+        {
+          "title": "6. Derecho de Arrepentimiento (CDC Art. 49) y Política de Reembolso",
+          "content": "En estricto cumplimiento del Artículo 49 del Código de Defensa del Consumidor brasileño (CDC) y del Decreto 7.962/2013, los suscriptores ubicados en Brasil podrán ejercer el derecho de arrepentimiento en el plazo incondicional de 7 (siete) días corridos contados a partir de la confirmación inicial de la suscripción. Dentro de este plazo de 7 días, la cancelación implicará el reembolso íntegro (100%) del dinero pagado, sin cargos ni penalizaciones, solicitándolo a admin@codingisgiving.com o a través de los canales de soporte. Finalizado el plazo de 7 días, la cancelación detendrá cobros futuros, manteniendo el acceso Premium activo hasta el último día del ciclo ya abonado, sin reembolsos proporcionales de pagos pasados."
+        },
+        {
+          "title": "7. Deberes del Usuario y Conductas Prohibidas",
+          "content": "La cuenta creada en MedCiclo es personal e intransferible. Queda expresamente prohibido: (a) compartir credenciales de acceso con terceros; (b) utilizar métodos automatizados de extracción de datos (web scraping, bots o scripts masivos); (c) realizar ingeniería inversa del código o de los algoritmos de repetición espaciada; y (d) ingresar al sistema datos identificables de pacientes reales o información hospitalaria confidencial."
+        },
+        {
+          "title": "8. Legislación Aplicable y Jurisdicción",
+          "content": "Para los usuarios y consumidores situados en territorio brasileño, estos Términos se regirán e interpretarán de conformidad con las normas imperativas del Código de Defensa del Consumidor (Ley nº 8.078/1990) y del Marco Civil de Internet (Ley nº 12.965/2014), sin perjuicio de la personalidad jurídica internacional de Coding Is Giving S.R.L. bajo las leyes de Bolivia. Se fija la jurisdicción del domicilio del consumidor en Brasil para resolver cualquier disputa derivada del servicio."
+        }
+      ]
+    },
+    "privacy": {
+      "eyebrow": "Privacidad y Protección de Datos",
+      "title": "Política de Privacidad",
+      "lastUpdated": "Última actualización: 5 de septiembre de 2026",
+      "intro": "Esta Política de Privacidad describe de manera transparente cómo Coding Is Giving S.R.L. (\"MedCiclo\", \"nosotros\") recopila, trata, almacena y protege los datos personales de los usuarios (\"tú\"), en estricto cumplimiento de la Ley General de Protección de Datos de Brasil (LGPD, Ley nº 13.709/2018) y las normativas aplicables de seguridad de la información.",
+      "sections": [
+        {
+          "title": "1. Responsable del Tratamiento de Datos y Canal de Contacto",
+          "content": "La entidad responsable del tratamiento de tus datos personales es Coding Is Giving S.R.L., con sede en Bolivia. Para ejercer cualquiera de los derechos conferidos por la LGPD o resolver dudas relativas a tu privacidad, puedes ponerte en contacto directamente con nuestro Delegado de Protección de Datos (DPO) en el correo: admin@codingisgiving.com."
+        },
+        {
+          "title": "2. Datos Personales Recopilados y Finalidades",
+          "content": "Recopilamos únicamente los datos estrictamente necesarios para prestar nuestros servicios educativos: (a) Datos de Registro: nombre, apellido y correo electrónico, necesarios para la autenticación, creación del perfil, prevención del fraude y comunicaciones transaccionales; (b) Datos Pedagógicos de Estudio: historial de sesiones respondidas, alternativas seleccionadas, tiempos de respuesta, autoevaluaciones discursivas, marcas metacognitivas y métricas FSRS de retención de memoria, utilizados exclusivamente para personalizar tu plan y generar análisis estadísticos individuales; (c) Registros de Conexión: direcciones IP, marcas de fecha/hora de acceso e identificadores de sesión, conservados por el plazo legal de 6 meses según el Artículo 15 del Marco Civil de Internet de Brasil."
+        },
+        {
+          "title": "3. Datos Sensibles y Prohibición de Datos de Pacientes",
+          "content": "MedCiclo NO recopila datos de salud de los usuarios ni datos biométricos. Está terminantemente prohibido a los estudiantes ingresar notas, comentarios o descripciones que contengan datos que identifiquen o puedan identificar a pacientes reales, historias clínicas o casos hospitalarios confidenciales."
+        },
+        {
+          "title": "4. Bases Legales para el Tratamiento de Datos (LGPD)",
+          "content": "El tratamiento de datos personales en MedCiclo se fundamenta en las siguientes bases legales del Artículo 7º de la LGPD: (a) Ejecución de contrato (Art. 7º, V): para facilitar el acceso a la plataforma, guardar tu progreso y prestar el servicio contratado; (b) Cumplimiento de obligación legal o regulatoria (Art. 7º, II): para conservar los registros de acceso conforme al Marco Civil de Internet y emitir comprobantes fiscales; (c) Interés legítimo (Art. 7º, IX): para la mejora continua de la experiencia educativa, observabilidad y seguridad técnica de la plataforma."
+        },
+        {
+          "title": "5. Compartición y Transferencia Internacional de Datos",
+          "content": "No comercializamos ni vendemos tus datos personales bajo ninguna circunstancia. Tus datos pueden tratarse en servidores en la nube de alta seguridad y proveedores asociados en el extranjero (incluyendo servicios en Estados Unidos, Bolivia y Europa), abarcando: (a) Proveedores de infraestructura y base de datos en la nube; (b) Proveedores de envío de correos transaccionales para verificación de cuenta; (c) Plataformas de pago y Merchant of Record (como Paddle y Suby) para el procesamiento seguro de cobros. Toda transferencia internacional se realiza bajo las salvaguardas contractuales correspondientes según el Artículo 33 de la LGPD."
+        },
+        {
+          "title": "6. Derechos del Titular de los Datos",
+          "content": "En cumplimiento del Artículo 18 de la LGPD, tienes derecho a solicitar en cualquier momento: (a) confirmación de la existencia de tratamiento y acceso a los datos; (b) corrección de datos incompletos, inexactos o desactualizados; (c) anonimización, bloqueo o eliminación de datos innecesarios o tratados en disconformidad con la ley; (d) eliminación de los datos personales tratados con tu consentimiento, salvo en los casos de conservación obligatoria por ley; (e) revocación del consentimiento. Para ejercer cualquiera de estos derechos, envía un mensaje a admin@codingisgiving.com."
+        },
+        {
+          "title": "7. Seguridad de la Información y Cookies",
+          "content": "Implementamos medidas técnicas y organizativas para proteger tus datos personales, tales como cifrado TLS/HTTPS en tránsito, contraseñas protegidas mediante algoritmos de hash seguros y políticas estrictas de control de acceso por mínimos privilegios. Empleamos únicamente cookies estrictamente esenciales para mantener tu sesión activa y protegerte contra ataques CSRF."
+        }
+      ]
+    }
   }
 }

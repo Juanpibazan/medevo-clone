@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { auth, type SupportedLocale } from "@/modules/identity";
 import { billingService } from "@/modules/billing";
 import { SiteHeader } from "@/components/site-header";
+import { SiteFooter } from "@/components/site-footer";
 import { WelcomeStatus } from "./welcome-status";
 export default async function WelcomePage({
   params,
@@ -26,6 +27,7 @@ export default async function WelcomePage({
           <WelcomeStatus active={active} locale={locale} />
         </div>
       </section>
+      <SiteFooter />
     </main>
   );
 }

@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { SiteHeader } from "./site-header";
+import { SiteFooter } from "./site-footer";
 import { AuthForm } from "./auth-form";
 export async function AuthPage({ mode }: { mode: "signIn" | "signUp" }) {
   const t = await getTranslations("auth");
@@ -16,6 +17,7 @@ export async function AuthPage({ mode }: { mode: "signIn" | "signUp" }) {
           <AuthForm mode={mode} />
         </div>
       </section>
+      <SiteFooter />
     </main>
   );
 }

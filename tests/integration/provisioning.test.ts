@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { afterAll, describe, expect, it } from "vitest";
 import { eq } from "drizzle-orm";
 import { db, pool } from "@/db/client";
-import { profiles, userRoles, users } from "@/db/schema";
+import { consents, profiles, userRoles, users } from "@/db/schema";
 import { ensureStudentProvisioning } from "@/modules/identity/infrastructure/provisioning";
 describe("student provisioning", () => {
   afterAll(() => pool.end());
@@ -23,11 +23,22 @@ describe("student provisioning", () => {
         .select()
         .from(userRoles)
         .where(eq(userRoles.userId, id));
+      const savedConsents = await db
+        .select()
+        .from(consents)
+        .where(eq(consents.userId, id));
       expect(profile).toHaveLength(1);
       expect(profile[0]?.locale).toBe("es");
       expect(assignments).toEqual([
         expect.objectContaining({ roleCode: "student" }),
       ]);
+      expect(savedConsents).toHaveLength(1);
+      expect(savedConsents[0]).toEqual(
+        expect.objectContaining({
+          kind: "terms_and_privacy",
+          version: "2026.1",
+        }),
+      );
     } finally {
       await db.delete(users).where(eq(users.id, id));
     }

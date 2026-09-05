@@ -8,6 +8,7 @@ import { DrizzleBillingRepository } from "@/modules/billing/infrastructure/drizz
 import { getSubyConfig } from "@/modules/billing/infrastructure/suby-config";
 import { SubyClient } from "@/modules/billing/infrastructure/suby-client";
 import { SiteHeader } from "@/components/site-header";
+import { SiteFooter } from "@/components/site-footer";
 import { PricingClient, type Tier } from "./pricing-client";
 
 export default async function PricingPage({
@@ -88,6 +89,7 @@ export default async function PricingPage({
             : undefined
         }
       />
+      <SiteFooter />
     </main>
   );
 }

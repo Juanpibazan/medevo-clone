@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, useSyncExternalStore, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import {
@@ -12,12 +12,31 @@ import {
 } from "@/modules/identity/client";
 import { Link } from "@/i18n/navigation";
 
+function subscribe(callback: () => void) {
+  window.addEventListener("popstate", callback);
+  return () => window.removeEventListener("popstate", callback);
+}
+
+function getResetSnapshot() {
+  return new URLSearchParams(window.location.search).get("reset") === "success";
+}
+
+function getServerResetSnapshot() {
+  return false;
+}
+
 export function AuthForm({ mode }: { mode: "signIn" | "signUp" }) {
   const t = useTranslations("auth");
   const locale = useLocale() as SupportedLocale;
   const router = useRouter();
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
+
+  const resetSuccess = useSyncExternalStore(
+    subscribe,
+    getResetSnapshot,
+    getServerResetSnapshot,
+  );
 
   const [unverifiedEmail, setUnverifiedEmail] = useState("");
   const [resendPending, setResendPending] = useState(false);
@@ -114,6 +133,11 @@ export function AuthForm({ mode }: { mode: "signIn" | "signUp" }) {
   }
   return (
     <form className="form" onSubmit={submit} noValidate>
+      {resetSuccess && mode === "signIn" && (
+        <p className="notice" role="status">
+          {t("passwordResetSuccess")}
+        </p>
+      )}
       {mode === "signUp" && (
         <>
           <div className="field">

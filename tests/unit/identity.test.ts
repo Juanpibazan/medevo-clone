@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   credentialsSchema,
   registrationSchema,
+  resetPasswordSchema,
   sanitizeLocalizedCallback,
 } from "@/modules/identity/domain/identity";
 describe("identity contracts", () => {
@@ -127,5 +128,43 @@ describe("identity contracts", () => {
       "/pt-BR/app",
     );
     expect(sanitizeLocalizedCallback("/admin", "es")).toBe("/es/app");
+  });
+
+  it("validates resetPasswordSchema boundaries and matching passwords", () => {
+    // Valid reset
+    expect(
+      resetPasswordSchema.safeParse({
+        password: "new-password-1234",
+        confirmPassword: "new-password-1234",
+        token: "valid-token-123",
+      }).success,
+    ).toBe(true);
+
+    // Mismatched passwords
+    expect(
+      resetPasswordSchema.safeParse({
+        password: "new-password-1234",
+        confirmPassword: "different-password-1234",
+        token: "valid-token-123",
+      }).success,
+    ).toBe(false);
+
+    // Password too short (< 12)
+    expect(
+      resetPasswordSchema.safeParse({
+        password: "short",
+        confirmPassword: "short",
+        token: "valid-token-123",
+      }).success,
+    ).toBe(false);
+
+    // Missing token
+    expect(
+      resetPasswordSchema.safeParse({
+        password: "new-password-1234",
+        confirmPassword: "new-password-1234",
+        token: "",
+      }).success,
+    ).toBe(false);
   });
 });

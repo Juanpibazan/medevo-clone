@@ -30,6 +30,7 @@ export {
   credentialsSchema,
   recoverySchema,
   registrationSchema,
+  resetPasswordSchema,
   sanitizeLocalizedCallback,
   supportedLocales,
 } from "./domain/identity";

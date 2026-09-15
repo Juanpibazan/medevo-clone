@@ -46,6 +46,27 @@ describe("ResendEmailService Unit Tests", () => {
     );
   });
 
+  it("should send password reset email with correct headers and body", async () => {
+    await service.sendPasswordReset({
+      recipient: "student@example.test",
+      resetUrl: "http://localhost:3000/pt-BR/redefinir-senha?token=abc-123",
+      locale: "pt-BR",
+    });
+
+    expect(fetchMock).toHaveBeenCalledOnce();
+    const [url, options] = fetchMock.mock.calls[0];
+    expect(url).toBe("https://api.resend.com/emails");
+    expect(options.method).toBe("POST");
+
+    const body = JSON.parse(options.body);
+    expect(body.from).toBe(fromEmail);
+    expect(body.to).toBe("student@example.test");
+    expect(body.subject).toContain("Recuperação de senha");
+    expect(body.html).toContain(
+      "http://localhost:3000/pt-BR/redefinir-senha?token=abc-123",
+    );
+  });
+
   it("should enforce the restriction of maximum 2 emails sent during tests", async () => {
     // 1st email
     await service.sendVerificationEmail({

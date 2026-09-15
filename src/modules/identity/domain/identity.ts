@@ -32,6 +32,18 @@ export const recoverySchema = z
   .object({ email: z.string().trim().email().max(254) })
   .strict();
 
+export const resetPasswordSchema = z
+  .object({
+    password: z.string().min(12).max(128),
+    confirmPassword: z.string().min(12).max(128),
+    token: z.string().min(1),
+  })
+  .strict()
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
+
 export function sanitizeLocalizedCallback(
   value: string | null | undefined,
   locale: SupportedLocale,

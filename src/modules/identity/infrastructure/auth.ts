@@ -18,6 +18,16 @@ export const auth = betterAuth({
     minPasswordLength: 12,
     maxPasswordLength: 128,
     requireEmailVerification: true,
+    sendResetPassword: async ({ user, token }) => {
+      const profile = await profileService.getProfile(user.id);
+      const locale = profile?.locale ?? "pt-BR";
+      const resetUrl = `${env.BETTER_AUTH_URL}/${locale}/redefinir-senha?token=${token}`;
+      await emailService.sendPasswordReset({
+        recipient: user.email,
+        resetUrl,
+        locale,
+      });
+    },
   },
   emailVerification: {
     sendOnSignUp: true,

@@ -59,18 +59,34 @@
       "resendLink": "Reenviar correo de verificación",
       "resendSuccess": "¡Correo de verificación reenviado con éxito!",
       "resendError": "Error al reenviar el correo de verificación. Inténtalo de nuevo."
-    }
+    },
+    "passwordResetSuccess": "Tu contraseña ha sido restablecida con éxito. Ya puedes iniciar sesión."
   },
   "recovery": {
     "eyebrow": "Acceso MedCiclo",
     "title": "Recuperar acceso",
-    "intro": "Indica tu correo. La recuperación por correo todavía no está activa.",
+    "intro": "Indica tu correo electrónico registrado para enviarte las instrucciones de recuperación.",
     "email": "Correo electrónico",
     "send": "Solicitar recuperación",
     "working": "Espera…",
     "invalidEmail": "Introduce una dirección de correo válida.",
-    "uniformResponse": "Si la dirección está registrada, enviaremos las instrucciones cuando esta función esté disponible.",
+    "uniformResponse": "Si la dirección está registrada, hemos enviado un correo con las instrucciones para redefinir tu contraseña.",
     "back": "Volver a ingresar"
+  },
+  "resetPassword": {
+    "eyebrow": "Acceso MedCiclo",
+    "title": "Redefinir contraseña",
+    "intro": "Ingresa y confirma tu nueva contraseña para restablecer el acceso a tu cuenta.",
+    "newPassword": "Nueva contraseña",
+    "confirmPassword": "Confirmar nueva contraseña",
+    "submit": "Confirmar",
+    "working": "Guardando…",
+    "back": "Volver a ingresar",
+    "passwordMismatch": "Las contraseñas no coinciden.",
+    "passwordTooShort": "La contraseña debe tener al menos 12 caracteres.",
+    "invalidOrExpiredTokenTitle": "Enlace inválido o expirado",
+    "invalidOrExpiredTokenDescription": "El enlace de recuperación ya no es válido o ha expirado. Por favor, solicita uno nuevo.",
+    "requestNewLink": "Solicitar nueva recuperación"
   },
   "app": {
     "eyebrow": "Área del estudiante",

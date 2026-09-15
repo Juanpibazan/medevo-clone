@@ -2,6 +2,7 @@ export interface EmailService {
   sendPasswordReset(input: {
     recipient: string;
     resetUrl: string;
+    locale: "pt-BR" | "es";
   }): Promise<void>;
   sendVerificationEmail(input: {
     recipient: string;
@@ -27,8 +28,89 @@ export class ResendEmailService implements EmailService {
     private readonly fromEmail: string,
   ) { }
 
-  async sendPasswordReset(): Promise<void> {
-    return Promise.resolve();
+  async sendPasswordReset(input: {
+    recipient: string;
+    resetUrl: string;
+    locale: "pt-BR" | "es";
+  }): Promise<void> {
+    const isTest = process.env.NODE_ENV === "test";
+    const isDev = process.env.NODE_ENV === "development";
+
+    if (isTest || isDev) {
+      if (isTest) {
+        if (this.sentCount >= 2) {
+          throw new Error(
+            "Test email limit reached (max 2 emails per test session)",
+          );
+        }
+        this.sentCount++;
+      }
+
+      console.log(
+        `[EMAIL DEV LOG] Password reset link for ${input.recipient}: ${input.resetUrl}`,
+      );
+
+      if (
+        !this.apiKey ||
+        this.apiKey.includes("dummy") ||
+        this.apiKey.includes("your_api_key")
+      ) {
+        return;
+      }
+    }
+
+    const subject =
+      input.locale === "es"
+        ? "Recuperación de contraseña - MedCiclo"
+        : "Recuperação de senha - MedCiclo";
+
+    const html =
+      input.locale === "es"
+        ? `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+            <h2 style="color: #102a43;">Recuperación de contraseña</h2>
+            <p style="color: #334155; font-size: 16px; line-height: 1.5;">Hemos recibido una solicitud para restablecer la contraseña de tu cuenta en MedCiclo.</p>
+            <p style="color: #334155; font-size: 16px; line-height: 1.5;">Para definir una nueva contraseña, haz clic en el siguiente botón:</p>
+            <a href="${input.resetUrl}" style="display: inline-block; background-color: #13a89e; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; margin-top: 10px;">Restablecer contraseña</a>
+            <p style="color: #64748b; font-size: 12px; margin-top: 20px;">Si no has solicitado esto, puedes ignorar este correo de forma segura. El enlace expirará en 1 hora.</p>
+          </div>
+        `
+        : `
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+            <h2 style="color: #102a43;">Recuperação de senha</h2>
+            <p style="color: #334155; font-size: 16px; line-height: 1.5;">Recebemos uma solicitação para redefinir a senha da sua conta no MedCiclo.</p>
+            <p style="color: #334155; font-size: 16px; line-height: 1.5;">Para definir uma nova senha, clique no botão abaixo:</p>
+            <a href="${input.resetUrl}" style="display: inline-block; background-color: #13a89e; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; margin-top: 10px;">Redefinir senha</a>
+            <p style="color: #64748b; font-size: 12px; margin-top: 20px;">Se você não solicitou este e-mail, pode ignorá-lo com segurança. O link expirará em 1 hora.</p>
+          </div>
+        `;
+
+    const from = this.fromEmail.includes("<")
+      ? this.fromEmail
+      : process.env.NODE_ENV === "test"
+        ? this.fromEmail
+        : `MedCiclo <${this.fromEmail}>`;
+
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${this.apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from,
+        to: input.recipient,
+        subject,
+        html,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(
+        `Resend email delivery failed: ${response.statusText} - ${errorText}`,
+      );
+    }
   }
 
   async sendVerificationEmail(input: {
@@ -49,15 +131,15 @@ export class ResendEmailService implements EmailService {
         this.sentCount++;
       }
 
+      console.log(
+        `[EMAIL DEV LOG] Sent verification email to ${input.recipient}: ${input.verificationUrl}`,
+      );
+
       if (
         !this.apiKey ||
         this.apiKey.includes("dummy") ||
-        this.apiKey.includes("your_api_key") ||
-        this.apiKey === process.env.RESEND_API_KEY
+        this.apiKey.includes("your_api_key")
       ) {
-        console.log(
-          `[TEST MOCK EMAIL] Sent verification email to ${input.recipient}: ${input.verificationUrl}`,
-        );
         return;
       }
     }
@@ -86,6 +168,12 @@ export class ResendEmailService implements EmailService {
           </div>
         `;
 
+    const from = this.fromEmail.includes("<")
+      ? this.fromEmail
+      : process.env.NODE_ENV === "test"
+        ? this.fromEmail
+        : `MedCiclo <${this.fromEmail}>`;
+
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -93,7 +181,7 @@ export class ResendEmailService implements EmailService {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: "MedCiclo <" + this.fromEmail + ">",
+        from,
         to: input.recipient,
         subject,
         html,

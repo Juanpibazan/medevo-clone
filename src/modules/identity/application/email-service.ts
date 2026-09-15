@@ -25,7 +25,7 @@ export class ResendEmailService implements EmailService {
   constructor(
     private readonly apiKey: string,
     private readonly fromEmail: string,
-  ) {}
+  ) { }
 
   async sendPasswordReset(): Promise<void> {
     return Promise.resolve();
@@ -93,7 +93,7 @@ export class ResendEmailService implements EmailService {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: this.fromEmail,
+        from: "MedCiclo <" + this.fromEmail + ">",
         to: input.recipient,
         subject,
         html,

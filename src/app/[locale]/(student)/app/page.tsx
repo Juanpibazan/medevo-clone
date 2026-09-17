@@ -50,14 +50,19 @@ export default async function AppPage({
 
   const quota = await billingService.checkDailyQuota(session.user.id);
 
+  const activeExam = profile.examGoal || "revalida";
   const dueQuestions = await learningService.getDueQuestions(
     session.user.id,
     100,
+    activeExam,
   );
   const dueCount = dueQuestions.length;
 
-  // Recuperar métricas de analítica agregadas en tiempo real para el estudiante
-  const metrics = await analyticsService.getUserMetrics(session.user.id);
+  // Recuperar métricas de analítica agregadas en tiempo real para el estudiante (filtradas por examen activo)
+  const metrics = await analyticsService.getUserMetrics(
+    session.user.id,
+    activeExam,
+  );
   const dailyQuestionsGoal = Math.max(
     5,
     Math.round((profile.weeklyStudyMinutes || 300) / 10),
@@ -93,7 +98,9 @@ export default async function AppPage({
           <dl className="profile-summary">
             <div>
               <dt>{t("exam")}</dt>
-              <dd>{t("revalida")}</dd>
+              <dd className="font-semibold text-[#13A89E]">
+                {activeExam === "enamed" ? "ENAMED" : t("revalida")}
+              </dd>
             </div>
             <div>
               <dt>{t("date")}</dt>
@@ -281,8 +288,9 @@ export default async function AppPage({
                   {tDashboard("startPractice")}
                 </h3>
                 <p className="mb-4 text-sm text-slate-500">
-                  Resuelve 10 preguntas aleatorias de Revalida para mantener tu
-                  ritmo diario.
+                  {locale === "es"
+                    ? `Resuelve 10 preguntas aleatorias de ${activeExam === "enamed" ? "ENAMED" : "Revalida"} para mantener tu ritmo diario.`
+                    : `Resolva 10 questões aleatórias do ${activeExam === "enamed" ? "ENAMED" : "Revalida"} para manter seu ritmo diário.`}
                 </p>
               </div>
               <PracticeFilters

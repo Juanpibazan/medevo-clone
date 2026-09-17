@@ -68,7 +68,11 @@ export async function saveExamDateAction(
   formData: FormData,
 ): Promise<OnboardingActionState> {
   const userId = await sessionUserId(routeLocale);
-  const input = strictStringFormData(formData, ["dateChoice", "examDate"]);
+  const input = strictStringFormData(formData, [
+    "examGoal",
+    "dateChoice",
+    "examDate",
+  ]);
   if (!input) return { error: "invalid_fields" };
   const result = await profileService.saveExamDate(userId, input);
   if (result.kind !== "updated" && result.kind !== "completed")

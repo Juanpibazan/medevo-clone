@@ -79,6 +79,8 @@ const mockQuestions: QuestionWithVersions[] = [
   {
     question: {
       id: "q-101",
+      exam: "revalida",
+      examYear: 2011,
       publishedVersionId: "v-1",
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -104,6 +106,8 @@ const mockQuestions: QuestionWithVersions[] = [
   {
     question: {
       id: "q-202",
+      exam: "revalida",
+      examYear: 2011,
       publishedVersionId: "v-2",
       createdAt: new Date(),
       updatedAt: new Date(),

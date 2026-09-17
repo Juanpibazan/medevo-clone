@@ -188,7 +188,7 @@ describe("Product Analytics and Observability Integration Tests", () => {
         },
       ]);
 
-      // Fetch metrics
+      // Fetch metrics (all / revalida)
       const metrics = await analyticsService.getUserMetrics(userId);
 
       // We expect:
@@ -206,6 +206,17 @@ describe("Product Analytics and Observability Integration Tests", () => {
       expect(metrics.precisionBySpecialty[0].correctCount).toBe(1);
       expect(metrics.precisionBySpecialty[0].totalCount).toBe(2);
       expect(metrics.precisionBySpecialty[0].precision).toBe(50);
+
+      // Test exam-scoped metrics:
+      const revalidaMetrics = await analyticsService.getUserMetrics(userId, "revalida");
+      expect(revalidaMetrics.answeredToday).toBe(2);
+      expect(revalidaMetrics.precisionGlobal).toBe(50);
+
+      const enamedMetrics = await analyticsService.getUserMetrics(userId, "enamed");
+      expect(enamedMetrics.answeredToday).toBe(0);
+      expect(enamedMetrics.precisionGlobal).toBe(0);
+      expect(enamedMetrics.averageTimeSeconds).toBe(0);
+      expect(enamedMetrics.precisionBySpecialty).toHaveLength(0);
     } finally {
       // Cleanup database
       await db

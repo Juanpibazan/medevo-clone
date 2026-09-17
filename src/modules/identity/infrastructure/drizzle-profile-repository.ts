@@ -10,7 +10,7 @@ import type { StudentProfile } from "../domain/onboarding";
 function toProfile(row: typeof profiles.$inferSelect): StudentProfile {
   return {
     locale: row.locale,
-    examGoal: "revalida",
+    examGoal: (row.examGoal as StudentProfile["examGoal"]) || "revalida",
     tentativeExamDate: row.tentativeExamDate,
     weeklyStudyMinutes: row.weeklyStudyMinutes,
     onboardingStatus: row.onboardingStatus,

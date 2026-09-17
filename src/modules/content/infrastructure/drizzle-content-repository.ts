@@ -21,7 +21,7 @@ import type {
 } from "../domain/content";
 
 export class DrizzleContentRepository implements ContentRepository {
-  async findPublishedQuestions(): Promise<
+  async findPublishedQuestions(exam?: string): Promise<
     Array<{
       question: Question;
       activeVersion: QuestionVersion;
@@ -29,10 +29,12 @@ export class DrizzleContentRepository implements ContentRepository {
       images: QuestionImage[];
     }>
   > {
-    const activeQuestions = await db
-      .select()
-      .from(questions)
-      .where(eq(questions.publishedVersionId, questions.publishedVersionId));
+    const activeQuestions = exam
+      ? await db
+          .select()
+          .from(questions)
+          .where(eq(questions.exam, exam))
+      : await db.select().from(questions);
 
     const filtered = activeQuestions.filter(
       (q) => q.publishedVersionId !== null,
@@ -78,6 +80,8 @@ export class DrizzleContentRepository implements ContentRepository {
       results.push({
         question: {
           id: q.id,
+          exam: q.exam,
+          examYear: q.examYear,
           publishedVersionId: q.publishedVersionId,
           createdAt: q.createdAt,
           updatedAt: q.updatedAt,
@@ -156,6 +160,8 @@ export class DrizzleContentRepository implements ContentRepository {
     return {
       question: {
         id: q.id,
+        exam: q.exam,
+        examYear: q.examYear,
         publishedVersionId: q.publishedVersionId,
         createdAt: q.createdAt,
         updatedAt: q.updatedAt,

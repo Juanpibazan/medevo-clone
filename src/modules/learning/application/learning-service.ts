@@ -12,9 +12,10 @@ export interface LearningRepository {
     userId: string,
     now: Date,
     limit: number,
+    exam?: string,
   ): Promise<string[]>;
-  getErrorNotebookQuestionIds(userId: string): Promise<string[]>;
-  getFavoritesQuestionIds(userId: string): Promise<string[]>;
+  getErrorNotebookQuestionIds(userId: string, exam?: string): Promise<string[]>;
+  getFavoritesQuestionIds(userId: string, exam?: string): Promise<string[]>;
 }
 
 export class LearningService {
@@ -45,11 +46,12 @@ export class LearningService {
     return this.repository.getReviewQueueItem(userId, questionId);
   }
 
-  async getDueQuestions(userId: string, limit = 10) {
+  async getDueQuestions(userId: string, limit = 10, exam?: string) {
     const ids = await this.repository.getDueQuestionIds(
       userId,
       new Date(),
       limit,
+      exam,
     );
     const questions = await Promise.all(
       ids.map((id) => this.contentService.getQuestionWithActiveVersion(id)),
@@ -57,16 +59,16 @@ export class LearningService {
     return questions.filter((q) => q !== null);
   }
 
-  async getErrorNotebook(userId: string) {
-    const ids = await this.repository.getErrorNotebookQuestionIds(userId);
+  async getErrorNotebook(userId: string, exam?: string) {
+    const ids = await this.repository.getErrorNotebookQuestionIds(userId, exam);
     const questions = await Promise.all(
       ids.map((id) => this.contentService.getQuestionWithActiveVersion(id)),
     );
     return questions.filter((q) => q !== null);
   }
 
-  async getFavorites(userId: string) {
-    const ids = await this.repository.getFavoritesQuestionIds(userId);
+  async getFavorites(userId: string, exam?: string) {
+    const ids = await this.repository.getFavoritesQuestionIds(userId, exam);
     const questions = await Promise.all(
       ids.map((id) => this.contentService.getQuestionWithActiveVersion(id)),
     );

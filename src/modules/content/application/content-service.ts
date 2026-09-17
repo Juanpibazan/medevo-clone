@@ -10,7 +10,7 @@ import {
 } from "../domain/content";
 
 export interface ContentRepository {
-  findPublishedQuestions(): Promise<
+  findPublishedQuestions(exam?: string): Promise<
     Array<{
       question: Question;
       activeVersion: QuestionVersion;
@@ -63,8 +63,8 @@ export interface ContentRepository {
 export class ContentService {
   constructor(private readonly repository: ContentRepository) {}
 
-  async getPublishedQuestions() {
-    return this.repository.findPublishedQuestions();
+  async getPublishedQuestions(exam?: string) {
+    return this.repository.findPublishedQuestions(exam);
   }
 
   async getQuestionVersion(versionId: string) {

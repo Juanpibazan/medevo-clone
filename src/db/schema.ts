@@ -113,7 +113,7 @@ export const profiles = pgTable(
       .defaultNow(),
   },
   (table) => [
-    check("profiles_exam_goal_revalida", sql`${table.examGoal} = 'revalida'`),
+    check("profiles_exam_goal_valid", sql`${table.examGoal} in ('revalida', 'enamed')`),
     check(
       "profiles_onboarding_completed_step_range",
       sql`${table.onboardingCompletedStep} between 0 and 3`,
@@ -217,19 +217,29 @@ export const taxonomyNodes = pgTable("taxonomy_nodes", {
     .defaultNow(),
 });
 
-export const questions = pgTable("questions", {
-  id: text("id").primaryKey(),
-  publishedVersionId: text("published_version_id").references(
-    (): AnyPgColumn => questionVersions.id,
-    { onDelete: "set null" },
-  ),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .notNull()
-    .defaultNow(),
-});
+export const questions = pgTable(
+  "questions",
+  {
+    id: text("id").primaryKey(),
+    exam: text("exam").notNull().default("revalida"),
+    examYear: integer("exam_year").notNull().default(2011),
+    publishedVersionId: text("published_version_id").references(
+      (): AnyPgColumn => questionVersions.id,
+      { onDelete: "set null" },
+    ),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("questions_exam_idx").on(table.exam),
+    index("questions_exam_year_idx").on(table.exam, table.examYear),
+    check("questions_exam_valid", sql`${table.exam} in ('revalida', 'enamed')`),
+  ],
+);
 
 export const questionVersions = pgTable("question_versions", {
   id: text("id").primaryKey(),

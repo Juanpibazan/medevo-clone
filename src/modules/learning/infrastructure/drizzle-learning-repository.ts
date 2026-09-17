@@ -6,6 +6,7 @@ import {
   studySessionItems,
   questionVersions,
   studySessions,
+  questions,
 } from "@/db/schema";
 import type { LearningRepository } from "../application/learning-service";
 import type { Card } from "../domain/fsrs";
@@ -98,7 +99,26 @@ export class DrizzleLearningRepository implements LearningRepository {
     userId: string,
     now: Date,
     limit: number,
+    exam?: string,
   ): Promise<string[]> {
+    if (exam) {
+      const rows = await db
+        .select({ questionId: reviewQueue.questionId })
+        .from(reviewQueue)
+        .innerJoin(questions, eq(reviewQueue.questionId, questions.id))
+        .where(
+          and(
+            eq(reviewQueue.userId, userId),
+            lte(reviewQueue.nextReviewAt, now),
+            eq(questions.exam, exam),
+          ),
+        )
+        .orderBy(asc(reviewQueue.nextReviewAt))
+        .limit(limit);
+
+      return rows.map((r) => r.questionId);
+    }
+
     const rows = await db
       .select({ questionId: reviewQueue.questionId })
       .from(reviewQueue)
@@ -116,7 +136,11 @@ export class DrizzleLearningRepository implements LearningRepository {
    * Uses native PostgreSQL DISTINCT ON to find the latest verified response for each question,
    * returning only those where the latest answer is incorrect.
    */
-  async getErrorNotebookQuestionIds(userId: string): Promise<string[]> {
+  async getErrorNotebookQuestionIds(
+    userId: string,
+    exam?: string,
+  ): Promise<string[]> {
+    const examFilter = exam ? sql`AND q.exam = ${exam}` : sql``;
     const query = sql`
       SELECT qv.question_id
       FROM (
@@ -124,8 +148,9 @@ export class DrizzleLearningRepository implements LearningRepository {
         FROM ${responses} r
         JOIN ${studySessionItems} ssi ON r.session_item_id = ssi.id
         JOIN ${questionVersions} qv ON ssi.question_version_id = qv.id
+        JOIN ${questions} q ON qv.question_id = q.id
         JOIN ${studySessions} ss ON ssi.session_id = ss.id
-        WHERE ss.user_id = ${userId} AND r.verified_at IS NOT NULL
+        WHERE ss.user_id = ${userId} AND r.verified_at IS NOT NULL ${examFilter}
         ORDER BY qv.question_id, r.verified_at DESC
       ) qv
       WHERE qv.is_correct = false
@@ -141,7 +166,11 @@ export class DrizzleLearningRepository implements LearningRepository {
    * Retrieves the question IDs marked as favorite.
    * Returns only those questions where the latest response has is_favorite = true.
    */
-  async getFavoritesQuestionIds(userId: string): Promise<string[]> {
+  async getFavoritesQuestionIds(
+    userId: string,
+    exam?: string,
+  ): Promise<string[]> {
+    const examFilter = exam ? sql`AND q.exam = ${exam}` : sql``;
     const query = sql`
       SELECT qv.question_id
       FROM (
@@ -149,8 +178,9 @@ export class DrizzleLearningRepository implements LearningRepository {
         FROM ${responses} r
         JOIN ${studySessionItems} ssi ON r.session_item_id = ssi.id
         JOIN ${questionVersions} qv ON ssi.question_version_id = qv.id
+        JOIN ${questions} q ON qv.question_id = q.id
         JOIN ${studySessions} ss ON ssi.session_id = ss.id
-        WHERE ss.user_id = ${userId}
+        WHERE ss.user_id = ${userId} ${examFilter}
         ORDER BY qv.question_id, r.updated_at DESC
       ) qv
       WHERE qv.is_favorite = true

@@ -73,6 +73,7 @@ export function BackofficeQuestionList({
 
   // Read initial states from URL search params
   const urlQ = searchParams.get("q") || "";
+  const urlExam = (searchParams.get("exam") as "all" | "revalida" | "enamed") || "all";
   const urlType = (searchParams.get("type") as "all" | QuestionType) || "all";
   const urlSpecialty = searchParams.get("specialty") || "";
   const urlTheme = searchParams.get("theme") || "";
@@ -80,6 +81,7 @@ export function BackofficeQuestionList({
 
   // Local state for instantaneous filtering
   const [searchTerm, setSearchTerm] = useState(urlQ);
+  const [selectedExam, setSelectedExam] = useState<"all" | "revalida" | "enamed">(urlExam);
   const [selectedType, setSelectedType] = useState<"all" | QuestionType>(urlType);
   const [selectedSpecialty, setSelectedSpecialty] = useState(urlSpecialty);
   const [selectedTheme, setSelectedTheme] = useState(urlTheme);
@@ -88,6 +90,7 @@ export function BackofficeQuestionList({
   // Track previous URL params to adjust state if external navigation occurs (e.g. browser back/forward)
   const [prevUrl, setPrevUrl] = useState({
     q: urlQ,
+    exam: urlExam,
     type: urlType,
     specialty: urlSpecialty,
     theme: urlTheme,
@@ -96,6 +99,7 @@ export function BackofficeQuestionList({
 
   if (
     prevUrl.q !== urlQ ||
+    prevUrl.exam !== urlExam ||
     prevUrl.type !== urlType ||
     prevUrl.specialty !== urlSpecialty ||
     prevUrl.theme !== urlTheme ||
@@ -103,12 +107,14 @@ export function BackofficeQuestionList({
   ) {
     setPrevUrl({
       q: urlQ,
+      exam: urlExam,
       type: urlType,
       specialty: urlSpecialty,
       theme: urlTheme,
       focus: urlFocus,
     });
     setSearchTerm(urlQ);
+    setSelectedExam(urlExam);
     setSelectedType(urlType);
     setSelectedSpecialty(urlSpecialty);
     setSelectedTheme(urlTheme);
@@ -219,6 +225,14 @@ export function BackofficeQuestionList({
     return initialQuestions.filter(({ question, versions }) => {
       const latestVersion = versions[0];
 
+      // Filter by exam
+      if (selectedExam !== "all") {
+        const qExam = (question.exam || "revalida").toLowerCase();
+        if (qExam !== selectedExam) {
+          return false;
+        }
+      }
+
       // Filter by type
       if (selectedType !== "all") {
         if (!latestVersion || latestVersion.type !== selectedType) {
@@ -251,7 +265,7 @@ export function BackofficeQuestionList({
 
       return true;
     });
-  }, [initialQuestions, selectedType, validTaxonomyIds, searchTerm]);
+  }, [initialQuestions, selectedExam, selectedType, validTaxonomyIds, searchTerm]);
 
   // Handlers for taxonomy changes
   const handleSpecialtyChange = (specialtyId: string) => {
@@ -281,6 +295,11 @@ export function BackofficeQuestionList({
     });
   };
 
+  const handleExamChange = (exam: "all" | "revalida" | "enamed") => {
+    setSelectedExam(exam);
+    updateUrl({ exam: exam === "all" ? null : exam });
+  };
+
   const handleTypeChange = (type: "all" | QuestionType) => {
     setSelectedType(type);
     updateUrl({ type: type === "all" ? null : type });
@@ -288,12 +307,14 @@ export function BackofficeQuestionList({
 
   const handleClearFilters = () => {
     setSearchTerm("");
+    setSelectedExam("all");
     setSelectedType("all");
     setSelectedSpecialty("");
     setSelectedTheme("");
     setSelectedFocus("");
     updateUrl({
       q: null,
+      exam: null,
       type: null,
       specialty: null,
       theme: null,
@@ -303,6 +324,7 @@ export function BackofficeQuestionList({
 
   const hasActiveFilters = Boolean(
     searchTerm.trim() ||
+      selectedExam !== "all" ||
       selectedType !== "all" ||
       selectedSpecialty ||
       selectedTheme ||
@@ -388,41 +410,81 @@ export function BackofficeQuestionList({
             )}
           </div>
 
-          {/* Question Type segmented buttons */}
-          <div className="inline-flex rounded-xl bg-slate-100 p-1 text-xs font-semibold text-slate-600">
-            <button
-              type="button"
-              onClick={() => handleTypeChange("all")}
-              className={`rounded-lg px-3 py-1.5 transition-all ${
-                selectedType === "all"
-                  ? "bg-white text-[#102A43] shadow-sm"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              {tr("filterTypeAll", "Todas", "Todas")}
-            </button>
-            <button
-              type="button"
-              onClick={() => handleTypeChange("multiple_choice")}
-              className={`rounded-lg px-3 py-1.5 transition-all ${
-                selectedType === "multiple_choice"
-                  ? "bg-white text-teal-700 shadow-sm"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              {tr("filterTypeMultipleChoice", "Múltipla Escolha", "Opción Múltiple")}
-            </button>
-            <button
-              type="button"
-              onClick={() => handleTypeChange("open_ended")}
-              className={`rounded-lg px-3 py-1.5 transition-all ${
-                selectedType === "open_ended"
-                  ? "bg-white text-teal-700 shadow-sm"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              {tr("filterTypeOpenEnded", "Discursiva", "Discursiva")}
-            </button>
+          {/* Filter pills row: Exam + Question Type */}
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Exam segmented buttons */}
+            <div className="inline-flex rounded-xl bg-slate-100 p-1 text-xs font-semibold text-slate-600">
+              <button
+                type="button"
+                onClick={() => handleExamChange("all")}
+                className={`rounded-lg px-3 py-1.5 transition-all ${
+                  selectedExam === "all"
+                    ? "bg-white text-[#102A43] shadow-sm"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                Todos Exames
+              </button>
+              <button
+                type="button"
+                onClick={() => handleExamChange("revalida")}
+                className={`rounded-lg px-3 py-1.5 transition-all ${
+                  selectedExam === "revalida"
+                    ? "bg-white text-blue-700 shadow-sm"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                Revalida
+              </button>
+              <button
+                type="button"
+                onClick={() => handleExamChange("enamed")}
+                className={`rounded-lg px-3 py-1.5 transition-all ${
+                  selectedExam === "enamed"
+                    ? "bg-white text-teal-700 shadow-sm"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                ENAMED
+              </button>
+            </div>
+
+            {/* Question Type segmented buttons */}
+            <div className="inline-flex rounded-xl bg-slate-100 p-1 text-xs font-semibold text-slate-600">
+              <button
+                type="button"
+                onClick={() => handleTypeChange("all")}
+                className={`rounded-lg px-3 py-1.5 transition-all ${
+                  selectedType === "all"
+                    ? "bg-white text-[#102A43] shadow-sm"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                {tr("filterTypeAll", "Todas", "Todas")}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleTypeChange("multiple_choice")}
+                className={`rounded-lg px-3 py-1.5 transition-all ${
+                  selectedType === "multiple_choice"
+                    ? "bg-white text-teal-700 shadow-sm"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                {tr("filterTypeMultipleChoice", "Múltipla Escolha", "Opción Múltiple")}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleTypeChange("open_ended")}
+                className={`rounded-lg px-3 py-1.5 transition-all ${
+                  selectedType === "open_ended"
+                    ? "bg-white text-teal-700 shadow-sm"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                {tr("filterTypeOpenEnded", "Discursiva", "Discursiva")}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -615,6 +677,16 @@ export function BackofficeQuestionList({
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="rounded bg-slate-100 px-2 py-0.5 font-mono text-xs font-bold text-slate-600">
                           ID: {question.id}
+                        </span>
+                        <span
+                          className={`rounded-full px-2 py-0.5 text-[10px] font-extrabold tracking-wider uppercase ${
+                            question.exam === "enamed"
+                              ? "border border-teal-200 bg-teal-50 text-teal-700"
+                              : "border border-blue-200 bg-blue-50 text-blue-700"
+                          }`}
+                        >
+                          {question.exam === "enamed" ? "ENAMED" : "Revalida"}{" "}
+                          {question.examYear || ""}
                         </span>
                         {latestVersion && (
                           <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold tracking-wider text-slate-600 uppercase">

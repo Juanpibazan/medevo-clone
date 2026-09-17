@@ -40,6 +40,9 @@ export function OnboardingForm({
   );
   const headingRef = useRef<HTMLHeadingElement>(null);
   const errorRef = useRef<HTMLParagraphElement>(null);
+  const [examGoalChoice, setExamGoalChoice] = useState<"revalida" | "enamed">(
+    profile.examGoal || "revalida",
+  );
   const [dateChoice, setDateChoice] = useState<"" | "known" | "unknown">(
     profile.onboardingCompletedStep >= 2
       ? profile.tentativeExamDate
@@ -131,6 +134,56 @@ export function OnboardingForm({
           <fieldset
             aria-describedby={state.error ? "onboarding-error" : undefined}
           >
+            <legend>{t("step2.examLegend")}</legend>
+            <div className="choice-grid" style={{ marginBottom: "1.5rem" }}>
+              <label className="choice">
+                <input
+                  type="radio"
+                  name="examGoal"
+                  value="revalida"
+                  checked={examGoalChoice === "revalida"}
+                  onChange={() => setExamGoalChoice("revalida")}
+                />
+                <div>
+                  <span style={{ fontWeight: 600, display: "block" }}>
+                    {t("step2.examRevalidaTitle")}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: "0.8rem",
+                      color: "var(--color-text-muted, #64748b)",
+                      display: "block",
+                    }}
+                  >
+                    {t("step2.examRevalidaDesc")}
+                  </span>
+                </div>
+              </label>
+              <label className="choice">
+                <input
+                  type="radio"
+                  name="examGoal"
+                  value="enamed"
+                  checked={examGoalChoice === "enamed"}
+                  onChange={() => setExamGoalChoice("enamed")}
+                />
+                <div>
+                  <span style={{ fontWeight: 600, display: "block" }}>
+                    {t("step2.examEnamedTitle")}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: "0.8rem",
+                      color: "var(--color-text-muted, #64748b)",
+                      display: "block",
+                    }}
+                  >
+                    {t("step2.examEnamedDesc")}
+                  </span>
+                </div>
+              </label>
+            </div>
+
             <legend>{t("step2.legend")}</legend>
             <div className="choice-grid">
               <label className="choice">

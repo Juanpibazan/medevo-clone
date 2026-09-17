@@ -226,10 +226,13 @@ async function run() {
 
     try {
       const typeSuffix = q.type === "open_ended" ? "dis" : "obj";
-      const questionId = `q-revalida-${q.metadata.year || "2011"}-${q.number}-${typeSuffix}`;
-      const versionId = `v-revalida-${q.metadata.year || "2011"}-${q.number}-${typeSuffix}-01`;
+      const rawExam = String(q.metadata?.exam || "").toLowerCase();
+      const examKey = rawExam.includes("enamed") ? "enamed" : "revalida";
+      const year = Number(q.metadata?.year) || (examKey === "enamed" ? 2025 : 2011);
+      const questionId = `q-${examKey}-${year}-${q.number}-${typeSuffix}`;
+      const versionId = `v-${examKey}-${year}-${q.number}-${typeSuffix}-01`;
 
-      console.log(`💾 Ingesting database records (ID: ${questionId})...`);
+      console.log(`💾 Ingesting database records (ID: ${questionId}, Exam: ${examKey}, Year: ${year})...`);
 
       await db.transaction(async (tx) => {
         // Insert parent question header
@@ -237,9 +240,18 @@ async function run() {
           .insert(schema.questions)
           .values({
             id: questionId,
+            exam: examKey,
+            examYear: year,
             publishedVersionId: null, // temporarily null
           })
-          .onConflictDoNothing();
+          .onConflictDoUpdate({
+            target: schema.questions.id,
+            set: {
+              exam: examKey,
+              examYear: year,
+              updatedAt: new Date(),
+            },
+          });
 
         // Insert version
         await tx
@@ -293,7 +305,7 @@ async function run() {
             );
 
           for (const alt of q.alternatives) {
-            const altId = `alt-revalida-${q.metadata.year || "2011"}-${q.number}-${typeSuffix}-${alt.optionLetter.toLowerCase()}`;
+            const altId = `alt-${examKey}-${year}-${q.number}-${typeSuffix}-${alt.optionLetter.toLowerCase()}`;
             await tx
               .insert(schema.questionAlternatives)
               .values({

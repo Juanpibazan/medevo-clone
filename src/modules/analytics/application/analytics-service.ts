@@ -22,7 +22,10 @@ export interface AnalyticsRepository {
     createdAt: Date,
   ): Promise<void>;
 
-  getUserResponsesData(userId: string): Promise<
+  getUserResponsesData(
+    userId: string,
+    exam?: string,
+  ): Promise<
     Array<{
       isCorrect: boolean | null;
       timeTakenSeconds: number;
@@ -64,10 +67,10 @@ export class AnalyticsService {
   }
 
   /**
-   * Calculates metrics for a user in real-time.
+   * Calculates metrics for a user in real-time, optionally scoped to a specific exam.
    */
-  async getUserMetrics(userId: string): Promise<UserMetrics> {
-    const responses = await this.repository.getUserResponsesData(userId);
+  async getUserMetrics(userId: string, exam?: string): Promise<UserMetrics> {
+    const responses = await this.repository.getUserResponsesData(userId, exam);
     const allNodes = await this.contentService.listTaxonomyNodes();
 
     // 1. Calculate today's verified responses in São Paulo timezone (UTC-3)

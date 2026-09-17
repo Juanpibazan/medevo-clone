@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "@/db/client";
 import {
   analyticsEvents,
@@ -6,6 +6,7 @@ import {
   studySessionItems,
   studySessions,
   questionVersions,
+  questions,
 } from "@/db/schema";
 import type { AnalyticsRepository } from "../application/analytics-service";
 
@@ -26,7 +27,10 @@ export class DrizzleAnalyticsRepository implements AnalyticsRepository {
     });
   }
 
-  async getUserResponsesData(userId: string): Promise<
+  async getUserResponsesData(
+    userId: string,
+    exam?: string,
+  ): Promise<
     Array<{
       isCorrect: boolean | null;
       timeTakenSeconds: number;
@@ -34,6 +38,11 @@ export class DrizzleAnalyticsRepository implements AnalyticsRepository {
       taxonomyNodeId: string;
     }>
   > {
+    const conditions = [eq(studySessions.userId, userId)];
+    if (exam) {
+      conditions.push(eq(questions.exam, exam));
+    }
+
     const rows = await db
       .select({
         isCorrect: responses.isCorrect,
@@ -54,7 +63,11 @@ export class DrizzleAnalyticsRepository implements AnalyticsRepository {
         questionVersions,
         eq(studySessionItems.questionVersionId, questionVersions.id),
       )
-      .where(eq(studySessions.userId, userId));
+      .innerJoin(
+        questions,
+        eq(questionVersions.questionId, questions.id),
+      )
+      .where(and(...conditions));
 
     return rows;
   }

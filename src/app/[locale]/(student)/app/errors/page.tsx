@@ -26,7 +26,8 @@ export default async function ErrorsNotebookPage({
   }
 
   // Ensure student profile is setup
-  await profileService.getProfile(session.user.id);
+  const profile = await profileService.getProfile(session.user.id);
+  const activeExam = profile?.examGoal || "revalida";
 
   const t = await getTranslations("errors");
 
@@ -37,9 +38,15 @@ export default async function ErrorsNotebookPage({
     alternatives: Alternative[];
   }> = [];
   if (activeTab === "errors") {
-    questions = await learningService.getErrorNotebook(session.user.id);
+    questions = await learningService.getErrorNotebook(
+      session.user.id,
+      activeExam,
+    );
   } else {
-    questions = await learningService.getFavorites(session.user.id);
+    questions = await learningService.getFavorites(
+      session.user.id,
+      activeExam,
+    );
   }
 
   return (

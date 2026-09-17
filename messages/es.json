@@ -116,8 +116,13 @@
       "locales": { "pt-BR": "Portugués (Brasil)", "es": "Español" }
     },
     "step2": {
-      "title": "¿Cuándo planeas presentar?",
-      "intro": "Una fecha tentativa nos ayuda a ordenar tu preparación. Si aún no la conoces, indícalo.",
+      "title": "¿Qué examen y cuándo planeas presentar?",
+      "intro": "Selecciona tu examen objetivo y una fecha tentativa para ordenar tu preparación. Si aún no conoces la fecha, indícalo.",
+      "examLegend": "Examen objetivo",
+      "examRevalidaTitle": "Revalida INEP",
+      "examRevalidaDesc": "Revalidación de Diplomas Médicos en Brasil",
+      "examEnamedTitle": "ENAMED",
+      "examEnamedDesc": "Examen Nacional de Evaluación de la Formación Médica",
       "legend": "Fecha tentativa del examen",
       "known": "Ya tengo una fecha",
       "unknown": "Aún no lo sé",

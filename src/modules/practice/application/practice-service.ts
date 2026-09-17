@@ -64,7 +64,7 @@ export class PracticeService {
         alternatives: Alternative[];
         images: QuestionImage[];
       } | null>;
-      getPublishedQuestions(): Promise<
+      getPublishedQuestions(exam?: string): Promise<
         Array<{
           question: Question;
           activeVersion: QuestionVersion;
@@ -84,12 +84,14 @@ export class PracticeService {
   async createSession(
     userId: string,
     specificQuestionVersionIds?: string[],
-    options?: { taxonomyNodeId?: string },
+    options?: { taxonomyNodeId?: string; exam?: string },
   ) {
     let versionIds = specificQuestionVersionIds;
 
     if (!versionIds) {
-      let published = await this.contentService.getPublishedQuestions();
+      let published = await this.contentService.getPublishedQuestions(
+        options?.exam,
+      );
       if (published.length === 0) {
         throw new Error("No published questions available to practice");
       }

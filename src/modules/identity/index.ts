@@ -22,6 +22,7 @@ export {
 } from "./domain/onboarding";
 export type {
   Clock,
+  ExamGoal,
   OnboardingCompletedStep,
   OnboardingStatus,
   StudentProfile,

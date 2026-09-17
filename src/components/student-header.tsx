@@ -6,6 +6,7 @@ import { SignOutButton } from "./sign-out-button";
 import { headers, cookies } from "next/headers";
 import { auth, profileService } from "@/modules/identity";
 import { DevRoleSwitcher } from "./dev-role-switcher";
+import { ExamSwitcher } from "./exam-switcher";
 
 export async function StudentHeader({
   showLocale = true,
@@ -17,9 +18,15 @@ export async function StudentHeader({
   const isDev = process.env.NODE_ENV === "development";
   let currentRole = "student";
   let showSwitcher = isDev;
+  let currentExam: "revalida" | "enamed" = "revalida";
 
   const session = await auth.api.getSession({ headers: await headers() });
   if (session) {
+    const profile = await profileService.getProfile(session.user.id);
+    if (profile?.examGoal) {
+      currentExam = profile.examGoal as "revalida" | "enamed";
+    }
+
     const rolesList = await profileService.getUserRoles(session.user.id);
     if (rolesList.includes("admin") || rolesList.includes("medical_editor")) {
       showSwitcher = true;
@@ -47,6 +54,7 @@ export async function StudentHeader({
         <Brand alt={t("logoAlt")} />
       </Link>
       <nav className="nav-actions" aria-label={t("studentLabel")}>
+        {session && <ExamSwitcher currentExam={currentExam} />}
         {showSwitcher && <DevRoleSwitcher initialRole={currentRole} />}
         {showLocale && <LocaleSwitcher />}
         <SignOutButton compact />

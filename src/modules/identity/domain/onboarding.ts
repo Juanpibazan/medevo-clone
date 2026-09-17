@@ -3,7 +3,7 @@ import { supportedLocales, type SupportedLocale } from "./identity";
 
 export type OnboardingCompletedStep = 0 | 1 | 2 | 3;
 export type OnboardingStatus = "not_started" | "in_progress" | "completed";
-export type ExamGoal = "revalida";
+export type ExamGoal = "revalida" | "enamed";
 
 export interface StudentProfile {
   locale: SupportedLocale;
@@ -23,7 +23,11 @@ export const languageStepSchema = z
   .object({ locale: z.enum(supportedLocales) })
   .strict();
 const examStepSchema = z
-  .object({ dateChoice: z.enum(["known", "unknown"]), examDate: z.string() })
+  .object({
+    examGoal: z.enum(["revalida", "enamed"]).optional().default("revalida"),
+    dateChoice: z.enum(["known", "unknown"]),
+    examDate: z.string(),
+  })
   .strict();
 const availabilityStepSchema = z
   .object({
@@ -96,12 +100,13 @@ export type ParseResult<T> =
 export function parseExamDateStep(
   input: unknown,
   clock: Clock = systemClock,
-): ParseResult<{ tentativeExamDate: string | null }> {
+): ParseResult<{ examGoal: ExamGoal; tentativeExamDate: string | null }> {
   const parsed = examStepSchema.safeParse(input);
   if (!parsed.success) return { success: false, code: "invalid_fields" };
+  const examGoal = parsed.data.examGoal || "revalida";
   if (parsed.data.dateChoice === "unknown")
     return parsed.data.examDate === ""
-      ? { success: true, data: { tentativeExamDate: null } }
+      ? { success: true, data: { examGoal, tentativeExamDate: null } }
       : { success: false, code: "invalid_fields" };
   if (!isStrictCalendarDate(parsed.data.examDate))
     return { success: false, code: "invalid_date" };
@@ -110,7 +115,10 @@ export function parseExamDateStep(
     parsed.data.examDate > maxExamDateInSaoPaulo(clock)
   )
     return { success: false, code: "date_out_of_range" };
-  return { success: true, data: { tentativeExamDate: parsed.data.examDate } };
+  return {
+    success: true,
+    data: { examGoal, tentativeExamDate: parsed.data.examDate },
+  };
 }
 
 export function parseAvailabilityStep(
@@ -183,7 +191,7 @@ export function validateProfileForCompletion(
   const minutes = profile.weeklyStudyMinutes;
   return (
     supportedLocales.includes(profile.locale) &&
-    profile.examGoal === "revalida" &&
+    ["revalida", "enamed"].includes(profile.examGoal) &&
     dateValid &&
     minutes !== null &&
     minutes >= 60 &&

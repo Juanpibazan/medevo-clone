@@ -40,13 +40,25 @@ describe("onboarding domain", () => {
   it("accepts unknown date only with an empty date", () => {
     expect(
       parseExamDateStep({ dateChoice: "unknown", examDate: "" }, leapClock),
-    ).toEqual({ success: true, data: { tentativeExamDate: null } });
+    ).toEqual({
+      success: true,
+      data: { examGoal: "revalida", tentativeExamDate: null },
+    });
+    expect(
+      parseExamDateStep(
+        { examGoal: "enamed", dateChoice: "unknown", examDate: "" },
+        leapClock,
+      ),
+    ).toEqual({
+      success: true,
+      data: { examGoal: "enamed", tentativeExamDate: null },
+    });
     expect(
       parseExamDateStep(
         { dateChoice: "unknown", examDate: "2025-01-01" },
         leapClock,
-      ).success,
-    ).toBe(false);
+      ),
+    ).toEqual({ success: false, code: "invalid_fields" });
   });
   it("normalizes presets and comma or point half-hours", () => {
     expect(

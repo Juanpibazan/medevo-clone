@@ -4,6 +4,7 @@ import {
   parseExamDateStep,
   validateProfileForCompletion,
   type Clock,
+  type ExamGoal,
   type StudentProfile,
 } from "../domain/onboarding";
 
@@ -11,6 +12,7 @@ export type ProfilePatch = Partial<
   Pick<
     StudentProfile,
     | "locale"
+    | "examGoal"
     | "tentativeExamDate"
     | "weeklyStudyMinutes"
     | "onboardingStatus"
@@ -97,10 +99,34 @@ export class ProfileService {
         if (profile.onboardingCompletedStep < 1)
           return { patch: {}, result: { kind: "invalid_sequence" } as const };
         const patch: ProfilePatch = {
+          examGoal: parsed.data.examGoal,
           tentativeExamDate: parsed.data.tentativeExamDate,
           onboardingStatus: "in_progress",
           onboardingCompletedStep: 2,
         };
+        return {
+          patch,
+          result: {
+            kind: "updated",
+            profile: withPatch(profile, patch),
+          } as const,
+        };
+      },
+    );
+    return result ?? { kind: "invalid_sequence" };
+  }
+
+  async switchActiveExam(
+    userId: string,
+    examGoal: ExamGoal,
+  ): Promise<ProfileUpdateResult | { kind: "invalid_fields" }> {
+    if (!["revalida", "enamed"].includes(examGoal)) {
+      return { kind: "invalid_fields" };
+    }
+    const result = await this.repository.updateLocked<ProfileUpdateResult>(
+      userId,
+      (profile) => {
+        const patch: ProfilePatch = { examGoal };
         return {
           patch,
           result: {

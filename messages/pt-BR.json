@@ -116,8 +116,13 @@
       "locales": { "pt-BR": "Português (Brasil)", "es": "Espanhol" }
     },
     "step2": {
-      "title": "Quando você pretende fazer a prova?",
-      "intro": "Uma data prevista ajuda a organizar sua preparação. Se ainda não souber, indique isso.",
+      "title": "Qual exame e quando pretende fazer?",
+      "intro": "Selecione seu exame objetivo e uma data prevista para organizar sua preparação. Se ainda não souber a data, indique isso.",
+      "examLegend": "Exame objetivo",
+      "examRevalidaTitle": "Revalida INEP",
+      "examRevalidaDesc": "Revalidação de Diplomas Médicos no Brasil",
+      "examEnamedTitle": "ENAMED",
+      "examEnamedDesc": "Exame Nacional de Avaliação da Formação Médica",
       "legend": "Data prevista da prova",
       "known": "Já tenho uma data",
       "unknown": "Ainda não sei",

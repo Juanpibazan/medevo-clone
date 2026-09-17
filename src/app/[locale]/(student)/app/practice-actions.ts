@@ -2,7 +2,7 @@
 
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { auth } from "@/modules/identity";
+import { auth, profileService } from "@/modules/identity";
 import { practiceService } from "@/modules/practice";
 import { learningService } from "@/modules/learning";
 import { billingService } from "@/modules/billing";
@@ -27,14 +27,17 @@ export async function startPracticeSessionAction(
     return { error: "quota_exceeded" };
   }
   try {
+    const profile = await profileService.getProfile(session.user.id);
+    const activeExam = profile?.examGoal || "revalida";
     const studySession = await practiceService.createSession(
       session.user.id,
       undefined,
-      { taxonomyNodeId },
+      { taxonomyNodeId, exam: activeExam },
     );
     analyticsService.trackEvent(session.user.id, "practice_session_started", {
       sessionId: studySession.id,
       taxonomyNodeId: taxonomyNodeId || null,
+      exam: activeExam,
     });
     return { sessionId: studySession.id };
   } catch (err: unknown) {
@@ -52,9 +55,12 @@ export async function startReviewSessionAction(locale: string) {
   if (quota.isBlocked) {
     redirect(`/${locale}/app/billing`);
   }
+  const profile = await profileService.getProfile(session.user.id);
+  const activeExam = profile?.examGoal || "revalida";
   const dueQuestions = await learningService.getDueQuestions(
     session.user.id,
     10,
+    activeExam,
   );
   if (dueQuestions.length === 0) {
     return { error: "no_reviews_due" };

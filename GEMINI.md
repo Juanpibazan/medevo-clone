@@ -2,7 +2,7 @@
 
 > Documento de arranque para planificar y construir una plataforma fullstack de preparación médica inspirada funcionalmente en MedEvo, con identidad, contenido y código propios.
 >
-> Última actualización del contexto: 3 de septiembre de 2026.
+> Última actualización del contexto: 17 de septiembre de 2026.
 
 ## 1. Propósito de este documento
 
@@ -19,7 +19,7 @@ Antes de escribir código, Codex debe leer este archivo completo, inspeccionar e
 
 ### 1.1 Estado actual del repositorio
 
-El bootstrap técnico, el tramo de identidad/onboarding y el **vertical slice completo de práctica** (sesión de preguntas, corrección, resultados, cuaderno de errores, favoritos y revisión programada FSRS) están totalmente implementados. Este estado describe el código existente al 3 de septiembre de 2026 y debe verificarse contra el repositorio antes de planificar cambios:
+El bootstrap técnico, el tramo de identidad/onboarding y el **vertical slice completo de práctica** (sesión de preguntas, corrección, resultados, cuaderno de errores, favoritos y revisión programada FSRS) están totalmente implementados. Este estado describe el código existente al 17 de septiembre de 2026 y debe verificarse contra el repositorio antes de planificar cambios:
 
 - Next.js 16 con App Router, React 19, TypeScript estricto, Tailwind CSS 4, `src/`, npm y Node.js 24 LTS.
 - Interfaz mobile-first bilingüe desde el inicio, con prefijos obligatorios `pt-BR` y `es`, `next-intl`, Manrope y los tokens de marca de MedCiclo.
@@ -27,7 +27,7 @@ El bootstrap técnico, el tramo de identidad/onboarding y el **vertical slice co
 - Better Auth con email y contraseña, sesiones por cookie, adaptador Drizzle y verificación obligatoria de correo electrónico activa.
 - Portada, registro, acceso, cierre de sesión, recuperación de contraseña deshabilitada de forma segura, health checks y área autenticada.
 - Aprovisionamiento idempotente del perfil y rol `student`; reparar el aprovisionamiento no modifica preferencias existentes.
-- Onboarding obligatorio, bilingüe y reanudable entre registro y `/app`, con tres pasos guardados incrementalmente: idioma/objetivo Revalida, fecha tentativa opcional y disponibilidad semanal.
+- Onboarding obligatorio, bilingüe y reanudable entre registro y `/app`, con tres pasos guardados incrementalmente: idioma y objetivo de examen (Revalida INEP vs ENAMED), fecha tentativa opcional y disponibilidad semanal.
 - Módulos de dominio `identity`, `content`, `practice` y `learning` implementados con APIs y repositorios Drizzle desacoplados.
 - Área de práctica con soporte para sesiones (con versiones congeladas de preguntas para preservar historial), corrección interactiva inmediata, marcas metacognitivas, favoritos y reportes.
 - Dashboard central en `/app` que muestra el resumen del perfil y la lista de revisiones pendientes programadas bajo el algoritmo de repetición espaciada FSRS.
@@ -48,6 +48,17 @@ El bootstrap técnico, el tramo de identidad/onboarding y el **vertical slice co
 - Preservación No Destructiva de Roles y Simulación Segura en DevRoleSwitcher: Corrección del bloqueo de administradores en producción al alternar roles en `DevRoleSwitcher`. La acción de servidor `switchRoleAction` preserva los roles fundamentales (`admin`, `medical_editor`, `student`) en la tabla `user_roles` mediante inserciones no destructivas e implementa la cookie `dev_active_role` para la simulación contextual de roles en tiempo de ejecución. Las vistas de backoffice y la cabecera adaptan su visibilidad y permisos en base a `getEffectiveRoles`, permitiendo a los administradores probar cualquier rol sin perder privilegios ni acceso permanente al switcher.
 - Billing Multiproveedor (Paddle + Suby v3-beta) y Validación Exitosa de Pago: Contrato de facturación neutral soportando Paddle y Suby v3-beta bajo feature flag `SUBY_ENABLED`, con persistencia en `billing_provider_customers`, `billing_checkout_attempts` e historial inmutable en `billing_webhook_events`. Soporte de checkout alojado (hosted checkout session) en Suby con validación estricta de host HTTPS, verificación de firmas webhook HMAC-SHA256 con ventana de 5 minutos, precedencia de estados terminales y aprovisionamiento idempotente. Validación exitosa de compra y activación Premium verificada en producción.
 - Registro con Nombre y Apellido y Sincronización con Pasarelas: Formulario de `/cadastro` adaptado con campos independientes para Nombre (`firstName`) y Apellido (`lastName`), validación en `registrationSchema` y concatenación hacia Better Auth (`users.name`). Descomposición y sincronización automática de `firstName` y `lastName` mediante `POST /v3/customers` y `PATCH /v3/customers/{id}` en Suby para garantizar la compatibilidad con cobros recurrentes de tarjeta sin errores de datos faltantes.
+- Soporte Multi-Examen Vertical (Revalida INEP + ENAMED 2025):
+  - Extensión integral de la plataforma para soportar múltiples exámenes médicos sobre un esquema y taxonomía médica unificada.
+  - Modelo de base de datos ampliado (`0012_tiresome_silvermane.sql`) con columnas `questions.exam` (`'revalida' | 'enamed'`) y `questions.exam_year`, índices compuestos `questions_exam_idx` y `questions_exam_year_idx`, y ampliación del check de `profiles.exam_goal` para admitir `"revalida"` o `"enamed"`.
+  - Ingesta automatizada y clasificación DeepSeek en `ingest.ts` para ENAMED 2025 (`q-enamed-2025-{number}-obj`), importando 90 preguntas completas con sus alternativas y mapeo taxonómico.
+  - Selector de examen en Onboarding (Paso 2) permitiendo a los nuevos estudiantes definir su examen objetivo inicial (`Revalida INEP` vs `ENAMED`).
+  - Componente de cabecera `ExamSwitcher` tipo pill (`[ Revalida | ENAMED ]`) en `StudentHeader`, permitiendo alternar al vuelo entre exámenes con actualización reactiva del perfil (`switchActiveExam`).
+  - Aislamiento estricto por examen activo:
+    - Sesiones de práctica (`practiceService`) y cola de repaso espaciado FSRS (`learningService.getDueQuestions`) filtradas por el examen activo.
+    - Cuaderno de errores y favoritos (`/app/errors`) filtrados por el examen activo.
+    - Métricas de analítica en tiempo real en el Dashboard (`analyticsService.getUserMetrics` y `DrizzleAnalyticsRepository.getUserResponsesData`) calculadas estrictamente sobre las respuestas del examen seleccionado (preguntas respondidas hoy, precisión global, tiempo medio y rendimiento por especialidad).
+  - Backoffice Editorial: Filtro segmentado por examen (`Todos | Revalida | ENAMED`) en `/app/backoffice` y badges visuales identificadores (`[ENAMED 2025]`, `[Revalida 2011]`).
 
 El siguiente tramo prioritario del vertical slice es:
 
@@ -236,9 +247,9 @@ El nombre oficial de la plataforma será **MedCiclo**.
 
 ### Concepto de marca
 
-> práctica → error → revisión → progreso
+> práctica → análisis → error → revisión → progreso
 
-La identidad representa el ciclo central de aprendizaje del producto: practicar, identificar errores, revisar de manera inteligente y convertir ese proceso en progreso medible.
+La identidad representa el ciclo central de aprendizaje del producto: practicar, analizar el rendimiento en tiempo real (precisión, tiempo y diagnóstico clínico), identificar errores, revisar de manera inteligente (FSRS y Cuaderno de Errores) y convertir ese proceso en progreso medible hacia la aprobación del examen Revalida.
 
 ### Logotipo
 

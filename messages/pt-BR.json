@@ -101,11 +101,18 @@
     "weeklyTime": "Tempo semanal",
     "hours": "{hours} h por semana",
     "language": "Idioma preferido",
-    "locales": { "pt-BR": "Português (Brasil)", "es": "Espanhol" }
+    "locales": {
+      "pt-BR": "Português (Brasil)",
+      "es": "Espanhol"
+    }
   },
   "onboarding": {
     "progressLabel": "Progresso da configuração",
-    "steps": { "1": "Objetivo e idioma", "2": "Data", "3": "Disponibilidade" },
+    "steps": {
+      "1": "Objetivo e idioma",
+      "2": "Data",
+      "3": "Disponibilidade"
+    },
     "eyebrow": "Etapa {step} de 3",
     "step1": {
       "title": "Prepare sua experiência",
@@ -113,7 +120,10 @@
       "legend": "Objetivo e idioma",
       "examLabel": "Sua prova",
       "examValue": "Revalida",
-      "locales": { "pt-BR": "Português (Brasil)", "es": "Espanhol" }
+      "locales": {
+        "pt-BR": "Português (Brasil)",
+        "es": "Espanhol"
+      }
     },
     "step2": {
       "title": "Qual exame e quando pretende fazer?",
@@ -154,6 +164,7 @@
   "dashboard": {
     "reviewsDue": "Você tem {count} revisões pendentes para hoje.",
     "noReviewsDue": "Você não tem revisões pendentes para hoje. Bom trabalho!",
+    "dashboardTitle": "Ciclo de Prática e Revisão",
     "startPractice": "Iniciar Prática (10 Questões)",
     "resumePractice": "Retomar Prática em Progresso",
     "startNewPractice": "Iniciar Nova Prática",
@@ -270,14 +281,20 @@
     "status": "Status",
     "accessUntil": "Acesso até",
     "billingCycle": "Frequência",
-    "cycles": { "month": "Mensal", "year": "Anual" },
+    "cycles": {
+      "month": "Mensal",
+      "year": "Anual"
+    },
     "attemptExpires": "Reserva válida até",
     "pendingCheckout": "Há uma confirmação de compra em andamento. Não pague novamente enquanto o provedor responde.",
     "attentionRequired": "Esta assinatura não concede acesso Premium agora. Entre em contato com o suporte para resolver o status antes de tentar outra compra.",
     "legacySubscription": "Esta assinatura legada mantém seu acesso, mas precisa de suporte para ser gerenciada com segurança.",
     "cancellation": "Cancelamento",
     "cancelsAt": "Programado para {date}",
-    "providers": { "paddle": "Paddle", "suby": "Suby" },
+    "providers": {
+      "paddle": "Paddle",
+      "suby": "Suby"
+    },
     "statuses": {
       "active": "Ativa",
       "trialing": "Em teste",
@@ -318,7 +335,10 @@
     "signInToSubscribe": "Entrar para assinar",
     "checkoutNote": "Pagamento seguro processado e vendido pela Paddle.",
     "providerLabel": "Provedor de pagamento",
-    "providers": { "paddle": "Paddle", "suby": "Suby" },
+    "providers": {
+      "paddle": "Paddle",
+      "suby": "Suby"
+    },
     "providerUnavailable": "Este provedor não está disponível no momento.",
     "subyTaxNote": "Preço em USD. O IVA é adicionado no checkout.",
     "subyCheckoutNote": "Compra vendida e processada pela Suby. Cartão, Apple Pay e Google Pay quando disponíveis.",
@@ -355,7 +375,7 @@
     "footer": {
       "operatorNotice": "MedCiclo é uma plataforma educacional operada por Coding Is Giving S.R.L.",
       "contact": "Contato e DPO: admin@codingisgiving.com",
-      "disclaimer": "Plataforma independente de preparação para o Revalida. Não possuímos vínculo, filiação institucional, patrocínio ou chancela oficial junto ao INEP, MEC ou CFM. As provas do Revalida constituem avaliações públicas federais reproduzidas exclusivamente para fins didáticos.",
+      "disclaimer": "Plataforma independente de preparação para o Revalida e ENAMED. Não possuímos vínculo, filiação institucional, patrocínio ou chancela oficial junto ao INEP, MEC, CFM ou órgãos examinadores do ENAMED. As provas do Revalida e ENAMED constituem avaliações públicas reproduzidas exclusivamente para fins didáticos.",
       "terms": "Termos de Uso",
       "privacy": "Política de Privacidade",
       "rights": "Todos os direitos reservados."
@@ -363,8 +383,8 @@
     "terms": {
       "eyebrow": "Jurídico e Regulatório",
       "title": "Termos de Uso e Serviço",
-      "lastUpdated": "Última atualização: 5 de setembro de 2026",
-      "intro": "Estes Termos de Uso e Serviço regem o acesso e a utilização da plataforma MedCiclo por candidatos, estudantes e médicos em preparação para o Exame de Revalidação de Diplomas Médicos expedidos no exterior (Revalida). Ao criar uma conta ou utilizar nossos serviços, você concorda expressamente com as condições aqui estabelecidas.",
+      "lastUpdated": "Última atualização: 20 de setembro de 2026",
+      "intro": "Estes Termos de Uso e Serviço regem o acesso e a utilização da plataforma MedCiclo por candidatos, estudantes e médicos em preparação para o Exame de Revalidação de Diplomas Médicos expedidos no exterior (Revalida) e o Exame Nacional de Avaliação da Formação Médica (ENAMED). Ao criar uma conta ou utilizar nossos serviços, você concorda expressamente com as condições aqui estabelecidas.",
       "sections": [
         {
           "title": "1. Identificação da Empresa e Provedores de Pagamento",
@@ -375,12 +395,12 @@
           "content": "A MedCiclo é uma ferramenta estritamente pedagógica de auxílio ao estudo individual. O conteúdo disponível, incluindo questões comentadas, mapas cognitivos, algoritmos de repetição espaçada (FSRS) e cadernos de erros, NÃO constitui aconselhamento médico, telemedicina, prescrição farmacológica, diagnóstico ou indicação de tratamento de pacientes reais. O material disponibilizado não substitui a formação universitária, diretrizes clínicas oficiais nem o julgamento clínico individual e ético do profissional médico perante casos reais."
         },
         {
-          "title": "3. Isenção Total de Garantia de Aprovação no Revalida",
-          "content": "A aprovação no Exame Revalida promovido pelo INEP/MEC depende de inúmeros fatores estritamente individuais, incluindo dedicação prévia, bagagem acadêmica, tempo de preparo e desempenho no dia da avaliação oficial. A Coding Is Giving S.R.L. e a MedCiclo NÃO garantem, prometem ou asseguram aprovação, obtenção de nota de corte ou revalidação de diplomas médicos. A MedCiclo não se responsabiliza civil, administrativa ou financeiramente pelo resultado individual do candidato no exame."
+          "title": "3. Isenção Total de Garantia de Aprovação no Revalida e ENAMED",
+          "content": "A aprovação no Exame Revalida promovido pelo INEP/MEC ou no Exame ENAMED depende de inúmeros fatores estritamente individuais, incluindo dedicação prévia, bagagem acadêmica, tempo de preparo e desempenho no dia da avaliação oficial. A Coding Is Giving S.R.L. e a MedCiclo NÃO garantem, prometem ou asseguram aprovação, obtenção de nota de corte, revalidação de diplomas médicos ou habilitação profissional. A MedCiclo não se responsabiliza civil, administrativa ou financeiramente pelo resultado individual do candidato em nenhum dos exames."
         },
         {
           "title": "4. Bancos de Questões Públicas e Direitos de Propriedade Intelectual",
-          "content": "As provas, gabaritos preliminares e padrões de resposta discursivos do Revalida são documentos e avaliações públicas federais emitidas pelo INEP, sendo utilizados na plataforma legitimamente para finalidades didáticas e de preparação acadêmica. A plataforma MedCiclo não reivindica titularidade autoral sobre os enunciados oficiais originais do INEP. Em contrapartida, todo o software, código-fonte, arquitetura, interface gráfica, logotipos, taxonomia médica proprietária, algoritmos de agendamento e resoluções comentadas autorais redigidas pela equipe editorial da MedCiclo são de propriedade exclusiva da Coding Is Giving S.R.L., protegidos pela legislação de direitos autorais e propriedade intelectual. Caso algum titular de direitos identifique infração de propriedade intelectual, poderá enviar notificação fundamentada para admin@codingisgiving.com para verificação imediata."
+          "content": "As provas, gabaritos preliminares e padrões de resposta discursivos ou objetivos de avaliações oficiais como o Revalida (emitido pelo INEP) e o ENAMED são documentos e avaliações públicas utilizados na plataforma legitimamente para finalidades didáticas e de preparação acadêmica. A plataforma MedCiclo não reivindica titularidade autoral sobre os enunciados oficiais originais dos órgãos examinadores. Em contrapartida, todo o software, código-fonte, arquitetura, interface gráfica, logotipos, taxonomia médica proprietária, algoritmos de agendamento e resoluções comentadas autorais redigidas pela equipe editorial da MedCiclo são de propriedade exclusiva da Coding Is Giving S.R.L., protegidos pela legislação de direitos autorais e propriedade intelectual. Caso algum titular de direitos identifique infração de propriedade intelectual, poderá enviar notificação fundamentada para admin@codingisgiving.com para verificação imediata."
         },
         {
           "title": "5. Planos de Acesso, Cota Gratuita e Assinatura Premium",

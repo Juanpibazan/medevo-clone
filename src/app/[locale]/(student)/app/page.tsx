@@ -77,9 +77,9 @@ export default async function AppPage({
 
   const date = profile.tentativeExamDate
     ? new Intl.DateTimeFormat(locale, {
-        dateStyle: "long",
-        timeZone: "UTC",
-      }).format(new Date(`${profile.tentativeExamDate}T12:00:00Z`))
+      dateStyle: "long",
+      timeZone: "UTC",
+    }).format(new Date(`${profile.tentativeExamDate}T12:00:00Z`))
     : t("dateUnknown");
 
   const hours = new Intl.NumberFormat(locale, {
@@ -222,8 +222,8 @@ export default async function AppPage({
                   <span className="text-3xl font-black text-[#102A43]">
                     {metrics.averageTimeSeconds > 0
                       ? tDashboard("timeSeconds", {
-                          seconds: metrics.averageTimeSeconds,
-                        })
+                        seconds: metrics.averageTimeSeconds,
+                      })
                       : tDashboard("noTimeData")}
                   </span>
                 </div>
@@ -260,13 +260,12 @@ export default async function AppPage({
                         </p>
                       </div>
                       <span
-                        className={`rounded-md px-2.5 py-1 text-sm font-extrabold ${
-                          spec.precision >= 70
+                        className={`rounded-md px-2.5 py-1 text-sm font-extrabold ${spec.precision >= 70
                             ? "border border-emerald-100 bg-emerald-50 text-emerald-700"
                             : spec.precision >= 50
                               ? "border border-amber-100 bg-amber-50 text-amber-700"
                               : "border border-red-100 bg-red-50 text-red-700"
-                        }`}
+                          }`}
                       >
                         {spec.precision}%
                       </span>
@@ -278,7 +277,7 @@ export default async function AppPage({
           </div>
 
           <h2 className="mb-4 text-xl font-bold text-[#102A43]">
-            Ciclo de Práctica y Revisión
+            {tDashboard("dashboardTitle")}
           </h2>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             {/* Practice Card */}
@@ -321,11 +320,10 @@ export default async function AppPage({
                 <button
                   type="submit"
                   disabled={dueCount === 0 || quota.isBlocked}
-                  className={`block w-full cursor-pointer rounded-lg px-4 py-2.5 text-center text-sm font-medium transition-colors ${
-                    dueCount > 0 && !quota.isBlocked
+                  className={`block w-full cursor-pointer rounded-lg px-4 py-2.5 text-center text-sm font-medium transition-colors ${dueCount > 0 && !quota.isBlocked
                       ? "bg-[#102A43] text-white hover:bg-[#1a3f60]"
                       : "cursor-not-allowed bg-slate-200 text-slate-400"
-                  }`}
+                    }`}
                 >
                   {tDashboard("startReview")}
                 </button>

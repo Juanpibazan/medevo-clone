@@ -11,7 +11,12 @@ export const auth = betterAuth({
   appName: "MedCiclo",
   baseURL: env.BETTER_AUTH_URL,
   secret: env.BETTER_AUTH_SECRET,
-  trustedOrigins: [env.BETTER_AUTH_URL],
+  trustedOrigins: [
+    env.BETTER_AUTH_URL,
+    "https://medciclo.com",
+    "https://www.medciclo.com",
+    "https://medevo-clone.vercel.app"
+  ],
   database: drizzleAdapter(db, { provider: "pg", schema, usePlural: true }),
   emailAndPassword: {
     enabled: true,

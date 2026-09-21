@@ -1,6 +1,6 @@
 # MedCiclo
 
-Base web bilingüe y mobile-first para preparar Revalida. Este bootstrap cubre portada, registro, acceso, cierre de sesión y un área protegida; todavía no implementa onboarding ni práctica médica.
+Plataforma web bilingüe y mobile-first de preparación médica (Revalida INEP y ENAMED). Cubre autenticación completa con Better Auth y verificación por correo vía Resend, recuperación de contraseñas, onboarding por pasos, sesiones de práctica médica (opción múltiple y discursivas), cuaderno de errores, repetición espaciada FSRS, analítica de estudio, backoffice editorial y pasarelas de pago (Paddle y Suby).
 
 ## Requisitos
 
@@ -26,7 +26,7 @@ Solo PostgreSQL se ejecuta en contenedor. La aplicación corre con Node local. `
 - `npm run build`
 - `npm run db:generate`, `npm run db:check`, `npm run db:migrate`
 
-La recuperación de contraseña es deliberadamente un stub: no persiste ni envía direcciones o tokens y siempre devuelve el mismo acuse. Debe conectarse a un `EmailService` solo después de elegir proveedor.
+La autenticación, verificación de cuenta y recuperación de contraseña están conectadas a Better Auth y `ResendEmailService`. En entornos de desarrollo o test sin credenciales de Resend, los enlaces y tokens se registran de forma segura en consola (`[EMAIL DEV LOG]`).
 
 ## Arquitectura y alcance
 

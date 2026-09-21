@@ -2,7 +2,7 @@
 
 > Documento de arranque para planificar y construir una plataforma fullstack de preparación médica inspirada funcionalmente en MedEvo, con identidad, contenido y código propios.
 >
-> Última actualización del contexto: 17 de septiembre de 2026.
+> Última actualización del contexto: 21 de septiembre de 2026.
 
 ## 1. Propósito de este documento
 
@@ -19,13 +19,13 @@ Antes de escribir código, Codex debe leer este archivo completo, inspeccionar e
 
 ### 1.1 Estado actual del repositorio
 
-El bootstrap técnico, el tramo de identidad/onboarding y el **vertical slice completo de práctica** (sesión de preguntas, corrección, resultados, cuaderno de errores, favoritos y revisión programada FSRS) están totalmente implementados. Este estado describe el código existente al 17 de septiembre de 2026 y debe verificarse contra el repositorio antes de planificar cambios:
+El bootstrap técnico, el tramo de identidad/onboarding y el **vertical slice completo de práctica** (sesión de preguntas, corrección, resultados, cuaderno de errores, favoritos y revisión programada FSRS) están totalmente implementados. Este estado describe el código existente al 21 de septiembre de 2026 y debe verificarse contra el repositorio antes de planificar cambios:
 
 - Next.js 16 con App Router, React 19, TypeScript estricto, Tailwind CSS 4, `src/`, npm y Node.js 24 LTS.
 - Interfaz mobile-first bilingüe desde el inicio, con prefijos obligatorios `pt-BR` y `es`, `next-intl`, Manrope y los tokens de marca de MedCiclo.
 - PostgreSQL 15 en Podman para desarrollo; `pg` mantiene el único pool y Drizzle es el único sistema de esquema y migraciones.
 - Better Auth con email y contraseña, sesiones por cookie, adaptador Drizzle y verificación obligatoria de correo electrónico activa.
-- Portada, registro, acceso, cierre de sesión, recuperación de contraseña deshabilitada de forma segura, health checks y área autenticada.
+- Portada, registro, acceso, cierre de sesión, recuperación y redefinición segura de contraseñas (con tokens Better Auth, emails transaccionales bilingües vía Resend y formularios interactivos en `/esqueci-senha` y `/redefinir-senha`), health checks y área autenticada.
 - Aprovisionamiento idempotente del perfil y rol `student`; reparar el aprovisionamiento no modifica preferencias existentes.
 - Onboarding obligatorio, bilingüe y reanudable entre registro y `/app`, con tres pasos guardados incrementalmente: idioma y objetivo de examen (Revalida INEP vs ENAMED), fecha tentativa opcional y disponibilidad semanal.
 - Módulos de dominio `identity`, `content`, `practice` y `learning` implementados con APIs y repositorios Drizzle desacoplados.
@@ -59,12 +59,13 @@ El bootstrap técnico, el tramo de identidad/onboarding y el **vertical slice co
     - Cuaderno de errores y favoritos (`/app/errors`) filtrados por el examen activo.
     - Métricas de analítica en tiempo real en el Dashboard (`analyticsService.getUserMetrics` y `DrizzleAnalyticsRepository.getUserResponsesData`) calculadas estrictamente sobre las respuestas del examen seleccionado (preguntas respondidas hoy, precisión global, tiempo medio y rendimiento por especialidad).
   - Backoffice Editorial: Filtro segmentado por examen (`Todos | Revalida | ENAMED`) en `/app/backoffice` y badges visuales identificadores (`[ENAMED 2025]`, `[Revalida 2011]`).
+- Recuperación de Contraseña y Envío Transaccional Activo: Flujo completo de restablecimiento de contraseña (`/esqueci-senha` y `/redefinir-senha`), integrado con Better Auth Drizzle adapter (`sendResetPassword`), generación segura de tokens, envío de correos transaccionales localizados con Resend (y fallback seguro a log en consola en dev/test), y pruebas unitarias/de integración automatizadas correspondientes.
+- Términos de Servicio y Políticas de Privacidad (Cumplimiento Legal Internacional): Páginas públicas `/termos` y `/privacidade` totalmente implementadas y bilingües (`pt-BR` y `es`), adaptadas para el marco legal de operación desde Bolivia hacia Brasil bajo LGPD (Ley 13.709/2018), Marco Civil da Internet (Ley 12.965/2014), Código de Defesa do Consumidor (Ley 8.078/1990), derecho de desistimiento de 7 días, deslinde expreso de responsabilidad frente al INEP/Revalida y términos de suscripción y pasarelas de pago.
+- Soporte para Dominio de Producción (`medciclo.com`) y Orígenes Confiables: Incorporación del dominio principal `https://medciclo.com` y `https://www.medciclo.com` en `trustedOrigins` de Better Auth (`src/modules/identity/infrastructure/auth.ts`) junto con el host original de Vercel para prevenir fallos 403 por CSRF / Origin Mismatch y garantizar enlaces canónicos correctos en notificaciones por correo.
 
 El siguiente tramo prioritario del vertical slice es:
 
-> Políticas de Privacidad y Términos de Servicio: Cumplimiento legal integral para la operación desde Bolivia hacia Brasil (LGPD, CDC, Marco Civil, deslinde de responsabilidad en Revalida y términos de suscripción).
-
-Seguido por el piloto cerrado con usuarios reales para validar estabilidad y hábito de estudio.
+> Piloto cerrado con usuarios reales (médicos en preparación para Revalida) para validar estabilidad de la plataforma, retención y hábito de estudio continuo.
 
 No existen todavía implementaciones de analítica externa o IA (el módulo de IA se mantiene planeado como opcional y desacoplado).
 

@@ -82,6 +82,7 @@ export class DrizzleContentRepository implements ContentRepository {
           id: q.id,
           exam: q.exam,
           examYear: q.examYear,
+          institution: q.institution,
           publishedVersionId: q.publishedVersionId,
           createdAt: q.createdAt,
           updatedAt: q.updatedAt,
@@ -162,6 +163,7 @@ export class DrizzleContentRepository implements ContentRepository {
         id: q.id,
         exam: q.exam,
         examYear: q.examYear,
+        institution: q.institution,
         publishedVersionId: q.publishedVersionId,
         createdAt: q.createdAt,
         updatedAt: q.updatedAt,
@@ -480,5 +482,27 @@ export class DrizzleContentRepository implements ContentRepository {
       current = all.find((n) => n.id === current!.parentId);
     }
     return ancestors;
+  }
+
+  async getFilterOptions(
+    exam?: string,
+  ): Promise<{ years: number[]; institutions: string[] }> {
+    const published = await this.findPublishedQuestions(exam);
+    const yearsSet = new Set<number>();
+    const instSet = new Set<string>();
+
+    for (const item of published) {
+      if (item.question.examYear) yearsSet.add(item.question.examYear);
+      if (item.question.institution) instSet.add(item.question.institution);
+    }
+
+    if (instSet.size === 0) {
+      instSet.add("INEP");
+    }
+
+    return {
+      years: Array.from(yearsSet).sort((a, b) => b - a),
+      institutions: Array.from(instSet).sort(),
+    };
   }
 }

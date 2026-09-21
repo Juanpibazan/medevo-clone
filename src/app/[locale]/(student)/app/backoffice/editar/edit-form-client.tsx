@@ -39,6 +39,7 @@ interface EditFormClientProps {
     explanation: string;
     taxonomyNodeId: string;
     type?: QuestionType;
+    institution?: string;
     alternatives: AlternativeInput[];
     images?: ImageInput[];
     subquestions?: SubquestionInput[];
@@ -61,6 +62,9 @@ export function EditFormClient({
   const [statement, setStatement] = useState(initialData?.statement || "");
   const [explanation, setExplanation] = useState(
     initialData?.explanation || "",
+  );
+  const [institution, setInstitution] = useState(
+    initialData?.institution || "INEP",
   );
   const [type, setType] = useState<QuestionType>(
     initialData?.type || "multiple_choice",
@@ -276,6 +280,7 @@ export function EditFormClient({
           explanation,
           taxonomyNodeId: finalTaxonomyNodeId,
           type,
+          institution,
           alternatives: finalAlternatives,
           images,
           subquestions: finalSubquestions,
@@ -342,6 +347,24 @@ export function EditFormClient({
               Discursiva (Aberta)
             </label>
           </div>
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label
+            htmlFor="institution"
+            className="text-xs font-bold tracking-wider text-slate-500 uppercase"
+          >
+            Instituição
+          </label>
+          <input
+            id="institution"
+            type="text"
+            disabled={pending}
+            value={institution}
+            onChange={(e) => setInstitution(e.target.value)}
+            placeholder="Ex: INEP, USP, etc."
+            className="rounded-xl border border-slate-200 px-4 py-2.5 text-sm text-slate-800 transition-colors focus:border-teal-500 focus:outline-none"
+          />
         </div>
 
         <div className="flex flex-col gap-1.5">

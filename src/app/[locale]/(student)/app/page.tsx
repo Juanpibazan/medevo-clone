@@ -74,6 +74,7 @@ export default async function AppPage({
 
   const activeSession = await practiceService.getActiveSession(session.user.id);
   const taxonomyNodes = await contentService.listTaxonomyNodes();
+  const filterOptions = await contentService.getFilterOptions(activeExam);
 
   const date = profile.tentativeExamDate
     ? new Intl.DateTimeFormat(locale, {
@@ -296,6 +297,8 @@ export default async function AppPage({
                 taxonomyNodes={taxonomyNodes}
                 quota={quota}
                 activeSession={activeSession}
+                availableYears={filterOptions.years}
+                availableInstitutions={filterOptions.institutions}
               />
             </div>
 

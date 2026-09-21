@@ -58,10 +58,15 @@ export interface ContentRepository {
   >;
   listTaxonomyNodes(): Promise<TaxonomyNode[]>;
   getTaxonomyAncestors(nodeId: string): Promise<TaxonomyNode[]>;
+  getFilterOptions(exam?: string): Promise<{ years: number[]; institutions: string[] }>;
 }
 
 export class ContentService {
   constructor(private readonly repository: ContentRepository) {}
+
+  async getFilterOptions(exam?: string) {
+    return this.repository.getFilterOptions(exam);
+  }
 
   async getPublishedQuestions(exam?: string) {
     return this.repository.findPublishedQuestions(exam);

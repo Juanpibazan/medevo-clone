@@ -84,7 +84,12 @@ export class PracticeService {
   async createSession(
     userId: string,
     specificQuestionVersionIds?: string[],
-    options?: { taxonomyNodeId?: string; exam?: string },
+    options?: {
+      taxonomyNodeId?: string;
+      exam?: string;
+      years?: number[];
+      institution?: string;
+    },
   ) {
     let versionIds = specificQuestionVersionIds;
 
@@ -117,6 +122,24 @@ export class PracticeService {
           allowedNodeIds.has(q.activeVersion.taxonomyNodeId),
         );
 
+        if (published.length === 0) {
+          throw new Error("no_questions_for_filters");
+        }
+      }
+
+      if (options?.years && options.years.length > 0) {
+        const yearSet = new Set(options.years);
+        published = published.filter((q) => yearSet.has(q.question.examYear));
+        if (published.length === 0) {
+          throw new Error("no_questions_for_filters");
+        }
+      }
+
+      if (options?.institution) {
+        const inst = options.institution.trim().toLowerCase();
+        published = published.filter(
+          (q) => q.question.institution.trim().toLowerCase() === inst,
+        );
         if (published.length === 0) {
           throw new Error("no_questions_for_filters");
         }

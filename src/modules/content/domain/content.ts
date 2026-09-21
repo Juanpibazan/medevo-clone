@@ -79,6 +79,7 @@ export const questionSchema = z.object({
   id: z.string(),
   exam: z.string().default("revalida"),
   examYear: z.number().int().default(2011),
+  institution: z.string().default("INEP"),
   publishedVersionId: z.string().nullable(),
   createdAt: z.date(),
   updatedAt: z.date(),

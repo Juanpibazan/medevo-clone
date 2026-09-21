@@ -54,6 +54,7 @@ export async function saveDraftAction(
     explanation: string;
     taxonomyNodeId: string;
     type?: QuestionType;
+    institution?: string;
     alternatives: Array<{
       optionLetter: "A" | "B" | "C" | "D" | "E";
       text: string;

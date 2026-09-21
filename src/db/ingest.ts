@@ -236,12 +236,14 @@ async function run() {
 
       await db.transaction(async (tx) => {
         // Insert parent question header
+        const institution = (q.metadata?.institution as string) || "INEP";
         await tx
           .insert(schema.questions)
           .values({
             id: questionId,
             exam: examKey,
             examYear: year,
+            institution,
             publishedVersionId: null, // temporarily null
           })
           .onConflictDoUpdate({
@@ -249,6 +251,7 @@ async function run() {
             set: {
               exam: examKey,
               examYear: year,
+              institution,
               updatedAt: new Date(),
             },
           });

@@ -19,6 +19,7 @@ export interface QuestionDraftInput {
   explanation: string;
   taxonomyNodeId: string;
   type?: QuestionType;
+  institution?: string;
   alternatives: Array<{
     optionLetter: AlternativeLetter;
     text: string;
@@ -62,6 +63,7 @@ export class EditorialService {
     await db.transaction(async (tx) => {
       await tx.insert(questions).values({
         id: questionId,
+        institution: input.institution || "INEP",
       });
 
       await tx.insert(questionVersions).values({

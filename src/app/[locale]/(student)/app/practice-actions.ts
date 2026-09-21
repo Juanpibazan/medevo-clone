@@ -20,6 +20,8 @@ async function requireAuth() {
 export async function startPracticeSessionAction(
   locale: string,
   taxonomyNodeId?: string,
+  years?: number[],
+  institution?: string,
 ): Promise<{ sessionId?: string; error?: string }> {
   const session = await requireAuth();
   const quota = await billingService.checkDailyQuota(session.user.id);
@@ -32,12 +34,14 @@ export async function startPracticeSessionAction(
     const studySession = await practiceService.createSession(
       session.user.id,
       undefined,
-      { taxonomyNodeId, exam: activeExam },
+      { taxonomyNodeId, exam: activeExam, years, institution },
     );
     analyticsService.trackEvent(session.user.id, "practice_session_started", {
       sessionId: studySession.id,
       taxonomyNodeId: taxonomyNodeId || null,
       exam: activeExam,
+      years: years || null,
+      institution: institution || null,
     });
     return { sessionId: studySession.id };
   } catch (err: unknown) {

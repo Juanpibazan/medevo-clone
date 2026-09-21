@@ -688,6 +688,9 @@ export function BackofficeQuestionList({
                           {question.exam === "enamed" ? "ENAMED" : "Revalida"}{" "}
                           {question.examYear || ""}
                         </span>
+                        <span className="rounded-full border border-purple-200 bg-purple-50 px-2 py-0.5 text-[10px] font-extrabold tracking-wider text-purple-700 uppercase">
+                          {question.institution || "INEP"}
+                        </span>
                         {latestVersion && (
                           <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold tracking-wider text-slate-600 uppercase">
                             {latestVersion.type === "open_ended"

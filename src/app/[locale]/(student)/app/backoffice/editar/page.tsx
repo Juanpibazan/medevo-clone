@@ -61,6 +61,7 @@ export default async function EditarQuestaoPage({
         url: img.url,
         position: img.position,
       })),
+      institution: versionData.question.institution,
       subquestions: versionData.version.subquestions || undefined,
     };
   }

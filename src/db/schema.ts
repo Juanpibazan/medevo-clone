@@ -223,6 +223,7 @@ export const questions = pgTable(
     id: text("id").primaryKey(),
     exam: text("exam").notNull().default("revalida"),
     examYear: integer("exam_year").notNull().default(2011),
+    institution: text("institution").notNull().default("INEP"),
     publishedVersionId: text("published_version_id").references(
       (): AnyPgColumn => questionVersions.id,
       { onDelete: "set null" },
@@ -237,6 +238,7 @@ export const questions = pgTable(
   (table) => [
     index("questions_exam_idx").on(table.exam),
     index("questions_exam_year_idx").on(table.exam, table.examYear),
+    index("questions_institution_idx").on(table.institution),
     check("questions_exam_valid", sql`${table.exam} in ('revalida', 'enamed')`),
   ],
 );

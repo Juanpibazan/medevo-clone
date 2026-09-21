@@ -62,6 +62,18 @@ El bootstrap técnico, el tramo de identidad/onboarding y el **vertical slice co
 - Recuperación de Contraseña y Envío Transaccional Activo: Flujo completo de restablecimiento de contraseña (`/esqueci-senha` y `/redefinir-senha`), integrado con Better Auth Drizzle adapter (`sendResetPassword`), generación segura de tokens, envío de correos transaccionales localizados con Resend (y fallback seguro a log en consola en dev/test), y pruebas unitarias/de integración automatizadas correspondientes.
 - Términos de Servicio y Políticas de Privacidad (Cumplimiento Legal Internacional): Páginas públicas `/termos` y `/privacidade` totalmente implementadas y bilingües (`pt-BR` y `es`), adaptadas para el marco legal de operación desde Bolivia hacia Brasil bajo LGPD (Ley 13.709/2018), Marco Civil da Internet (Ley 12.965/2014), Código de Defesa do Consumidor (Ley 8.078/1990), derecho de desistimiento de 7 días, deslinde expreso de responsabilidad frente al INEP/Revalida y términos de suscripción y pasarelas de pago.
 - Soporte para Dominio de Producción (`medciclo.com`) y Orígenes Confiables: Incorporación del dominio principal `https://medciclo.com` y `https://www.medciclo.com` en `trustedOrigins` de Better Auth (`src/modules/identity/infrastructure/auth.ts`) junto con el host original de Vercel para prevenir fallos 403 por CSRF / Origin Mismatch y garantizar enlaces canónicos correctos en notificaciones por correo.
+- Soporte de Institución y Filtros Avanzados de Práctica en Dashboard (Vertical Slice Integral):
+  - Base de datos (`0013_wise_jackpot.sql`): incorporación de la columna `questions.institution` (`text NOT NULL DEFAULT 'INEP'`) e índice `questions_institution_idx` para asociar preguntas a instituciones examinadoras (ej. INEP para Revalida y ENAMED, y futuras como USP o UNIFESP).
+  - Ingesta y dominio: actualización de `ingest.ts`, `seed.ts` y del esquema Zod `questionSchema` para persistir y tipar la institución.
+  - Repositorio y Dominio (`modules/content`): mapeo de `institution` en `DrizzleContentRepository` e implementación del método `getFilterOptions(exam)` para obtener dinámicamente los años e instituciones con preguntas publicadas activas.
+  - Lógica de Práctica (`modules/practice`): extensión de `createSession` y `startPracticeSessionAction` para admitir selección múltiple de años (`years?: number[]`) e institución (`institution?: string`), aplicando filtros combinados y registrando telemetría analítica.
+  - UI del Dashboard del Estudiante (`PracticeFilters`):
+    - Selector multi-selección desplegable para Años del examen con casillas de verificación (checkboxes), contador interactivo ("Todos los años" o "X seleccionados"), acciones rápidas ("Seleccionar todos" / "Limpiar selección") y cierre por clic exterior.
+    - Selector desplegable de Institución ("Todas las instituciones" vs institución específica).
+  - Backoffice Editorial:
+    - Badge visual distintivo para la institución (púrpura) en el listado de preguntas de `/app/backoffice`.
+    - Campo editable de Institución en el formulario de creación y edición de preguntas (`edit-form-client.tsx`), persistido mediante `saveDraftAction` y `editorialService.createQuestionDraft`.
+  - Internacionalización bilingüe completa (`messages/es.json` y `messages/pt-BR.json`) y suite de pruebas unitarias (`tests/unit/practice-filter.test.ts`) con 100% de éxito.
 
 El siguiente tramo prioritario del vertical slice es:
 
